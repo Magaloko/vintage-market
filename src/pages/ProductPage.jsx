@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Share2, ShoppingBag, Tag, Clock, Award, Ruler, MapPin, Home, Phone, Globe, Mail, MessageCircle, Send as SendIcon } from 'lucide-react'
-import { getProduct, getCategoryAvgPrice } from '../lib/api'
+import { ArrowLeft, Share2, ShoppingBag, Tag, Clock, Award, Ruler, MapPin, Home, Phone, Globe, Mail, MessageCircle, Send as SendIcon, Store } from 'lucide-react'
+import { getProduct, getCategoryAvgPrice, getShop } from '../lib/api'
 import { categories, conditions, categoryFields } from '../data/demoProducts'
 import ImageGallery from '../components/public/ImageGallery'
 import FavoriteButton from '../components/public/FavoriteButton'
@@ -24,6 +24,7 @@ export default function ProductPage() {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [avgPrice, setAvgPrice] = useState(null)
+  const [shopData, setShopData] = useState(null)
 
   useEffect(() => {
     async function load() {
@@ -40,6 +41,13 @@ export default function ProductPage() {
           const avg = await getCategoryAvgPrice(data.category)
           setAvgPrice(avg)
         } catch (e) { /* optional */ }
+
+        if (data.shop_id) {
+          try {
+            const { data: shop } = await getShop(data.shop_id)
+            setShopData(shop)
+          } catch (e) { /* optional */ }
+        }
       } catch (e) {
         navigate('/catalog', { replace: true })
       }
@@ -160,6 +168,18 @@ export default function ProductPage() {
                 </button>
               </div>
             </div>
+
+            {/* Shop Badge */}
+            {shopData && (
+              <Link to={`/shop/${shopData.slug}`}
+                className="inline-flex items-center gap-2 px-3 py-1.5 transition-all duration-300"
+                style={{ backgroundColor: 'rgba(176, 141, 87, 0.06)', border: '1px solid rgba(176, 141, 87, 0.12)', borderRadius: '2px' }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.3)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.12)' }}>
+                <Store size={13} style={{ color: '#B08D57' }} />
+                <span className="font-body text-xs" style={{ color: '#B08D57' }}>{shopData.name}</span>
+              </Link>
+            )}
 
             {/* Price + Insight */}
             {showPrice && (

@@ -1,10 +1,17 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { categories, categoryGroups } from '../../data/demoProducts'
 import { siteConfig } from '../../lib/siteConfig'
+import { getCategoryCounts } from '../../lib/api'
 
 export default function Footer() {
-  const vintageCats = categories.filter(c => c.group === 'vintage').slice(0, 5)
-  const otherCats = categories.filter(c => c.group !== 'vintage').slice(0, 3)
+  const [categoryCounts, setCategoryCounts] = useState({})
+
+  useEffect(() => {
+    getCategoryCounts().then(r => setCategoryCounts(r.data || {}))
+  }, [])
+
+  const activeCats = categories.filter(c => categoryCounts[c.id] > 0).slice(0, 8)
 
   return (
     <footer style={{ backgroundColor: '#0C0A08' }}>
@@ -68,9 +75,11 @@ export default function Footer() {
             <div className="flex flex-col gap-4">
               {[
                 { to: '/catalog', label: 'Каталог' },
+                { to: '/shops', label: 'Магазины' },
                 { to: '/favorites', label: 'Избранное' },
                 { to: '/about', label: 'О галерее' },
                 { to: '/contact', label: 'Контакт' },
+                { to: '/seller/register', label: 'Стать продавцом' },
               ].map(link => (
                 <Link key={link.to} to={link.to}
                   className="font-display text-sm italic tracking-wide transition-colors duration-300"
@@ -90,7 +99,7 @@ export default function Footer() {
               Категории
             </h4>
             <div className="flex flex-col gap-4">
-              {[...vintageCats, ...otherCats].map(cat => (
+              {activeCats.map(cat => (
                 <Link key={cat.id} to={`/catalog/${cat.id}`}
                   className="font-display text-sm italic tracking-wide transition-colors duration-300"
                   style={{ color: 'rgba(240, 230, 214, 0.3)' }}

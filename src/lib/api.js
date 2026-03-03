@@ -11,12 +11,13 @@ function generateId() {
 
 // ---- Products API ----
 
-export async function getProducts({ category, condition, status, search, limit, offset = 0 } = {}) {
+export async function getProducts({ category, condition, status, search, shop_id, limit, offset = 0 } = {}) {
   if (!isSupabaseConfigured) {
     let filtered = [...localProducts]
     if (category) filtered = filtered.filter(p => p.category === category)
     if (condition) filtered = filtered.filter(p => p.condition === condition)
     if (status) filtered = filtered.filter(p => p.status === status)
+    if (shop_id) filtered = filtered.filter(p => p.shop_id === shop_id)
     if (search) {
       const q = search.toLowerCase()
       filtered = filtered.filter(p =>
@@ -35,6 +36,7 @@ export async function getProducts({ category, condition, status, search, limit, 
     if (category) query = query.eq('category', category)
     if (condition) query = query.eq('condition', condition)
     if (status) query = query.eq('status', status)
+    if (shop_id) query = query.eq('shop_id', shop_id)
     if (search) query = query.or('title.ilike.%' + search + '%,description.ilike.%' + search + '%,brand.ilike.%' + search + '%')
     if (limit) query = query.range(offset, offset + limit - 1)
     query = query.order('created_at', { ascending: false })
@@ -245,6 +247,195 @@ export async function removeFavorite(userId, productId) {
 
 
 // ---- Statistics API ----
+
+// ---- Shops API ----
+
+const DEMO_SHOP = {
+  id: 'demo-shop-001', user_id: 'demo-seller-001', name: 'Vintage Corner',
+  slug: 'vintage-corner', description: 'Уникальные винтажные находки из Европы. Одежда, аксессуары и предметы интерьера 1960-1980х годов.',
+  address: 'Нашмаркт, 1060 Вена', phone: '+43 660 123 4567', email: 'seller@vintage.demo',
+  website: '', logo_url: null, opening_hours: 'Пн-Сб 10:00-18:00',
+  status: 'active', created_at: '2025-01-15T10:00:00Z', rating: 4.7, review_count: 12,
+  lat: 48.1985, lng: 16.3584,
+}
+
+function getDemoShops() {
+  const extra = JSON.parse(localStorage.getItem('vintage_demo_shops') || '[]')
+  return [DEMO_SHOP, ...extra]
+}
+
+export async function getShops() {
+  if (!isSupabaseConfigured) return { data: getDemoShops().filter(s => s.status === 'active'), error: null }
+  try {
+    const { data, error } = await supabase.from('shops').select('*').eq('status', 'active').order('created_at', { ascending: false })
+    return { data: data || [], error }
+  } catch (e) { return { data: [], error: { message: e.message } } }
+}
+
+export async function getShop(idOrSlug) {
+  if (!isSupabaseConfigured) {
+    const shop = getDemoShops().find(s => s.id === idOrSlug || s.slug === idOrSlug)
+    return { data: shop || null, error: shop ? null : { message: 'Not found' } }
+  }
+  try {
+    let { data, error } = await supabase.from('shops').select('*').eq('slug', idOrSlug).maybeSingle()
+    if (!data) {
+      const res = await supabase.from('shops').select('*').eq('id', idOrSlug).maybeSingle()
+      data = res.data; error = res.error
+    }
+    return { data, error }
+  } catch (e) { return { data: null, error: { message: e.message } } }
+}
+
+export async function getMyShop(shopId) {
+  if (!isSupabaseConfigured) {
+    const shop = getDemoShops().find(s => s.id === shopId)
+    return { data: shop || null, error: null }
+  }
+  try {
+    const { data, error } = await supabase.from('shops').select('*').eq('id', shopId).single()
+    return { data, error }
+  } catch (e) { return { data: null, error: { message: e.message } } }
+}
+
+export async function updateShop(shopId, updates) {
+  if (!isSupabaseConfigured) {
+    const shops = getDemoShops()
+    const idx = shops.findIndex(s => s.id === shopId)
+    if (idx === -1) return { data: null, error: { message: 'Not found' } }
+    if (idx === 0) {
+      Object.assign(DEMO_SHOP, updates)
+      return { data: DEMO_SHOP, error: null }
+    }
+    const extra = JSON.parse(localStorage.getItem('vintage_demo_shops') || '[]')
+    const ei = extra.findIndex(s => s.id === shopId)
+    if (ei !== -1) { Object.assign(extra[ei], updates); localStorage.setItem('vintage_demo_shops', JSON.stringify(extra)) }
+    return { data: { ...shops[idx], ...updates }, error: null }
+  }
+  try {
+    const { data, error } = await supabase.from('shops').update(updates).eq('id', shopId).select().single()
+    return { data, error }
+  } catch (e) { return { data: null, error: { message: e.message } } }
+}
+
+export async function getShopProducts(shopId) {
+  if (!isSupabaseConfigured) {
+    const prods = localProducts.filter(p => p.shop_id === shopId)
+    return { data: prods, error: null }
+  }
+  try {
+    const { data, error } = await supabase.from('products').select('*').eq('shop_id', shopId).order('created_at', { ascending: false })
+    return { data: data || [], error }
+  } catch (e) { return { data: [], error: { message: e.message } } }
+}
+
+export async function getShopInquiries(shopId) {
+  if (!isSupabaseConfigured) {
+    const shopProducts = localProducts.filter(p => p.shop_id === shopId).map(p => p.id)
+    return { data: localInquiries.filter(i => shopProducts.includes(i.product_id)), error: null }
+  }
+  try {
+    // Get shop's product IDs first
+    const { data: prods } = await supabase.from('products').select('id').eq('shop_id', shopId)
+    const ids = (prods || []).map(p => p.id)
+    if (ids.length === 0) return { data: [], error: null }
+    const { data, error } = await supabase.from('inquiries').select('*').in('product_id', ids).order('created_at', { ascending: false })
+    return { data: data || [], error }
+  } catch (e) { return { data: [], error: { message: e.message } } }
+}
+
+export async function getShopStats(shopId) {
+  if (!isSupabaseConfigured) {
+    const prods = localProducts.filter(p => p.shop_id === shopId)
+    const shopInqs = localInquiries.filter(i => prods.some(p => p.id === i.product_id))
+    return {
+      data: {
+        total: prods.length, active: prods.filter(p => p.status === 'active').length,
+        sold: prods.filter(p => p.status === 'sold').length,
+        totalViews: prods.reduce((s, p) => s + (p.views || 0), 0),
+        newInquiries: shopInqs.filter(i => i.status === 'new').length,
+        totalInquiries: shopInqs.length,
+      }, error: null,
+    }
+  }
+  try {
+    const { data: prods } = await supabase.from('products').select('*').eq('shop_id', shopId)
+    const products = prods || []
+    const ids = products.map(p => p.id)
+    let newInquiries = 0, totalInquiries = 0
+    if (ids.length > 0) {
+      try {
+        const { data: inqs } = await supabase.from('inquiries').select('status').in('product_id', ids)
+        totalInquiries = inqs?.length || 0
+        newInquiries = (inqs || []).filter(i => i.status === 'new').length
+      } catch {}
+    }
+    return {
+      data: {
+        total: products.length, active: products.filter(p => p.status === 'active').length,
+        sold: products.filter(p => p.status === 'sold').length,
+        totalViews: products.reduce((s, p) => s + (p.views || 0), 0),
+        newInquiries, totalInquiries,
+      }, error: null,
+    }
+  } catch (e) { return { data: null, error: { message: e.message } } }
+}
+
+// ---- Shop Reviews API ----
+
+let localReviews = [
+  { id: 'r1', shop_id: 'demo-shop-001', name: 'Мария К.', rating: 5, comment: 'Прекрасный магазин! Нашла уникальное платье 70-х.', created_at: '2025-02-10T14:00:00Z' },
+  { id: 'r2', shop_id: 'demo-shop-001', name: 'Thomas W.', rating: 4, comment: 'Gute Qualität, nette Beratung.', created_at: '2025-03-05T10:00:00Z' },
+  { id: 'r3', shop_id: 'demo-shop-001', name: 'Анна П.', rating: 5, comment: 'Рекомендую! Очень вежливые и знающие продавцы.', created_at: '2025-03-20T16:30:00Z' },
+]
+
+export async function getShopReviews(shopId) {
+  if (!isSupabaseConfigured) return { data: localReviews.filter(r => r.shop_id === shopId), error: null }
+  try {
+    const { data, error } = await supabase.from('shop_reviews').select('*').eq('shop_id', shopId).order('created_at', { ascending: false })
+    return { data: data || [], error }
+  } catch (e) { return { data: [], error: { message: e.message } } }
+}
+
+export async function createShopReview({ shop_id, name, rating, comment }) {
+  const review = { shop_id, name, rating, comment, created_at: new Date().toISOString() }
+  if (!isSupabaseConfigured) {
+    review.id = 'r' + Date.now()
+    localReviews.unshift(review)
+    return { data: review, error: null }
+  }
+  try {
+    const { data, error } = await supabase.from('shop_reviews').insert([review]).select().single()
+    return { data, error }
+  } catch (e) { return { data: null, error: { message: e.message } } }
+}
+
+// ---- Category Counts API ----
+
+export async function getCategoryCounts() {
+  if (!isSupabaseConfigured) {
+    const counts = {}
+    localProducts.forEach(p => {
+      if (p.status === 'active' || !p.status) {
+        counts[p.category] = (counts[p.category] || 0) + 1
+      }
+    })
+    return { data: counts, error: null }
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('category')
+      .eq('status', 'active')
+    if (error) return { data: {}, error }
+    const counts = {}
+    ;(data || []).forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1 })
+    return { data: counts, error: null }
+  } catch (e) {
+    return { data: {}, error: { message: e.message } }
+  }
+}
 
 // ---- Inquiries API ----
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { X, SlidersHorizontal, ChevronDown } from 'lucide-react'
 import ProductCard from '../components/public/ProductCard'
-import { getProducts } from '../lib/api'
+import { getProducts, getCategoryCounts } from '../lib/api'
 import { categories, conditions, sortOptions, eras, categoryGroups } from '../data/demoProducts'
 
 const PRICE_RANGES = [
@@ -32,6 +32,11 @@ export default function Catalog() {
   const [showFilters, setShowFilters] = useState(false)
   const [showSort, setShowSort] = useState(false)
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE)
+  const [categoryCounts, setCategoryCounts] = useState({})
+
+  useEffect(() => {
+    getCategoryCounts().then(r => setCategoryCounts(r.data || {}))
+  }, [])
 
   useEffect(() => {
     setActiveCategory(paramCategory || '')
@@ -157,7 +162,8 @@ export default function Catalog() {
               Все
             </Link>
             {categoryGroups.map(group => {
-              const groupCats = categories.filter(c => c.group === group.id)
+              const groupCats = categories.filter(c => c.group === group.id && categoryCounts[c.id] > 0)
+              if (groupCats.length === 0) return null
               return groupCats.map(cat => (
                 <Link key={cat.id} to={`/catalog/${cat.id}`} onClick={() => setActiveCategory(cat.id)}
                   className="px-3 py-2 font-body text-xs tracking-wider rounded-full transition-all"

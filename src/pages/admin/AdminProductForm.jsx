@@ -18,7 +18,7 @@ const emptyForm = {
   status: 'active',
 }
 
-export default function AdminProductForm() {
+export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
   const { id } = useParams()
   const isEditing = Boolean(id)
   const navigate = useNavigate()
@@ -35,7 +35,7 @@ export default function AdminProductForm() {
       const { data, error } = await getProduct(id)
       if (error || !data) {
         toast.error('Товар не найден')
-        navigate('/admin/products')
+        navigate(sellerMode ? '/seller/products' : '/admin/products')
         return
       }
       setForm({
@@ -97,6 +97,7 @@ export default function AdminProductForm() {
       image_url: images[0]?.url || form.image_url || '',
       images: images,
       details: details,
+      ...(sellerShopId && { shop_id: sellerShopId }),
     }
 
     const { error } = isEditing
@@ -111,7 +112,7 @@ export default function AdminProductForm() {
     }
 
     toast.success(isEditing ? 'Товар обновлён' : 'Товар добавлен')
-    navigate('/admin/products')
+    navigate(sellerMode ? '/seller/products' : '/admin/products')
   }
 
   const inputStyle = {

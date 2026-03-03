@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronDown } from 'lucide-react'
-import { getProducts } from '../lib/api'
+import { getProducts, getCategoryCounts } from '../lib/api'
 import { categoryGroups, categories } from '../data/demoProducts'
 import ProductCard from '../components/public/ProductCard'
 
@@ -14,14 +14,19 @@ const heroBGs = [
 
 export default function Home() {
   const [products, setProducts] = useState([])
+  const [categoryCounts, setCategoryCounts] = useState({})
   const [activeBG, setActiveBG] = useState(0)
   const heroRef = useRef(null)
 
   useEffect(() => {
     async function load() {
       try {
-        const { data } = await getProducts({})
-        setProducts((data || []).filter(p => p.status === 'active').slice(0, 8))
+        const [prodResult, countResult] = await Promise.all([
+          getProducts({}),
+          getCategoryCounts(),
+        ])
+        setProducts((prodResult.data || []).filter(p => p.status === 'active').slice(0, 8))
+        setCategoryCounts(countResult.data || {})
       } catch (e) { console.error(e) }
     }
     load()
@@ -139,8 +144,10 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categoryGroups.map((group, i) => {
-              const groupCats = categories.filter(c => c.group === group.id)
+            {categoryGroups
+              .filter(group => categories.filter(c => c.group === group.id).some(c => categoryCounts[c.id] > 0))
+              .map((group, i) => {
+              const groupCats = categories.filter(c => c.group === group.id && categoryCounts[c.id] > 0)
               return (
                 <Link
                   key={group.id}
