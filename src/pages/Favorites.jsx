@@ -38,15 +38,15 @@ export default function Favorites() {
   return (
     <div className="page-enter">
       {/* Header */}
-      <div className="bg-gradient-to-b from-vintage-beige/40 to-transparent">
+      <div style={{ backgroundColor: 'rgba(91, 58, 41, 0.04)' }}>
         <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
           <div className="flex items-center gap-3 mb-3">
-            <Heart size={24} className="text-red-400" fill="currentColor" />
-            <h1 className="font-display text-3xl md:text-4xl font-bold text-vintage-dark">
+            <Heart size={24} style={{ color: '#C2642C' }} fill="currentColor" />
+            <h1 className="font-display text-3xl md:text-4xl font-bold" style={{ color: '#0E1A2B' }}>
               Избранное
             </h1>
           </div>
-          <p className="font-body text-lg text-vintage-ink/60">
+          <p className="font-body text-lg" style={{ color: 'rgba(28, 28, 26, 0.5)' }}>
             {favoritesCount > 0
               ? `${favoritesCount} ${favoritesCount === 1 ? 'товар' : favoritesCount < 5 ? 'товара' : 'товаров'} в вашей коллекции`
               : 'Ваша коллекция избранных товаров пока пуста'
@@ -56,45 +56,40 @@ export default function Favorites() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 pb-24">
-        {/* Loading */}
         {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mt-8">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="aspect-[4/5] bg-vintage-beige/30 rounded" />
-                <div className="mt-4 h-4 bg-vintage-beige/30 rounded w-3/4" />
-                <div className="mt-2 h-4 bg-vintage-beige/30 rounded w-1/4" />
+                <div className="aspect-[4/5]" style={{ backgroundColor: 'rgba(91, 58, 41, 0.06)', borderRadius: '6px' }} />
+                <div className="mt-4 h-4 rounded w-3/4" style={{ backgroundColor: 'rgba(91, 58, 41, 0.06)' }} />
+                <div className="mt-2 h-4 rounded w-1/4" style={{ backgroundColor: 'rgba(91, 58, 41, 0.06)' }} />
               </div>
             ))}
           </div>
         )}
 
-        {/* Empty state */}
         {!loading && products.length === 0 && (
           <div className="text-center py-20">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-vintage-beige/30 flex items-center justify-center">
-              <Heart size={32} className="text-vintage-brown/20" />
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(91, 58, 41, 0.04)' }}>
+              <Heart size={32} style={{ color: 'rgba(91, 58, 41, 0.15)' }} />
             </div>
-            <h3 className="font-display text-xl text-vintage-dark mb-2">
+            <h3 className="font-display text-xl mb-2" style={{ color: '#0E1A2B' }}>
               Пока ничего не добавлено
             </h3>
-            <p className="font-body text-vintage-ink/50 mb-8 max-w-md mx-auto">
+            <p className="font-body mb-8 max-w-md mx-auto" style={{ color: 'rgba(28, 28, 26, 0.4)' }}>
               Нажмите на сердечко рядом с товаром, чтобы добавить его в избранное.
               Так вы не потеряете понравившиеся находки.
             </p>
-            <Link
-              to="/catalog"
-              className="vintage-btn inline-flex items-center gap-2"
-            >
+            <Link to="/catalog" className="btn-primary inline-flex items-center gap-2">
               <ShoppingBag size={16} />
               Перейти в каталог
             </Link>
           </div>
         )}
 
-        {/* Products Grid */}
         {!loading && products.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mt-8">
             {products.map((product, idx) => (
               <div
                 key={product.id}

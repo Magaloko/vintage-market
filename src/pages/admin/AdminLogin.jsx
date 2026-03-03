@@ -29,30 +29,36 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-vintage-dark flex items-center justify-center px-6">
+    <div className="min-h-screen flex items-center justify-center px-6" style={{ backgroundColor: '#0E1A2B' }}>
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-12">
-          <div className="w-16 h-16 bg-vintage-cream/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <span className="font-display text-3xl font-bold text-vintage-cream">Э</span>
+          <div className="w-16 h-16 rounded-btn flex items-center justify-center mx-auto mb-4"
+            style={{ backgroundColor: 'rgba(184, 154, 90, 0.1)', border: '1px solid rgba(184, 154, 90, 0.25)' }}>
+            <span className="font-display text-3xl font-bold" style={{ color: '#B89A5A' }}>Э</span>
           </div>
-          <h1 className="font-display text-2xl font-bold text-vintage-cream">ЭПОХА</h1>
-          <p className="font-sans text-xs tracking-[0.3em] uppercase text-vintage-cream/30 mt-1">
+          <h1 className="font-display text-2xl font-bold" style={{ color: '#F2EDE3' }}>ЭПОХА</h1>
+          <p className="font-sans text-xs tracking-[0.3em] uppercase mt-1"
+            style={{ color: 'rgba(184, 154, 90, 0.4)' }}>
             Админ-панель
           </p>
         </div>
 
         {/* Demo Notice */}
         {!isSupabaseConfigured && (
-          <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+          <div className="mb-6 p-4" style={{
+            backgroundColor: 'rgba(194, 100, 44, 0.08)',
+            border: '1px solid rgba(194, 100, 44, 0.2)',
+            borderRadius: '6px',
+          }}>
             <div className="flex items-start gap-3">
-              <AlertCircle size={18} className="text-amber-400 flex-shrink-0 mt-0.5" />
+              <AlertCircle size={18} className="flex-shrink-0 mt-0.5" style={{ color: '#D4784A' }} />
               <div>
-                <p className="font-sans text-sm text-amber-300 font-medium">Демо-режим</p>
-                <p className="font-sans text-xs text-amber-400/60 mt-1">
+                <p className="font-sans text-sm font-medium" style={{ color: '#D4784A' }}>Демо-режим</p>
+                <p className="font-sans text-xs mt-1" style={{ color: 'rgba(212, 120, 74, 0.6)' }}>
                   Supabase не настроен. Используйте:<br />
-                  Email: <code className="text-amber-300">admin@vintage.demo</code><br />
-                  Пароль: <code className="text-amber-300">demo123</code>
+                  Email: <code style={{ color: '#D4784A' }}>admin@vintage.demo</code><br />
+                  Пароль: <code style={{ color: '#D4784A' }}>demo123</code>
                 </p>
               </div>
             </div>
@@ -60,16 +66,21 @@ export default function AdminLogin() {
         )}
 
         {/* Form */}
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-8">
+        <div className="p-8" style={{
+          backgroundColor: 'rgba(242, 237, 227, 0.03)',
+          border: '1px solid rgba(242, 237, 227, 0.08)',
+          borderRadius: '6px',
+        }}>
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                <p className="font-sans text-sm text-red-400">{error}</p>
+              <div className="p-3" style={{ backgroundColor: 'rgba(194, 100, 44, 0.1)', border: '1px solid rgba(194, 100, 44, 0.2)', borderRadius: '6px' }}>
+                <p className="font-sans text-sm" style={{ color: '#D4784A' }}>{error}</p>
               </div>
             )}
 
             <div>
-              <label className="block font-sans text-xs tracking-wider uppercase text-vintage-cream/40 mb-2">
+              <label className="block font-sans text-xs tracking-wider uppercase mb-2"
+                style={{ color: 'rgba(242, 237, 227, 0.35)' }}>
                 Email
               </label>
               <input
@@ -77,15 +88,14 @@ export default function AdminLogin() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 text-vintage-cream placeholder-vintage-cream/20
-                  focus:outline-none focus:border-vintage-gold/50 focus:ring-1 focus:ring-vintage-gold/20 rounded-lg
-                  font-sans text-sm transition-all"
+                className="vintage-input-dark"
                 placeholder="admin@example.com"
               />
             </div>
 
             <div>
-              <label className="block font-sans text-xs tracking-wider uppercase text-vintage-cream/40 mb-2">
+              <label className="block font-sans text-xs tracking-wider uppercase mb-2"
+                style={{ color: 'rgba(242, 237, 227, 0.35)' }}>
                 Пароль
               </label>
               <input
@@ -93,9 +103,7 @@ export default function AdminLogin() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 text-vintage-cream placeholder-vintage-cream/20
-                  focus:outline-none focus:border-vintage-gold/50 focus:ring-1 focus:ring-vintage-gold/20 rounded-lg
-                  font-sans text-sm transition-all"
+                className="vintage-input-dark"
                 placeholder="••••••••"
               />
             </div>
@@ -103,12 +111,16 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-vintage-cream text-vintage-dark font-sans text-sm font-medium tracking-wider uppercase
-                rounded-lg hover:bg-vintage-gold hover:text-white transition-all duration-300 disabled:opacity-50
-                flex items-center justify-center gap-2"
+              className="w-full py-3 font-sans text-sm font-medium tracking-wider uppercase transition-all duration-300 disabled:opacity-50 flex items-center justify-center gap-2"
+              style={{
+                backgroundColor: '#C2642C',
+                color: '#F2EDE3',
+                borderRadius: '6px',
+              }}
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-vintage-dark/20 border-t-vintage-dark rounded-full animate-spin" />
+                <div className="w-5 h-5 rounded-full animate-spin"
+                  style={{ border: '2px solid rgba(242, 237, 227, 0.2)', borderTopColor: '#F2EDE3' }} />
               ) : (
                 <>
                   <LogIn size={16} />

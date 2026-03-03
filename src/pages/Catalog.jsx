@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
-import { Filter, X, SlidersHorizontal, ChevronDown } from 'lucide-react'
+import { X, SlidersHorizontal, ChevronDown } from 'lucide-react'
 import ProductCard from '../components/public/ProductCard'
 import { getProducts } from '../lib/api'
 import { categories, conditions, sortOptions, eras } from '../data/demoProducts'
 
 const PRICE_RANGES = [
-  { id: 'all', label: '\u0412\u0441\u0435 \u0446\u0435\u043d\u044b', min: 0, max: Infinity },
-  { id: '0-50', label: '\u0414\u043e 50\u20ac', min: 0, max: 50 },
+  { id: 'all', label: 'Все цены', min: 0, max: Infinity },
+  { id: '0-50', label: 'До 50\u20ac', min: 0, max: 50 },
   { id: '50-150', label: '50\u2013150\u20ac', min: 50, max: 150 },
   { id: '150-300', label: '150\u2013300\u20ac', min: 150, max: 300 },
   { id: '300-500', label: '300\u2013500\u20ac', min: 300, max: 500 },
-  { id: '500+', label: '\u041e\u0442 500\u20ac', min: 500, max: Infinity },
+  { id: '500+', label: 'От 500\u20ac', min: 500, max: Infinity },
 ]
 
 export default function Catalog() {
@@ -34,7 +34,6 @@ export default function Catalog() {
     setActiveCategory(paramCategory || '')
   }, [paramCategory])
 
-  // Load products
   useEffect(() => {
     async function load() {
       setLoading(true)
@@ -53,21 +52,15 @@ export default function Catalog() {
     load()
   }, [activeCategory, searchQuery])
 
-  // Apply filters + sort client-side
   useEffect(() => {
     let filtered = [...allProducts]
 
-    // Condition filter
     if (activeCondition) {
       filtered = filtered.filter(p => p.condition === activeCondition)
     }
-
-    // Era filter
     if (activeEra) {
       filtered = filtered.filter(p => p.era && p.era.toLowerCase().includes(activeEra.replace(/s$/,"").replace(/0s-/,"-")))
     }
-
-    // Price filter
     const priceRange = PRICE_RANGES.find(r => r.id === activePriceRange)
     if (priceRange && priceRange.id !== 'all') {
       filtered = filtered.filter(p => {
@@ -76,7 +69,6 @@ export default function Catalog() {
       })
     }
 
-    // Sort
     switch (sortBy) {
       case 'price_asc':
         filtered.sort((a, b) => (a.price || 0) - (b.price || 0))
@@ -111,34 +103,37 @@ export default function Catalog() {
 
   return (
     <div className="page-enter">
-      {/* Page Header */}
-      <div className="bg-vintage-dark text-vintage-cream py-16">
+      {/* Page Header — Deep Navy */}
+      <div className="py-16" style={{ backgroundColor: '#0E1A2B' }}>
         <div className="max-w-7xl mx-auto px-6">
-          <span className="font-sans text-xs tracking-[0.3em] uppercase text-vintage-cream/40">
-            {searchQuery ? '\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u044b \u043f\u043e\u0438\u0441\u043a\u0430' : '\u041a\u043e\u043b\u043b\u0435\u043a\u0446\u0438\u044f'}
+          <span className="font-sans text-xs tracking-[0.3em] uppercase"
+            style={{ color: 'rgba(184, 154, 90, 0.5)' }}>
+            {searchQuery ? 'Результаты поиска' : 'Коллекция'}
           </span>
-          <h1 className="font-display text-4xl md:text-5xl font-bold mt-3">
-            {searchQuery ? `\u00ab${searchQuery}\u00bb` : currentCategory ? currentCategory.name : '\u041a\u0430\u0442\u0430\u043b\u043e\u0433'}
+          <h1 className="font-display text-4xl md:text-5xl font-bold mt-3"
+            style={{ color: '#F2EDE3' }}>
+            {searchQuery ? `\u00ab${searchQuery}\u00bb` : currentCategory ? currentCategory.name : 'Каталог'}
           </h1>
           {!searchQuery && (
-            <p className="font-body text-vintage-cream/50 mt-4 max-w-lg">
-              {currentCategory ? `\u0412\u0441\u0435 \u0442\u043e\u0432\u0430\u0440\u044b \u0432 \u043a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u0438 \u00ab${currentCategory.name}\u00bb` : '\u0412\u0441\u0435 \u0443\u043d\u0438\u043a\u0430\u043b\u044c\u043d\u044b\u0435 \u0432\u0435\u0449\u0438 \u0432 \u043e\u0434\u043d\u043e\u043c \u043c\u0435\u0441\u0442\u0435'}
+            <p className="font-body mt-4 max-w-lg" style={{ color: 'rgba(242, 237, 227, 0.4)' }}>
+              {currentCategory ? `Все товары в категории \u00ab${currentCategory.name}\u00bb` : 'Все уникальные вещи в одном месте'}
             </p>
           )}
         </div>
+        <div className="section-gold-line mt-16" />
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-12">
-        {/* Top Bar: Categories + Sort + Filter Toggle */}
+        {/* Top Bar */}
         <div className="flex flex-wrap items-center gap-3 mb-6">
-          {/* Filter + Sort buttons (mobile) */}
           <div className="flex items-center gap-2 md:hidden">
             <button onClick={() => setShowFilters(!showFilters)}
-              className="vintage-btn-outline text-xs py-2 px-4 relative">
+              className="btn-secondary text-xs py-2 px-4 relative">
               <SlidersHorizontal size={14} className="mr-2" />
-              {'\u0424\u0438\u043b\u044c\u0442\u0440\u044b'}
+              Фильтры
               {activeFilterCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-vintage-gold text-vintage-dark text-[10px] font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 text-[10px] font-bold rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: '#B89A5A', color: '#0E1A2B' }}>
                   {activeFilterCount}
                 </span>
               )}
@@ -148,16 +143,22 @@ export default function Catalog() {
           {/* Category Pills */}
           <div className={`flex-wrap gap-2 ${showFilters ? 'flex' : 'hidden md:flex'} flex-1`}>
             <Link to="/catalog" onClick={() => setActiveCategory('')}
-              className={`px-4 py-2 font-sans text-xs tracking-wider rounded-full border transition-all ${
-                !activeCategory ? 'bg-vintage-dark text-vintage-cream border-vintage-dark' : 'border-vintage-sand text-vintage-brown/60 hover:border-vintage-brown'
-              }`}>
-              {'\u0412\u0441\u0435'}
+              className="px-4 py-2 font-sans text-xs tracking-wider rounded-full transition-all"
+              style={{
+                backgroundColor: !activeCategory ? '#0E1A2B' : 'transparent',
+                color: !activeCategory ? '#F2EDE3' : 'rgba(91, 58, 41, 0.5)',
+                border: `1px solid ${!activeCategory ? '#0E1A2B' : 'rgba(91, 58, 41, 0.2)'}`,
+              }}>
+              Все
             </Link>
             {categories.map(cat => (
               <Link key={cat.id} to={`/catalog/${cat.id}`} onClick={() => setActiveCategory(cat.id)}
-                className={`px-4 py-2 font-sans text-xs tracking-wider rounded-full border transition-all ${
-                  activeCategory === cat.id ? 'bg-vintage-dark text-vintage-cream border-vintage-dark' : 'border-vintage-sand text-vintage-brown/60 hover:border-vintage-brown'
-                }`}>
+                className="px-4 py-2 font-sans text-xs tracking-wider rounded-full transition-all"
+                style={{
+                  backgroundColor: activeCategory === cat.id ? '#0E1A2B' : 'transparent',
+                  color: activeCategory === cat.id ? '#F2EDE3' : 'rgba(91, 58, 41, 0.5)',
+                  border: `1px solid ${activeCategory === cat.id ? '#0E1A2B' : 'rgba(91, 58, 41, 0.2)'}`,
+                }}>
                 {cat.icon} {cat.name}
               </Link>
             ))}
@@ -166,20 +167,25 @@ export default function Catalog() {
           {/* Sort Dropdown */}
           <div className="relative ml-auto">
             <button onClick={() => setShowSort(!showSort)}
-              className="flex items-center gap-2 px-4 py-2 font-sans text-xs border border-vintage-sand rounded-full text-vintage-brown/60 hover:border-vintage-brown transition-all">
-              {currentSort?.name || '\u0421\u043e\u0440\u0442\u0438\u0440\u043e\u0432\u043a\u0430'}
+              className="flex items-center gap-2 px-4 py-2 font-sans text-xs rounded-full transition-all"
+              style={{ border: '1px solid rgba(91, 58, 41, 0.2)', color: 'rgba(91, 58, 41, 0.5)' }}>
+              {currentSort?.name || 'Сортировка'}
               <ChevronDown size={14} className={`transition-transform ${showSort ? 'rotate-180' : ''}`} />
             </button>
             {showSort && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowSort(false)} />
-                <div className="absolute right-0 top-full mt-2 bg-white border border-vintage-sand/50 rounded-xl shadow-lg z-20 min-w-[200px] py-2">
+                <div className="absolute right-0 top-full mt-2 shadow-vintage-lg z-20 min-w-[200px] py-2"
+                  style={{ backgroundColor: '#F2EDE3', border: '1px solid rgba(91, 58, 41, 0.15)', borderRadius: '6px' }}>
                   {sortOptions.map(opt => (
                     <button key={opt.id}
                       onClick={() => { setSortBy(opt.id); setShowSort(false) }}
-                      className={`w-full text-left px-4 py-2 font-sans text-sm transition-colors ${
-                        sortBy === opt.id ? 'bg-vintage-beige/50 text-vintage-dark font-medium' : 'text-vintage-brown/60 hover:bg-vintage-beige/30'
-                      }`}>
+                      className="w-full text-left px-4 py-2 font-sans text-sm transition-colors"
+                      style={{
+                        backgroundColor: sortBy === opt.id ? 'rgba(91, 58, 41, 0.06)' : 'transparent',
+                        color: sortBy === opt.id ? '#0E1A2B' : 'rgba(91, 58, 41, 0.5)',
+                        fontWeight: sortBy === opt.id ? '500' : '400',
+                      }}>
                       {opt.name}
                     </button>
                   ))}
@@ -189,54 +195,52 @@ export default function Catalog() {
           </div>
         </div>
 
-        {/* Extended Filters Row */}
+        {/* Extended Filters */}
         <div className={`flex-wrap gap-3 mb-6 ${showFilters ? 'flex' : 'hidden md:flex'}`}>
-          {/* Price Range */}
           <div className="flex flex-wrap gap-1.5">
             {PRICE_RANGES.map(range => (
               <button key={range.id}
                 onClick={() => setActivePriceRange(activePriceRange === range.id ? 'all' : range.id)}
-                className={`px-3 py-1.5 font-sans text-xs rounded-full border transition-all ${
-                  activePriceRange === range.id && range.id !== 'all'
-                    ? 'bg-vintage-gold/20 text-vintage-dark border-vintage-gold'
-                    : 'border-vintage-sand/30 text-vintage-brown/40 hover:border-vintage-sand'
-                }`}>
+                className="px-3 py-1.5 font-sans text-xs rounded-full transition-all"
+                style={{
+                  backgroundColor: activePriceRange === range.id && range.id !== 'all' ? 'rgba(184, 154, 90, 0.15)' : 'transparent',
+                  color: activePriceRange === range.id && range.id !== 'all' ? '#0E1A2B' : 'rgba(91, 58, 41, 0.35)',
+                  border: `1px solid ${activePriceRange === range.id && range.id !== 'all' ? 'rgba(184, 154, 90, 0.4)' : 'rgba(91, 58, 41, 0.1)'}`,
+                }}>
                 {range.label}
               </button>
             ))}
           </div>
 
-          {/* Divider */}
-          <div className="hidden md:block w-px h-8 bg-vintage-sand/30" />
+          <div className="hidden md:block w-px h-8" style={{ backgroundColor: 'rgba(91, 58, 41, 0.1)' }} />
 
-          {/* Condition Filter */}
           <div className="flex flex-wrap gap-1.5">
             {conditions.map(cond => (
               <button key={cond.id}
                 onClick={() => setActiveCondition(activeCondition === cond.id ? '' : cond.id)}
-                className={`px-3 py-1.5 font-sans text-xs rounded-full border transition-all ${
-                  activeCondition === cond.id
-                    ? 'bg-vintage-green/10 text-vintage-green border-vintage-green/40'
-                    : 'border-vintage-sand/30 text-vintage-brown/40 hover:border-vintage-sand'
-                }`}>
+                className="px-3 py-1.5 font-sans text-xs rounded-full transition-all"
+                style={{
+                  backgroundColor: activeCondition === cond.id ? 'rgba(90, 107, 60, 0.1)' : 'transparent',
+                  color: activeCondition === cond.id ? '#5A6B3C' : 'rgba(91, 58, 41, 0.35)',
+                  border: `1px solid ${activeCondition === cond.id ? 'rgba(90, 107, 60, 0.3)' : 'rgba(91, 58, 41, 0.1)'}`,
+                }}>
                 {cond.name}
               </button>
             ))}
           </div>
 
-          {/* Divider */}
-          <div className="hidden md:block w-px h-8 bg-vintage-sand/30" />
+          <div className="hidden md:block w-px h-8" style={{ backgroundColor: 'rgba(91, 58, 41, 0.1)' }} />
 
-          {/* Era Filter */}
           <div className="flex flex-wrap gap-1.5">
             {eras.map(era => (
               <button key={era.id}
                 onClick={() => setActiveEra(activeEra === era.id ? '' : era.id)}
-                className={`px-3 py-1.5 font-sans text-xs rounded-full border transition-all ${
-                  activeEra === era.id
-                    ? 'bg-vintage-rust/10 text-vintage-rust border-vintage-rust/40'
-                    : 'border-vintage-sand/30 text-vintage-brown/40 hover:border-vintage-sand'
-                }`}>
+                className="px-3 py-1.5 font-sans text-xs rounded-full transition-all"
+                style={{
+                  backgroundColor: activeEra === era.id ? 'rgba(194, 100, 44, 0.1)' : 'transparent',
+                  color: activeEra === era.id ? '#C2642C' : 'rgba(91, 58, 41, 0.35)',
+                  border: `1px solid ${activeEra === era.id ? 'rgba(194, 100, 44, 0.3)' : 'rgba(91, 58, 41, 0.1)'}`,
+                }}>
                 {era.name}
               </button>
             ))}
@@ -246,29 +250,33 @@ export default function Catalog() {
         {/* Active Filters Bar */}
         {(activeCategory || activeCondition || activeEra || activePriceRange !== 'all' || searchQuery) && (
           <div className="flex items-center gap-2 mb-6 text-sm">
-            <span className="font-sans text-vintage-brown/40">{'\u0424\u0438\u043b\u044c\u0442\u0440\u044b'}:</span>
+            <span className="font-sans" style={{ color: 'rgba(91, 58, 41, 0.35)' }}>Фильтры:</span>
             {searchQuery && (
-              <Link to="/catalog" className="flex items-center gap-1 px-3 py-1 bg-vintage-beige/50 rounded-full font-sans text-xs">
+              <Link to="/catalog" className="flex items-center gap-1 px-3 py-1 rounded-full font-sans text-xs"
+                style={{ backgroundColor: 'rgba(91, 58, 41, 0.06)' }}>
                 {searchQuery} <X size={12} />
               </Link>
             )}
             {activePriceRange !== 'all' && (
-              <button onClick={() => setActivePriceRange('all')} className="flex items-center gap-1 px-3 py-1 bg-vintage-gold/10 rounded-full font-sans text-xs text-vintage-dark">
+              <button onClick={() => setActivePriceRange('all')} className="flex items-center gap-1 px-3 py-1 rounded-full font-sans text-xs"
+                style={{ backgroundColor: 'rgba(184, 154, 90, 0.1)', color: '#0E1A2B' }}>
                 {PRICE_RANGES.find(r => r.id === activePriceRange)?.label} <X size={12} />
               </button>
             )}
             {activeCondition && (
-              <button onClick={() => setActiveCondition('')} className="flex items-center gap-1 px-3 py-1 bg-vintage-green/10 rounded-full font-sans text-xs text-vintage-green">
+              <button onClick={() => setActiveCondition('')} className="flex items-center gap-1 px-3 py-1 rounded-full font-sans text-xs"
+                style={{ backgroundColor: 'rgba(90, 107, 60, 0.1)', color: '#5A6B3C' }}>
                 {conditions.find(c => c.id === activeCondition)?.name} <X size={12} />
               </button>
             )}
             {activeFilterCount > 0 && (
-              <button onClick={clearAllFilters} className="font-sans text-xs text-vintage-brown/30 hover:text-vintage-brown ml-2">
-                {'\u0421\u0431\u0440\u043e\u0441\u0438\u0442\u044c \u0432\u0441\u0435'}
+              <button onClick={clearAllFilters} className="font-sans text-xs ml-2 transition-colors"
+                style={{ color: 'rgba(91, 58, 41, 0.3)' }}>
+                Сбросить все
               </button>
             )}
-            <span className="font-sans text-vintage-brown/40 ml-auto">
-              {products.length} {products.length === 1 ? '\u0442\u043e\u0432\u0430\u0440' : '\u0442\u043e\u0432\u0430\u0440\u043e\u0432'}
+            <span className="font-sans ml-auto" style={{ color: 'rgba(91, 58, 41, 0.35)' }}>
+              {products.length} {products.length === 1 ? 'товар' : 'товаров'}
             </span>
           </div>
         )}
@@ -278,19 +286,19 @@ export default function Catalog() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="aspect-square bg-vintage-beige/30 rounded" />
+                <div className="aspect-square" style={{ backgroundColor: 'rgba(91, 58, 41, 0.06)', borderRadius: '6px' }} />
                 <div className="p-5 space-y-3">
-                  <div className="h-5 bg-vintage-beige/30 rounded w-3/4" />
-                  <div className="h-4 bg-vintage-beige/30 rounded w-1/4" />
+                  <div className="h-5 rounded w-3/4" style={{ backgroundColor: 'rgba(91, 58, 41, 0.06)' }} />
+                  <div className="h-4 rounded w-1/4" style={{ backgroundColor: 'rgba(91, 58, 41, 0.06)' }} />
                 </div>
               </div>
             ))}
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-24">
-            <p className="font-display text-2xl text-vintage-brown/30 mb-4">{'\u041d\u0438\u0447\u0435\u0433\u043e \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e'}</p>
-            <p className="font-body text-vintage-brown/40 mb-8">{'\u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0438\u0437\u043c\u0435\u043d\u0438\u0442\u044c \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u044b'}</p>
-            <button onClick={clearAllFilters} className="vintage-btn-outline">{'\u0421\u0431\u0440\u043e\u0441\u0438\u0442\u044c \u0444\u0438\u043b\u044c\u0442\u0440\u044b'}</button>
+            <p className="font-display text-2xl mb-4" style={{ color: 'rgba(91, 58, 41, 0.25)' }}>Ничего не найдено</p>
+            <p className="font-body mb-8" style={{ color: 'rgba(91, 58, 41, 0.35)' }}>Попробуйте изменить параметры</p>
+            <button onClick={clearAllFilters} className="btn-secondary">Сбросить фильтры</button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { Menu, X, Search, Heart, GitCompareArrows } from 'lucide-react'
+import { Menu, X, Search, Heart } from 'lucide-react'
 import { useFavorites } from '../../lib/FavoritesContext'
 import { useCompare } from '../../lib/CompareContext'
 
@@ -20,19 +20,22 @@ export default function Header() {
   const { compareCount } = useCompare()
 
   return (
-    <header className="sticky top-0 z-50 bg-vintage-paper/95 backdrop-blur-md border-b border-vintage-sand/30">
+    <header className="sticky top-0 z-50" style={{ backgroundColor: '#0E1A2B' }}>
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-vintage-dark rounded flex items-center justify-center">
-              <span className="font-display text-vintage-cream text-xl font-bold">Э</span>
+            <div className="w-10 h-10 rounded-btn flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(184, 154, 90, 0.15)', border: '1px solid rgba(184, 154, 90, 0.3)' }}>
+              <span className="font-display text-xl font-bold" style={{ color: '#B89A5A' }}>Э</span>
             </div>
             <div>
-              <h1 className="font-display text-xl font-bold text-vintage-dark tracking-wide leading-none">
+              <h1 className="font-display text-xl font-bold tracking-wide leading-none"
+                style={{ color: '#F2EDE3' }}>
                 ЭПОХА
               </h1>
-              <p className="font-sans text-[10px] tracking-[0.3em] text-vintage-brown/60 uppercase">
+              <p className="font-sans text-[10px] tracking-[0.3em] uppercase"
+                style={{ color: 'rgba(184, 154, 90, 0.6)' }}>
                 Винтажный Маркетплейс
               </p>
             </div>
@@ -48,16 +51,24 @@ export default function Header() {
                 className={({ isActive }) =>
                   `relative font-sans text-sm tracking-wider uppercase transition-colors duration-200 flex items-center gap-1.5 ${
                     isActive
-                      ? 'text-vintage-dark font-medium'
-                      : 'text-vintage-brown/60 hover:text-vintage-dark'
+                      ? 'font-medium'
+                      : ''
                   }`
                 }
+                style={({ isActive }) => ({
+                  color: isActive ? '#B89A5A' : 'rgba(242, 237, 227, 0.5)',
+                })}
+                onMouseEnter={e => { if (!e.currentTarget.classList.contains('active')) e.currentTarget.style.color = '#F2EDE3' }}
+                onMouseLeave={e => {
+                  const isActive = e.currentTarget.getAttribute('aria-current') === 'page'
+                  if (!isActive) e.currentTarget.style.color = 'rgba(242, 237, 227, 0.5)'
+                }}
               >
                 {link.isFav && <Heart size={14} />}
                 {link.label}
                 {link.isFav && favoritesCount > 0 && (
-                  <span className="absolute -top-2 -right-3 min-w-[16px] h-4 px-1 flex items-center justify-center
-                    bg-red-500 text-white text-[9px] font-medium rounded-full">
+                  <span className="absolute -top-2 -right-3 min-w-[16px] h-4 px-1 flex items-center justify-center text-[9px] font-medium rounded-full"
+                    style={{ backgroundColor: '#C2642C', color: '#F2EDE3' }}>
                     {favoritesCount}
                   </span>
                 )}
@@ -69,7 +80,10 @@ export default function Header() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSearchOpen(!searchOpen)}
-              className="p-2 text-vintage-brown/60 hover:text-vintage-dark transition-colors"
+              className="p-2 transition-colors"
+              style={{ color: 'rgba(242, 237, 227, 0.5)' }}
+              onMouseEnter={e => e.currentTarget.style.color = '#F2EDE3'}
+              onMouseLeave={e => e.currentTarget.style.color = 'rgba(242, 237, 227, 0.5)'}
             >
               <Search size={18} />
             </button>
@@ -77,19 +91,21 @@ export default function Header() {
             {/* Mobile favorites icon */}
             <Link
               to="/favorites"
-              className="md:hidden relative p-2 text-vintage-brown/60 hover:text-vintage-dark transition-colors"
+              className="md:hidden relative p-2 transition-colors"
+              style={{ color: 'rgba(242, 237, 227, 0.5)' }}
             >
               <Heart size={18} />
               {favoritesCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center
-                  bg-red-500 text-white text-[9px] font-medium rounded-full">
+                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 flex items-center justify-center text-[9px] font-medium rounded-full"
+                  style={{ backgroundColor: '#C2642C', color: '#F2EDE3' }}>
                   {favoritesCount}
                 </span>
               )}
             </Link>
 
             <button
-              className="md:hidden p-2 text-vintage-brown/60"
+              className="md:hidden p-2"
+              style={{ color: 'rgba(242, 237, 227, 0.5)' }}
               onClick={() => setMobileOpen(!mobileOpen)}
             >
               {mobileOpen ? <X size={20} /> : <Menu size={20} />}
@@ -113,7 +129,7 @@ export default function Header() {
                 name="search"
                 type="text"
                 placeholder="Поиск по каталогу..."
-                className="vintage-input"
+                className="vintage-input-dark"
                 autoFocus
               />
             </form>
@@ -131,19 +147,19 @@ export default function Header() {
                   end={link.to === '/'}
                   onClick={() => setMobileOpen(false)}
                   className={({ isActive }) =>
-                    `px-4 py-3 font-sans text-sm tracking-wider uppercase rounded-lg transition-colors
-                    flex items-center gap-2 ${
-                      isActive
-                        ? 'bg-vintage-dark text-vintage-cream'
-                        : 'text-vintage-brown/70 hover:bg-vintage-beige/50'
-                    }`
+                    `px-4 py-3 font-sans text-sm tracking-wider uppercase transition-colors flex items-center gap-2`
                   }
+                  style={({ isActive }) => ({
+                    backgroundColor: isActive ? 'rgba(194, 100, 44, 0.15)' : 'transparent',
+                    color: isActive ? '#D4784A' : 'rgba(242, 237, 227, 0.5)',
+                    borderRadius: '6px',
+                  })}
                 >
                   {link.isFav && <Heart size={14} />}
                   {link.label}
                   {link.isFav && favoritesCount > 0 && (
-                    <span className="ml-auto min-w-[20px] h-5 px-1.5 flex items-center justify-center
-                      bg-red-500 text-white text-[10px] font-medium rounded-full">
+                    <span className="ml-auto min-w-[20px] h-5 px-1.5 flex items-center justify-center text-[10px] font-medium rounded-full"
+                      style={{ backgroundColor: '#C2642C', color: '#F2EDE3' }}>
                       {favoritesCount}
                     </span>
                   )}
@@ -153,6 +169,9 @@ export default function Header() {
           </nav>
         )}
       </div>
+
+      {/* Subtle gold bottom line */}
+      <div className="section-gold-line" />
     </header>
   )
 }

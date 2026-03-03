@@ -21,32 +21,39 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-vintage-dark transform transition-transform duration-300
+    <div className="min-h-screen flex" style={{ backgroundColor: '#0A1220' }}>
+      {/* Sidebar — Deep Navy */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static`}
-      >
+        style={{ backgroundColor: '#0E1A2B' }}>
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="p-6 flex items-center justify-between">
             <Link to="/admin" className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-vintage-cream/10 rounded flex items-center justify-center">
-                <span className="font-display text-vintage-cream text-sm font-bold">Э</span>
+              <div className="w-8 h-8 rounded-btn flex items-center justify-center"
+                style={{ backgroundColor: 'rgba(184, 154, 90, 0.15)', border: '1px solid rgba(184, 154, 90, 0.3)' }}>
+                <span className="font-display text-sm font-bold" style={{ color: '#B89A5A' }}>Э</span>
               </div>
               <div>
-                <p className="font-display text-sm font-bold text-vintage-cream">ЭПОХА</p>
-                <p className="font-sans text-[9px] tracking-[0.2em] text-vintage-cream/40 uppercase">Админ-панель</p>
+                <p className="font-display text-sm font-bold" style={{ color: '#F2EDE3' }}>ЭПОХА</p>
+                <p className="font-sans text-[9px] tracking-[0.2em] uppercase"
+                  style={{ color: 'rgba(184, 154, 90, 0.5)' }}>Админ-панель</p>
               </div>
             </Link>
-            <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-vintage-cream/50">
+            <button onClick={() => setSidebarOpen(false)} className="lg:hidden"
+              style={{ color: 'rgba(242, 237, 227, 0.4)' }}>
               <X size={18} />
             </button>
           </div>
 
           {/* Demo Badge */}
           {isDemoMode && (
-            <div className="mx-4 mb-4 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-              <div className="flex items-center gap-2 text-amber-400">
+            <div className="mx-4 mb-4 px-3 py-2" style={{
+              backgroundColor: 'rgba(194, 100, 44, 0.1)',
+              border: '1px solid rgba(194, 100, 44, 0.2)',
+              borderRadius: '6px',
+            }}>
+              <div className="flex items-center gap-2" style={{ color: '#D4784A' }}>
                 <AlertTriangle size={14} />
                 <span className="font-sans text-xs">Демо-режим</span>
               </div>
@@ -72,15 +79,17 @@ export default function AdminLayout() {
           </nav>
 
           {/* Bottom */}
-          <div className="p-4 space-y-2">
+          <div className="p-4 space-y-2" style={{ borderTop: '1px solid rgba(242, 237, 227, 0.06)' }}>
             <Link
               to="/"
-              className="admin-sidebar-link text-vintage-cream/40 hover:text-vintage-cream/60"
+              className="admin-sidebar-link"
+              style={{ color: 'rgba(242, 237, 227, 0.3)' }}
             >
               <ChevronLeft size={18} />
               На сайт
             </Link>
-            <button onClick={handleLogout} className="admin-sidebar-link w-full text-red-400/60 hover:text-red-400">
+            <button onClick={handleLogout} className="admin-sidebar-link w-full"
+              style={{ color: 'rgba(194, 100, 44, 0.5)' }}>
               <LogOut size={18} />
               Выйти
             </button>
@@ -90,18 +99,21 @@ export default function AdminLayout() {
 
       {/* Overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 z-40 lg:hidden" style={{ backgroundColor: 'rgba(10, 18, 32, 0.7)' }}
+          onClick={() => setSidebarOpen(false)} />
       )}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b border-gray-100 px-6 py-4">
+        <header className="sticky top-0 z-30 px-6 py-4"
+          style={{ backgroundColor: 'rgba(14, 26, 43, 0.95)', backdropFilter: 'blur(8px)', borderBottom: '1px solid rgba(242, 237, 227, 0.06)' }}>
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden text-gray-500">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden"
+              style={{ color: 'rgba(242, 237, 227, 0.5)' }}>
               <Menu size={20} />
             </button>
-            <h2 className="font-sans text-sm font-medium text-gray-800">Панель управления</h2>
+            <h2 className="font-sans text-sm font-medium" style={{ color: 'rgba(242, 237, 227, 0.7)' }}>Панель управления</h2>
           </div>
         </header>
 

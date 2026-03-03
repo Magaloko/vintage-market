@@ -8,66 +8,178 @@
   }
 
   body {
-    @apply bg-vintage-paper text-vintage-ink font-body antialiased;
+    @apply bg-vintage-paper font-body antialiased;
+    color: #1C1C1A;
     background-image: url('data:image/svg+xml,%3Csvg width="200" height="200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noise)" opacity="0.025"/%3E%3C/svg%3E');
   }
 
   ::selection {
-    @apply bg-vintage-gold/30 text-vintage-dark;
+    background: rgba(184, 154, 90, 0.3);
+    color: #0E1A2B;
   }
 }
 
 @layer components {
-  .vintage-btn {
-    @apply inline-flex items-center justify-center px-8 py-3 
-           bg-vintage-dark text-vintage-cream font-sans font-medium text-sm
-           tracking-widest uppercase
-           border border-vintage-dark
-           transition-all duration-300 ease-out
-           hover:bg-transparent hover:text-vintage-dark;
+  /* === BUTTONS === */
+
+  /* Primary: Burnt Orange */
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-8 py-3
+           font-sans font-medium text-sm tracking-widest uppercase
+           transition-all duration-300 ease-out;
+    background-color: #C2642C;
+    color: #F2EDE3;
+    border: 1px solid #C2642C;
+    border-radius: 6px;
+  }
+  .btn-primary:hover {
+    background-color: #A45322;
+    border-color: #A45322;
+    box-shadow: 0 4px 12px rgba(194, 100, 44, 0.25);
   }
 
-  .vintage-btn-outline {
-    @apply inline-flex items-center justify-center px-8 py-3 
-           bg-transparent text-vintage-dark font-sans font-medium text-sm
-           tracking-widest uppercase
-           border border-vintage-dark
-           transition-all duration-300 ease-out
-           hover:bg-vintage-dark hover:text-vintage-cream;
+  /* Secondary: Outline with warm brown */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-8 py-3
+           font-sans font-medium text-sm tracking-widest uppercase
+           transition-all duration-300 ease-out;
+    background-color: transparent;
+    color: #5B3A29;
+    border: 1px solid rgba(91, 58, 41, 0.4);
+    border-radius: 6px;
+  }
+  .btn-secondary:hover {
+    background-color: #5B3A29;
+    color: #F2EDE3;
+    border-color: #5B3A29;
   }
 
+  /* Ghost: Subtle text button */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-8 py-3
+           font-sans font-medium text-sm tracking-widest uppercase
+           transition-all duration-300 ease-out;
+    background-color: transparent;
+    color: #5B3A29;
+    border: 1px solid transparent;
+    border-radius: 6px;
+  }
+  .btn-ghost:hover {
+    background-color: rgba(91, 58, 41, 0.08);
+    color: #0E1A2B;
+  }
+
+  /* Light variant for dark backgrounds */
+  .btn-light {
+    @apply inline-flex items-center justify-center px-8 py-3
+           font-sans font-medium text-sm tracking-widest uppercase
+           transition-all duration-300 ease-out;
+    background-color: #F2EDE3;
+    color: #0E1A2B;
+    border: 1px solid #F2EDE3;
+    border-radius: 6px;
+  }
+  .btn-light:hover {
+    background-color: transparent;
+    color: #F2EDE3;
+    border-color: rgba(242, 237, 227, 0.5);
+  }
+
+  /* Olive variant for admin */
+  .btn-olive {
+    @apply inline-flex items-center justify-center px-8 py-3
+           font-sans font-medium text-sm tracking-widest uppercase
+           transition-all duration-300 ease-out;
+    background-color: #5A6B3C;
+    color: #F2EDE3;
+    border: 1px solid #5A6B3C;
+    border-radius: 6px;
+  }
+  .btn-olive:hover {
+    background-color: #485A30;
+    border-color: #485A30;
+  }
+
+  /* === FORM INPUTS === */
   .vintage-input {
-    @apply w-full px-4 py-3 bg-white/60 border border-vintage-sand
-           font-body text-vintage-ink placeholder-vintage-brown/40
-           focus:outline-none focus:border-vintage-brown focus:ring-1 focus:ring-vintage-brown/20
-           transition-all duration-200;
+    @apply w-full px-4 py-3 font-body text-sm transition-all duration-200;
+    background-color: rgba(242, 237, 227, 0.6);
+    border: 1px solid rgba(91, 58, 41, 0.2);
+    color: #1C1C1A;
+    border-radius: 6px;
+  }
+  .vintage-input::placeholder {
+    color: rgba(91, 58, 41, 0.35);
+  }
+  .vintage-input:focus {
+    outline: none;
+    border-color: #5A6B3C;
+    box-shadow: 0 0 0 3px rgba(90, 107, 60, 0.15);
   }
 
+  /* Dark input for admin/login */
+  .vintage-input-dark {
+    @apply w-full px-4 py-3 font-sans text-sm transition-all duration-200;
+    background-color: rgba(242, 237, 227, 0.05);
+    border: 1px solid rgba(242, 237, 227, 0.1);
+    color: #F2EDE3;
+    border-radius: 6px;
+  }
+  .vintage-input-dark::placeholder {
+    color: rgba(242, 237, 227, 0.2);
+  }
+  .vintage-input-dark:focus {
+    outline: none;
+    border-color: rgba(184, 154, 90, 0.5);
+    box-shadow: 0 0 0 3px rgba(184, 154, 90, 0.12);
+  }
+
+  /* === CARDS === */
   .vintage-card {
-    @apply bg-white/70 border border-vintage-sand/50 
-           transition-all duration-500 ease-out
-           hover:shadow-lg hover:shadow-vintage-brown/5
-           hover:border-vintage-sand;
+    @apply transition-all duration-500 ease-out;
+    background-color: rgba(247, 243, 236, 0.7);
+    border: 1px solid rgba(91, 58, 41, 0.12);
+    border-radius: 6px;
+  }
+  .vintage-card:hover {
+    box-shadow: 0 8px 24px rgba(14, 26, 43, 0.1);
+    border-color: rgba(91, 58, 41, 0.2);
   }
 
+  /* === DECORATIVE ELEMENTS === */
   .vintage-divider {
-    @apply w-16 h-px bg-vintage-gold mx-auto;
+    @apply w-16 h-px mx-auto;
+    background-color: #B89A5A;
   }
 
+  .section-gold-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #B89A5A, transparent);
+  }
+
+  /* === ADMIN === */
   .admin-sidebar-link {
-    @apply flex items-center gap-3 px-4 py-3 text-sm font-sans
-           text-vintage-cream/70 rounded-lg
-           transition-all duration-200
-           hover:bg-white/10 hover:text-vintage-cream;
+    @apply flex items-center gap-3 px-4 py-3 text-sm font-sans transition-all duration-200;
+    color: rgba(242, 237, 227, 0.5);
+    border-radius: 6px;
   }
-
+  .admin-sidebar-link:hover {
+    background-color: rgba(242, 237, 227, 0.08);
+    color: #F2EDE3;
+  }
   .admin-sidebar-link.active {
-    @apply bg-white/15 text-vintage-cream;
+    background-color: rgba(194, 100, 44, 0.15);
+    color: #D4784A;
   }
 
   .stat-card {
-    @apply bg-white rounded-xl p-6 border border-gray-100
-           shadow-sm hover:shadow-md transition-shadow duration-300;
+    @apply p-6 transition-shadow duration-300;
+    background-color: #162438;
+    border: 1px solid rgba(242, 237, 227, 0.06);
+    border-radius: 6px;
+  }
+  .stat-card:hover {
+    box-shadow: 0 4px 16px rgba(14, 26, 43, 0.3);
   }
 }
 
@@ -75,17 +187,15 @@
 ::-webkit-scrollbar {
   width: 6px;
 }
-
 ::-webkit-scrollbar-track {
-  @apply bg-vintage-cream;
+  background-color: #F2EDE3;
 }
-
 ::-webkit-scrollbar-thumb {
-  @apply bg-vintage-sand rounded-full;
+  background-color: rgba(91, 58, 41, 0.2);
+  border-radius: 999px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-vintage-brown/50;
+  background-color: rgba(91, 58, 41, 0.4);
 }
 
 /* Page transitions */
@@ -96,4 +206,18 @@
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Antique watermark overlay */
+.watermark-overlay {
+  position: relative;
+}
+.watermark-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"%3E%3Cpath d="M100 20 C100 20 85 50 85 80 C85 100 100 110 100 110 C100 110 115 100 115 80 C115 50 100 20 100 20Z" fill="none" stroke="%235B3A29" stroke-width="0.5" opacity="0.06"/%3E%3Ccircle cx="100" cy="140" r="15" fill="none" stroke="%235B3A29" stroke-width="0.5" opacity="0.06"/%3E%3Cpath d="M90 155 L100 180 L110 155" fill="none" stroke="%235B3A29" stroke-width="0.5" opacity="0.06"/%3E%3C/svg%3E');
+  background-size: 200px 200px;
+  pointer-events: none;
+  z-index: 0;
 }

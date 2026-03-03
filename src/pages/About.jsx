@@ -1,19 +1,23 @@
 export default function About() {
   return (
     <div className="page-enter">
-      <div className="bg-vintage-dark text-vintage-cream py-20">
+      {/* Hero header — Deep Navy */}
+      <div className="py-20" style={{ backgroundColor: '#0E1A2B' }}>
         <div className="max-w-7xl mx-auto px-6">
-          <span className="font-sans text-xs tracking-[0.3em] uppercase text-vintage-cream/40">О нас</span>
-          <h1 className="font-display text-4xl md:text-6xl font-bold mt-3 italic">
+          <span className="font-sans text-xs tracking-[0.3em] uppercase"
+            style={{ color: 'rgba(184, 154, 90, 0.5)' }}>О нас</span>
+          <h1 className="font-display text-4xl md:text-6xl font-bold mt-3 italic"
+            style={{ color: '#F2EDE3' }}>
             История, которую<br />можно потрогать
           </h1>
         </div>
+        <div className="section-gold-line mt-16" />
       </div>
 
       <div className="max-w-3xl mx-auto px-6 py-24">
-        <div className="space-y-8 font-body text-lg text-vintage-ink/70 leading-relaxed">
+        <div className="space-y-8 font-body text-lg leading-relaxed" style={{ color: 'rgba(28, 28, 26, 0.6)' }}>
           <p>
-            <span className="font-display text-4xl text-vintage-dark float-left mr-3 mt-1 leading-none">Э</span>ПОХА — это не просто магазин.
+            <span className="font-display text-4xl float-left mr-3 mt-1 leading-none" style={{ color: '#0E1A2B' }}>Э</span>ПОХА — это не просто магазин.
             Это пространство, где каждая вещь рассказывает свою историю. Мы верим, что винтаж — это не про старое.
             Это про вечное.
           </p>
@@ -26,27 +30,28 @@ export default function About() {
 
           <div className="vintage-divider my-12" />
 
-          <h2 className="font-display text-2xl font-bold text-vintage-dark">Наши ценности</h2>
+          <h2 className="font-display text-2xl font-bold" style={{ color: '#0E1A2B' }}>Наши ценности</h2>
 
           <p>
-            <strong className="text-vintage-dark">Подлинность.</strong> Каждый предмет проходит экспертную оценку.
+            <strong style={{ color: '#0E1A2B' }}>Подлинность.</strong> Каждый предмет проходит экспертную оценку.
             Мы гарантируем происхождение и возраст всех товаров в нашей коллекции.
           </p>
 
           <p>
-            <strong className="text-vintage-dark">Устойчивость.</strong> Давая вещам вторую жизнь,
+            <strong style={{ color: '#0E1A2B' }}>Устойчивость.</strong> Давая вещам вторую жизнь,
             мы поддерживаем осознанное потребление и заботимся об окружающей среде.
           </p>
 
           <p>
-            <strong className="text-vintage-dark">Эмоция.</strong> Винтажная вещь — это не просто объект.
+            <strong style={{ color: '#0E1A2B' }}>Эмоция.</strong> Винтажная вещь — это не просто объект.
             Это чувство, настроение, связь с эпохой. Мы хотим, чтобы каждая покупка приносила вам радость.
           </p>
 
           <div className="vintage-divider my-12" />
 
-          <blockquote className="border-l-2 border-vintage-gold pl-6 italic font-display text-2xl text-vintage-dark/80">
-            «Настоящая красота не стареет — она приобретает глубину»
+          <blockquote className="pl-6 italic font-display text-2xl"
+            style={{ borderLeft: '2px solid #B89A5A', color: 'rgba(14, 26, 43, 0.7)' }}>
+            &laquo;Настоящая красота не стареет — она приобретает глубину&raquo;
           </blockquote>
         </div>
       </div>

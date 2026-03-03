@@ -50,7 +50,6 @@ export default function AdminProductForm() {
         image_url: data.image_url || '',
         status: data.status || 'active',
       })
-      // Load existing gallery images
       if (data.images && data.images.length > 0) {
         setImages(data.images.map(img => ({
           url: img.url,
@@ -96,12 +95,19 @@ export default function AdminProductForm() {
     navigate('/admin/products')
   }
 
+  const inputStyle = {
+    backgroundColor: 'rgba(242, 237, 227, 0.05)',
+    border: '1px solid rgba(242, 237, 227, 0.08)',
+    borderRadius: '6px',
+    color: '#F2EDE3',
+  }
+
   if (loadingProduct) {
     return (
       <div className="max-w-3xl mx-auto animate-pulse space-y-6">
-        <div className="h-8 bg-gray-100 rounded w-1/3" />
+        <div className="h-8 rounded w-1/3" style={{ backgroundColor: 'rgba(242, 237, 227, 0.05)' }} />
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-12 bg-gray-100 rounded" />
+          <div key={i} className="h-12 rounded" style={{ backgroundColor: 'rgba(242, 237, 227, 0.05)' }} />
         ))}
       </div>
     )
@@ -110,14 +116,15 @@ export default function AdminProductForm() {
   return (
     <div className="max-w-3xl mx-auto animate-fade-in">
       <div className="flex items-center gap-4 mb-8">
-        <button onClick={() => navigate(-1)} className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+        <button onClick={() => navigate(-1)} className="p-2 transition-colors"
+          style={{ color: 'rgba(242, 237, 227, 0.3)', borderRadius: '6px' }}>
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 className="font-sans text-xl font-semibold text-gray-900">
+          <h1 className="font-sans text-xl font-semibold" style={{ color: '#F2EDE3' }}>
             {isEditing ? 'Редактировать товар' : 'Новый товар'}
           </h1>
-          <p className="font-sans text-sm text-gray-500 mt-0.5">
+          <p className="font-sans text-sm mt-0.5" style={{ color: 'rgba(242, 237, 227, 0.35)' }}>
             {isEditing ? 'Измените данные товара' : 'Заполните информацию о новом товаре'}
           </p>
         </div>
@@ -125,14 +132,14 @@ export default function AdminProductForm() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Image Gallery Upload */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <div className="p-6" style={{ backgroundColor: '#162438', border: '1px solid rgba(242, 237, 227, 0.06)', borderRadius: '6px' }}>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-sans text-sm font-medium text-gray-900">
+            <h3 className="font-sans text-sm font-medium" style={{ color: 'rgba(242, 237, 227, 0.7)' }}>
               Изображения
             </h3>
-            <span className="font-sans text-xs text-gray-400">
-              {images.length} {images.length === 1 ? 'фото' : images.length < 5 ? 'фото' : 'фото'}
-              {images.length > 0 && ' • первое = главное'}
+            <span className="font-sans text-xs" style={{ color: 'rgba(242, 237, 227, 0.3)' }}>
+              {images.length} фото
+              {images.length > 0 && ' \u2022 первое = главное'}
             </span>
           </div>
           <ImageUploader
@@ -143,137 +150,89 @@ export default function AdminProductForm() {
         </div>
 
         {/* Basic Info */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
-          <h3 className="font-sans text-sm font-medium text-gray-900">Основная информация</h3>
+        <div className="p-6 space-y-5" style={{ backgroundColor: '#162438', border: '1px solid rgba(242, 237, 227, 0.06)', borderRadius: '6px' }}>
+          <h3 className="font-sans text-sm font-medium" style={{ color: 'rgba(242, 237, 227, 0.7)' }}>Основная информация</h3>
 
           <div>
-            <label className="block font-sans text-xs text-gray-400 mb-2">Название товара *</label>
+            <label className="block font-sans text-xs mb-2" style={{ color: 'rgba(242, 237, 227, 0.3)' }}>Название товара *</label>
             <input
-              type="text"
-              name="title"
-              value={form.title}
-              onChange={handleChange}
-              required
+              type="text" name="title" value={form.title} onChange={handleChange} required
               placeholder="Например: Кожаный портфель 1960-х"
-              className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg font-sans text-sm
-                focus:outline-none focus:ring-2 focus:ring-vintage-brown/20 focus:border-vintage-brown"
+              className="w-full px-4 py-2.5 font-sans text-sm focus:outline-none"
+              style={inputStyle}
             />
           </div>
 
           <div>
-            <label className="block font-sans text-xs text-gray-400 mb-2">Описание *</label>
+            <label className="block font-sans text-xs mb-2" style={{ color: 'rgba(242, 237, 227, 0.3)' }}>Описание *</label>
             <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              required
-              rows={4}
+              name="description" value={form.description} onChange={handleChange} required rows={4}
               placeholder="Подробное описание товара..."
-              className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg font-sans text-sm resize-none
-                focus:outline-none focus:ring-2 focus:ring-vintage-brown/20 focus:border-vintage-brown"
+              className="w-full px-4 py-2.5 font-sans text-sm resize-none focus:outline-none"
+              style={inputStyle}
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block font-sans text-xs text-gray-400 mb-2">Цена (€) *</label>
+              <label className="block font-sans text-xs mb-2" style={{ color: 'rgba(242, 237, 227, 0.3)' }}>Цена (&euro;) *</label>
               <input
-                type="number"
-                name="price"
-                value={form.price}
-                onChange={handleChange}
-                required
-                min="0"
-                step="1"
+                type="number" name="price" value={form.price} onChange={handleChange} required min="0" step="1"
                 placeholder="0"
-                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg font-sans text-sm
-                  focus:outline-none focus:ring-2 focus:ring-vintage-brown/20 focus:border-vintage-brown"
+                className="w-full px-4 py-2.5 font-sans text-sm focus:outline-none"
+                style={inputStyle}
               />
             </div>
             <div>
-              <label className="block font-sans text-xs text-gray-400 mb-2">Бренд</label>
+              <label className="block font-sans text-xs mb-2" style={{ color: 'rgba(242, 237, 227, 0.3)' }}>Бренд</label>
               <input
-                type="text"
-                name="brand"
-                value={form.brand}
-                onChange={handleChange}
+                type="text" name="brand" value={form.brand} onChange={handleChange}
                 placeholder="Если известен"
-                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg font-sans text-sm
-                  focus:outline-none focus:ring-2 focus:ring-vintage-brown/20 focus:border-vintage-brown"
+                className="w-full px-4 py-2.5 font-sans text-sm focus:outline-none"
+                style={inputStyle}
               />
             </div>
           </div>
         </div>
 
         {/* Classification */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-5">
-          <h3 className="font-sans text-sm font-medium text-gray-900">Классификация</h3>
+        <div className="p-6 space-y-5" style={{ backgroundColor: '#162438', border: '1px solid rgba(242, 237, 227, 0.06)', borderRadius: '6px' }}>
+          <h3 className="font-sans text-sm font-medium" style={{ color: 'rgba(242, 237, 227, 0.7)' }}>Классификация</h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block font-sans text-xs text-gray-400 mb-2">Категория</label>
-              <select
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg font-sans text-sm
-                  focus:outline-none focus:ring-2 focus:ring-vintage-brown/20 focus:border-vintage-brown"
-              >
-                {categories.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
+              <label className="block font-sans text-xs mb-2" style={{ color: 'rgba(242, 237, 227, 0.3)' }}>Категория</label>
+              <select name="category" value={form.category} onChange={handleChange}
+                className="w-full px-4 py-2.5 font-sans text-sm focus:outline-none" style={inputStyle}>
+                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="block font-sans text-xs text-gray-400 mb-2">Состояние</label>
-              <select
-                name="condition"
-                value={form.condition}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg font-sans text-sm
-                  focus:outline-none focus:ring-2 focus:ring-vintage-brown/20 focus:border-vintage-brown"
-              >
-                {conditions.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
+              <label className="block font-sans text-xs mb-2" style={{ color: 'rgba(242, 237, 227, 0.3)' }}>Состояние</label>
+              <select name="condition" value={form.condition} onChange={handleChange}
+                className="w-full px-4 py-2.5 font-sans text-sm focus:outline-none" style={inputStyle}>
+                {conditions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block font-sans text-xs text-gray-400 mb-2">Размер</label>
-              <input
-                type="text"
-                name="size"
-                value={form.size}
-                onChange={handleChange}
+              <label className="block font-sans text-xs mb-2" style={{ color: 'rgba(242, 237, 227, 0.3)' }}>Размер</label>
+              <input type="text" name="size" value={form.size} onChange={handleChange}
                 placeholder="S / M / L / 42 / ..."
-                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg font-sans text-sm
-                  focus:outline-none focus:ring-2 focus:ring-vintage-brown/20 focus:border-vintage-brown"
-              />
+                className="w-full px-4 py-2.5 font-sans text-sm focus:outline-none" style={inputStyle} />
             </div>
             <div>
-              <label className="block font-sans text-xs text-gray-400 mb-2">Эпоха / Год</label>
-              <input
-                type="text"
-                name="era"
-                value={form.era}
-                onChange={handleChange}
+              <label className="block font-sans text-xs mb-2" style={{ color: 'rgba(242, 237, 227, 0.3)' }}>Эпоха / Год</label>
+              <input type="text" name="era" value={form.era} onChange={handleChange}
                 placeholder="1970-е"
-                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg font-sans text-sm
-                  focus:outline-none focus:ring-2 focus:ring-vintage-brown/20 focus:border-vintage-brown"
-              />
+                className="w-full px-4 py-2.5 font-sans text-sm focus:outline-none" style={inputStyle} />
             </div>
             <div>
-              <label className="block font-sans text-xs text-gray-400 mb-2">Статус</label>
-              <select
-                name="status"
-                value={form.status}
-                onChange={handleChange}
-                className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg font-sans text-sm
-                  focus:outline-none focus:ring-2 focus:ring-vintage-brown/20 focus:border-vintage-brown"
-              >
+              <label className="block font-sans text-xs mb-2" style={{ color: 'rgba(242, 237, 227, 0.3)' }}>Статус</label>
+              <select name="status" value={form.status} onChange={handleChange}
+                className="w-full px-4 py-2.5 font-sans text-sm focus:outline-none" style={inputStyle}>
                 <option value="active">В наличии</option>
                 <option value="sold">Продано</option>
               </select>
@@ -286,18 +245,20 @@ export default function AdminProductForm() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="px-6 py-2.5 font-sans text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            className="px-6 py-2.5 font-sans text-sm transition-colors"
+            style={{ color: 'rgba(242, 237, 227, 0.4)' }}
           >
             Отмена
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-vintage-dark text-white font-sans text-sm rounded-lg
-              hover:bg-vintage-brown transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-6 py-2.5 font-sans text-sm transition-colors disabled:opacity-50"
+            style={{ backgroundColor: '#C2642C', color: '#F2EDE3', borderRadius: '6px' }}
           >
             {loading ? (
-              <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+              <div className="w-4 h-4 rounded-full animate-spin"
+                style={{ border: '2px solid rgba(242, 237, 227, 0.2)', borderTopColor: '#F2EDE3' }} />
             ) : (
               <Save size={16} />
             )}
