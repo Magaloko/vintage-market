@@ -14,7 +14,6 @@ const About = lazy(() => import('./pages/About'))
 const Contact = lazy(() => import('./pages/Contact'))
 const Favorites = lazy(() => import('./pages/Favorites'))
 const Compare = lazy(() => import('./pages/Compare'))
-const AuthCallback = lazy(() => import('./pages/AuthCallback'))
 
 // Admin pages (lazy — only loaded for admins)
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
@@ -77,9 +76,6 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
           </Route>
-
-          {/* Auth Callback (OAuth redirect) */}
-          <Route path="/auth/callback" element={<AuthCallback />} />
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />

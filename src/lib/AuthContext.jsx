@@ -10,7 +10,7 @@ const DEMO_ADMIN = { email: 'admin@vintage.demo', id: 'demo-admin-001' }
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [isDemoMode, setIsDemoMode] = useState(!isSupabaseConfigured)
+  const [isDemoMode] = useState(!isSupabaseConfigured)
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -77,39 +77,6 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Email/Password sign up
-  const signUp = async (email, password) => {
-    if (!isSupabaseConfigured) {
-      return { data: null, error: { message: 'Регистрация недоступна в демо-режиме' } }
-    }
-
-    try {
-      const { data, error } = await supabase.auth.signUp({ email, password })
-      return { data, error }
-    } catch (e) {
-      return { data: null, error: { message: e.message || 'Ошибка подключения' } }
-    }
-  }
-
-  // Google OAuth
-  const signInWithGoogle = async () => {
-    if (!isSupabaseConfigured) {
-      return { data: null, error: { message: 'Google вход недоступен в демо-режиме' } }
-    }
-
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-      return { data, error }
-    } catch (e) {
-      return { data: null, error: { message: e.message || 'Ошибка подключения' } }
-    }
-  }
-
   const signOut = async () => {
     if (!isSupabaseConfigured) {
       sessionStorage.removeItem('vintage_demo_session')
@@ -123,7 +90,7 @@ export function AuthProvider({ children }) {
   const user = session?.user || null
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signInWithGoogle, signOut, isDemoMode }}>
+    <AuthContext.Provider value={{ session, user, loading, signIn, signOut, isDemoMode }}>
       {children}
     </AuthContext.Provider>
   )
