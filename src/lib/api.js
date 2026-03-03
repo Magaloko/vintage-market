@@ -1,0 +1,395 @@
+import { supabase, isSupabaseConfigured } from './supabase'
+import { demoProducts } from '../data/demoProducts'
+
+// In-memory store for demo mode
+let localProducts = [...demoProducts]
+let nextId = 100
+
+function generateId() {
+  return String(++nextId)
+}
+
+// ---- Products API ----
+
+export async function getProducts({ category, condition, status, search, limit, offset = 0 } = {}) {
+  if (!isSupabaseConfigured) {
+    let filtered = [...localProducts]
+    if (category) filtered = filtered.filter(p => p.category === category)
+    if (condition) filtered = filtered.filter(p => p.condition === condition)
+    if (status) filtered = filtered.filter(p => p.status === status)
+    if (search) {
+      const q = search.toLowerCase()
+      filtered = filtered.filter(p =>
+        p.title.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.brand?.toLowerCase().includes(q)
+      )
+    }
+    const total = filtered.length
+    if (limit) filtered = filtered.slice(offset, offset + limit)
+    return { data: filtered, count: total, error: null }
+  }
+
+  try {
+    let query = supabase.from('products').select('*', { count: 'exact' })
+    if (category) query = query.eq('category', category)
+    if (condition) query = query.eq('condition', condition)
+    if (status) query = query.eq('status', status)
+    if (search) query = query.or('title.ilike.%' + search + '%,description.ilike.%' + search + '%,brand.ilike.%' + search + '%')
+    if (limit) query = query.range(offset, offset + limit - 1)
+    query = query.order('created_at', { ascending: false })
+
+    const { data, count, error } = await query
+    if (error) {
+      console.warn('getProducts error:', error.message)
+      return { data: [], count: 0, error }
+    }
+    return { data: data || [], count: count || 0, error: null }
+  } catch (e) {
+    console.error('getProducts exception:', e)
+    return { data: [], count: 0, error: { message: e.message } }
+  }
+}
+
+export async function getProduct(id) {
+  if (!isSupabaseConfigured) {
+    const product = localProducts.find(p => p.id === id)
+    if (product) product.views = (product.views || 0) + 1
+    return { data: product || null, error: product ? null : { message: 'Not found' } }
+  }
+
+  try {
+    // Try incrementing view count (safe to fail)
+    try { await supabase.rpc('increment_views', { product_id: id }) } catch (e) { /* ok */ }
+
+    const { data, error } = await supabase.from('products').select('*').eq('id', id).single()
+    if (error) return { data: null, error }
+
+    if (data) {
+      // Try loading gallery images (safe to fail if table missing)
+      try {
+        const { data: images, error: imgErr } = await supabase
+          .from('product_images')
+          .select('*')
+          .eq('product_id', id)
+          .order('position', { ascending: true })
+
+        data.images = (!imgErr && images) ? images : []
+      } catch (e) {
+        console.warn('product_images load error:', e)
+        data.images = []
+      }
+
+      // Fallback: if no gallery images but has image_url
+      if (!data.images.length && data.image_url) {
+        data.images = [{ url: data.image_url, alt_text: data.title }]
+      }
+    }
+
+    return { data, error: null }
+  } catch (e) {
+    console.error('getProduct exception:', e)
+    return { data: null, error: { message: e.message } }
+  }
+}
+
+export async function createProduct(product) {
+  if (!isSupabaseConfigured) {
+    const newProduct = {
+      ...product,
+      id: generateId(),
+      views: 0,
+      created_at: new Date().toISOString(),
+    }
+    localProducts.unshift(newProduct)
+    return { data: newProduct, error: null }
+  }
+
+  try {
+    const { images, ...productData } = product
+    const { data, error } = await supabase.from('products').insert([productData]).select().single()
+    if (error) return { data: null, error }
+    if (images && images.length > 0) {
+      try { await saveProductImages(data.id, images) } catch (e) { console.warn('saveImages error:', e) }
+    }
+    return { data, error: null }
+  } catch (e) {
+    console.error('createProduct exception:', e)
+    return { data: null, error: { message: e.message } }
+  }
+}
+
+export async function updateProduct(id, updates) {
+  if (!isSupabaseConfigured) {
+    const idx = localProducts.findIndex(p => p.id === id)
+    if (idx === -1) return { data: null, error: { message: 'Not found' } }
+    localProducts[idx] = { ...localProducts[idx], ...updates }
+    return { data: localProducts[idx], error: null }
+  }
+
+  try {
+    const { images, ...productUpdates } = updates
+    const { data, error } = await supabase.from('products').update(productUpdates).eq('id', id).select().single()
+    if (error) return { data: null, error }
+    if (images !== undefined) {
+      try { await saveProductImages(id, images) } catch (e) { console.warn('saveImages error:', e) }
+    }
+    return { data, error: null }
+  } catch (e) {
+    console.error('updateProduct exception:', e)
+    return { data: null, error: { message: e.message } }
+  }
+}
+
+export async function deleteProduct(id) {
+  if (!isSupabaseConfigured) {
+    localProducts = localProducts.filter(p => p.id !== id)
+    return { error: null }
+  }
+
+  try {
+    const { error } = await supabase.from('products').delete().eq('id', id)
+    return { error }
+  } catch (e) {
+    console.error('deleteProduct exception:', e)
+    return { error: { message: e.message } }
+  }
+}
+
+
+// ---- Product Images API ----
+
+export async function saveProductImages(productId, images) {
+  if (!isSupabaseConfigured) return { error: null }
+
+  try {
+    await supabase.from('product_images').delete().eq('product_id', productId)
+
+    if (images.length > 0) {
+      const rows = images.map((img, idx) => ({
+        product_id: productId,
+        url: img.url,
+        storage_path: img.path || null,
+        position: idx,
+        alt_text: img.alt_text || null,
+      }))
+      const { error } = await supabase.from('product_images').insert(rows)
+      return { error }
+    }
+    return { error: null }
+  } catch (e) {
+    console.warn('saveProductImages exception:', e)
+    return { error: { message: e.message } }
+  }
+}
+
+export async function getProductImages(productId) {
+  if (!isSupabaseConfigured) {
+    const product = localProducts.find(p => p.id === productId)
+    return { data: product?.images || [], error: null }
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('product_images')
+      .select('*')
+      .eq('product_id', productId)
+      .order('position', { ascending: true })
+
+    return { data: data || [], error }
+  } catch (e) {
+    console.warn('getProductImages exception:', e)
+    return { data: [], error: { message: e.message } }
+  }
+}
+
+
+// ---- Favorites API ----
+
+export async function getFavorites(userId) {
+  if (!isSupabaseConfigured) return { data: [], error: null }
+
+  try {
+    const { data, error } = await supabase
+      .from('favorites')
+      .select('product_id, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    return { data: data || [], error }
+  } catch (e) {
+    console.warn('getFavorites exception:', e)
+    return { data: [], error: { message: e.message } }
+  }
+}
+
+export async function addFavorite(userId, productId) {
+  if (!isSupabaseConfigured) return { error: null }
+  try {
+    const { error } = await supabase.from('favorites').insert({ user_id: userId, product_id: productId })
+    return { error }
+  } catch (e) {
+    return { error: { message: e.message } }
+  }
+}
+
+export async function removeFavorite(userId, productId) {
+  if (!isSupabaseConfigured) return { error: null }
+  try {
+    const { error } = await supabase.from('favorites').delete().eq('user_id', userId).eq('product_id', productId)
+    return { error }
+  } catch (e) {
+    return { error: { message: e.message } }
+  }
+}
+
+
+// ---- Statistics API ----
+
+export async function getCategoryAvgPrice(categoryId) {
+  if (!isSupabaseConfigured) {
+    const catProducts = localProducts.filter(p => p.category === categoryId && p.price)
+    if (catProducts.length === 0) return 0
+    return Math.round(catProducts.reduce((sum, p) => sum + p.price, 0) / catProducts.length)
+  }
+  try {
+    const { data, error } = await supabase
+      .from('products').select('price').eq('category', categoryId).not('price', 'is', null)
+    if (error || !data || data.length === 0) return 0
+    return Math.round(data.reduce((sum, p) => sum + p.price, 0) / data.length)
+  } catch (e) { return 0 }
+}
+
+export async function getStats() {
+  if (!isSupabaseConfigured) {
+    const total = localProducts.length
+    const active = localProducts.filter(p => p.status === 'active').length
+    const sold = localProducts.filter(p => p.status === 'sold').length
+    const prices = localProducts.map(p => p.price).filter(Boolean)
+    const avgPrice = prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0
+    const totalViews = localProducts.reduce((sum, p) => sum + (p.views || 0), 0)
+
+    const cats = {}
+    localProducts.forEach(p => { cats[p.category] = (cats[p.category] || 0) + 1 })
+    const topCategory = Object.entries(cats).sort((a, b) => b[1] - a[1])[0]
+
+    const priceRanges = [
+      { range: '0-50', count: prices.filter(p => p <= 50).length },
+      { range: '50-100', count: prices.filter(p => p > 50 && p <= 100).length },
+      { range: '100-200', count: prices.filter(p => p > 100 && p <= 200).length },
+      { range: '200-500', count: prices.filter(p => p > 200 && p <= 500).length },
+      { range: '500+', count: prices.filter(p => p > 500).length },
+    ]
+
+    const monthlyData = [
+      { month: 'Jan', products: 3, views: 120 },
+      { month: 'Feb', products: 5, views: 180 },
+      { month: 'Mar', products: 4, views: 250 },
+      { month: 'Apr', products: 7, views: 310 },
+      { month: 'Mai', products: 6, views: 280 },
+      { month: 'Jun', products: 8, views: 420 },
+    ]
+
+    // Revenue
+    const totalRevenue = localProducts.filter(p => p.status === 'sold').reduce((s, p) => s + (p.price || 0), 0)
+    const revByCat = {}
+    localProducts.filter(p => p.status === 'sold').forEach(p => {
+      revByCat[p.category] = (revByCat[p.category] || 0) + (p.price || 0)
+    })
+    const revenueByCategory = Object.entries(revByCat).map(([k, revenue]) => ({ name: k, revenue }))
+
+    // Top products
+    const topByViews = [...localProducts].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5)
+    const topByFavorites = [...localProducts].map((p, i) => ({
+      ...p, favCount: [12, 9, 8, 7, 5, 4, 3, 2, 1, 1][i] || 1
+    })).sort((a, b) => b.favCount - a.favCount).slice(0, 5)
+    const totalFavorites = topByFavorites.reduce((s, p) => s + p.favCount, 0)
+
+    return {
+      data: {
+        total, active, sold, avgPrice, totalViews,
+        topCategory: topCategory ? topCategory[0] : '-',
+        categories: cats, priceRanges, monthlyData,
+        totalRevenue, revenueByCategory, topByViews, topByFavorites, totalFavorites,
+      },
+      error: null,
+    }
+  }
+
+  try {
+    const { data: products, error } = await supabase.from('products').select('*')
+    if (error) return { data: null, error }
+
+    const total = products.length
+    const active = products.filter(p => p.status === 'active').length
+    const sold = products.filter(p => p.status === 'sold').length
+    const prices = products.map(p => p.price).filter(Boolean)
+    const avgPrice = prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0
+    const totalViews = products.reduce((sum, p) => sum + (p.views || 0), 0)
+
+    const cats = {}
+    products.forEach(p => { cats[p.category] = (cats[p.category] || 0) + 1 })
+    const topCategory = Object.entries(cats).sort((a, b) => b[1] - a[1])[0]
+
+    // Price ranges
+    const priceRanges = [
+      { range: '0-50', count: prices.filter(p => p <= 50).length },
+      { range: '50-100', count: prices.filter(p => p > 50 && p <= 100).length },
+      { range: '100-200', count: prices.filter(p => p > 100 && p <= 200).length },
+      { range: '200-500', count: prices.filter(p => p > 200 && p <= 500).length },
+      { range: '500+', count: prices.filter(p => p > 500).length },
+    ]
+
+    // Monthly data from created_at
+    const mNames = ['Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez']
+    const mMap = {}
+    products.forEach(p => {
+      if (!p.created_at) return
+      const d = new Date(p.created_at)
+      const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`
+      if (!mMap[key]) mMap[key] = { products: 0, views: 0, month: mNames[d.getMonth()] }
+      mMap[key].products++
+      mMap[key].views += (p.views || 0)
+    })
+    const monthlyData = Object.entries(mMap).sort(([a],[b]) => a.localeCompare(b)).slice(-6).map(([,v]) => v)
+
+    // Revenue
+    const totalRevenue = products.filter(p => p.status === 'sold').reduce((s, p) => s + (p.price || 0), 0)
+    const revByCat = {}
+    products.filter(p => p.status === 'sold').forEach(p => {
+      revByCat[p.category] = (revByCat[p.category] || 0) + (p.price || 0)
+    })
+    const revenueByCategory = Object.entries(revByCat).map(([k, revenue]) => ({ name: k, revenue }))
+
+    // Top by views
+    const topByViews = [...products].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5)
+
+    // Top by favorites (safe)
+    let topByFavorites = []
+    let totalFavorites = 0
+    try {
+      const { data: favData } = await supabase.from('favorites').select('product_id')
+      if (favData && favData.length > 0) {
+        const fc = {}
+        favData.forEach(f => { fc[f.product_id] = (fc[f.product_id] || 0) + 1 })
+        totalFavorites = favData.length
+        topByFavorites = Object.entries(fc).sort((a,b) => b[1]-a[1]).slice(0,5)
+          .map(([pid, count]) => { const p = products.find(x => x.id === pid); return p ? {...p, favCount: count} : null })
+          .filter(Boolean)
+      }
+    } catch (e) { /* favorites table may not exist yet */ }
+
+    return {
+      data: {
+        total, active, sold, avgPrice, totalViews,
+        topCategory: topCategory ? topCategory[0] : '-',
+        categories: cats, priceRanges, monthlyData,
+        totalRevenue, revenueByCategory, topByViews, topByFavorites, totalFavorites,
+      },
+      error: null,
+    }
+  } catch (e) {
+    console.error('getStats exception:', e)
+    return { data: null, error: { message: e.message } }
+  }
+}

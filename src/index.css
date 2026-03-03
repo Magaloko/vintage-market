@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-vintage-paper text-vintage-ink font-body antialiased;
+    background-image: url('data:image/svg+xml,%3Csvg width="200" height="200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noise"%3E%3CfeTurbulence baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noise)" opacity="0.025"/%3E%3C/svg%3E');
+  }
+
+  ::selection {
+    @apply bg-vintage-gold/30 text-vintage-dark;
+  }
+}
+
+@layer components {
+  .vintage-btn {
+    @apply inline-flex items-center justify-center px-8 py-3 
+           bg-vintage-dark text-vintage-cream font-sans font-medium text-sm
+           tracking-widest uppercase
+           border border-vintage-dark
+           transition-all duration-300 ease-out
+           hover:bg-transparent hover:text-vintage-dark;
+  }
+
+  .vintage-btn-outline {
+    @apply inline-flex items-center justify-center px-8 py-3 
+           bg-transparent text-vintage-dark font-sans font-medium text-sm
+           tracking-widest uppercase
+           border border-vintage-dark
+           transition-all duration-300 ease-out
+           hover:bg-vintage-dark hover:text-vintage-cream;
+  }
+
+  .vintage-input {
+    @apply w-full px-4 py-3 bg-white/60 border border-vintage-sand
+           font-body text-vintage-ink placeholder-vintage-brown/40
+           focus:outline-none focus:border-vintage-brown focus:ring-1 focus:ring-vintage-brown/20
+           transition-all duration-200;
+  }
+
+  .vintage-card {
+    @apply bg-white/70 border border-vintage-sand/50 
+           transition-all duration-500 ease-out
+           hover:shadow-lg hover:shadow-vintage-brown/5
+           hover:border-vintage-sand;
+  }
+
+  .vintage-divider {
+    @apply w-16 h-px bg-vintage-gold mx-auto;
+  }
+
+  .admin-sidebar-link {
+    @apply flex items-center gap-3 px-4 py-3 text-sm font-sans
+           text-vintage-cream/70 rounded-lg
+           transition-all duration-200
+           hover:bg-white/10 hover:text-vintage-cream;
+  }
+
+  .admin-sidebar-link.active {
+    @apply bg-white/15 text-vintage-cream;
+  }
+
+  .stat-card {
+    @apply bg-white rounded-xl p-6 border border-gray-100
+           shadow-sm hover:shadow-md transition-shadow duration-300;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-vintage-cream;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-vintage-sand rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-vintage-brown/50;
+}
+
+/* Page transitions */
+.page-enter {
+  animation: fadeIn 0.4s ease-out both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}

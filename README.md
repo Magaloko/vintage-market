@@ -229,3 +229,11 @@ vintage-market/
 ## Лицензия
 
 MIT
+
+## v3.0 Features
+
+- Admin Dashboard: 8 stat cards, tabbed charts, top products rankings
+- Catalog: Price filter, condition filter, sort dropdown
+- Product Comparison: Compare button, floating bar, side-by-side page
+- Price Analysis: Category average, price insight badge
+- Similar Products: Recommendations on product page
