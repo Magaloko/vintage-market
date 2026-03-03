@@ -20,6 +20,7 @@ const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const AdminProducts = lazy(() => import('./pages/admin/AdminProducts'))
 const AdminProductForm = lazy(() => import('./pages/admin/AdminProductForm'))
+const AdminInquiries = lazy(() => import('./pages/admin/AdminInquiries'))
 
 // Layouts
 import PublicLayout from './components/public/PublicLayout'
@@ -91,6 +92,7 @@ export default function App() {
             <Route path="products" element={<AdminProducts />} />
             <Route path="products/new" element={<AdminProductForm />} />
             <Route path="products/edit/:id" element={<AdminProductForm />} />
+            <Route path="inquiries" element={<AdminInquiries />} />
           </Route>
 
           {/* 404 */}

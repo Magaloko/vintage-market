@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Share2, ShoppingBag, Tag, Clock, Award, Ruler, MapPin, Home, Phone, Globe, Mail } from 'lucide-react'
+import { ArrowLeft, Share2, ShoppingBag, Tag, Clock, Award, Ruler, MapPin, Home, Phone, Globe, Mail, MessageCircle, Send as SendIcon } from 'lucide-react'
 import { getProduct, getCategoryAvgPrice } from '../lib/api'
 import { categories, conditions, categoryFields } from '../data/demoProducts'
 import ImageGallery from '../components/public/ImageGallery'
@@ -8,6 +8,8 @@ import FavoriteButton from '../components/public/FavoriteButton'
 import CompareButton from '../components/public/CompareButton'
 import PriceInsight from '../components/public/PriceInsight'
 import SimilarProducts from '../components/public/SimilarProducts'
+
+import { siteConfig } from '../lib/siteConfig'
 
 // Icons for detail field types
 const fieldIcons = {
@@ -212,11 +214,63 @@ export default function ProductPage() {
               </div>
             )}
 
-            {/* CTA */}
+            {/* CTA — Contact Options */}
             {product.status !== 'sold' && (
-              <Link to="/contact" className="btn-primary w-full text-center justify-center">
-                {isShop ? 'Связаться с магазином' : isRealEstate ? 'Запросить просмотр' : 'Связаться для покупки'}
-              </Link>
+              <div className="space-y-3">
+                {/* WhatsApp */}
+                {siteConfig.whatsapp && (
+                  <a
+                    href={`https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(siteConfig.messageTemplates.whatsapp(product))}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-3 w-full py-3.5 font-body text-sm tracking-[0.1em] uppercase transition-all duration-300"
+                    style={{ backgroundColor: '#25D366', color: '#fff', borderRadius: '2px' }}
+                    onMouseEnter={e => e.currentTarget.style.boxShadow = '0 4px 20px rgba(37, 211, 102, 0.3)'}
+                    onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
+                  >
+                    <MessageCircle size={16} />
+                    WhatsApp
+                  </a>
+                )}
+
+                <div className="flex gap-3">
+                  {/* Telegram */}
+                  {siteConfig.telegram && (
+                    <a
+                      href={`https://t.me/${siteConfig.telegram}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-2 py-3 font-body text-sm tracking-[0.1em] uppercase transition-all duration-300"
+                      style={{ backgroundColor: 'rgba(38, 163, 238, 0.1)', color: '#26A3EE', border: '1px solid rgba(38, 163, 238, 0.2)', borderRadius: '2px' }}
+                      onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#26A3EE'; e.currentTarget.style.color = '#fff' }}
+                      onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'rgba(38, 163, 238, 0.1)'; e.currentTarget.style.color = '#26A3EE' }}
+                    >
+                      <SendIcon size={14} />
+                      Telegram
+                    </a>
+                  )}
+
+                  {/* Contact Form */}
+                  <Link
+                    to={`/contact?product=${product.id}&title=${encodeURIComponent(product.title)}`}
+                    className="flex-1 btn-secondary justify-center"
+                  >
+                    <Mail size={14} className="mr-2" />
+                    {isShop ? 'Написать' : isRealEstate ? 'Запрос' : 'Форма'}
+                  </Link>
+                </div>
+
+                {/* Phone */}
+                {siteConfig.phone && (
+                  <a href={`tel:${siteConfig.phoneClean}`}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 font-body text-xs transition-colors"
+                    style={{ color: 'rgba(44, 36, 32, 0.35)' }}
+                    onMouseEnter={e => e.currentTarget.style.color = '#0C0A08'}
+                    onMouseLeave={e => e.currentTarget.style.color = 'rgba(44, 36, 32, 0.35)'}
+                  >
+                    <Phone size={12} />
+                    {siteConfig.phone}
+                  </a>
+                )}
+              </div>
             )}
           </div>
         </div>

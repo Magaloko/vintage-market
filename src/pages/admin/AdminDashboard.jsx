@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Package, ShoppingCart, Eye, TrendingUp, Tag, DollarSign, Heart, BarChart3 } from 'lucide-react'
+import { Package, ShoppingCart, Eye, TrendingUp, Tag, DollarSign, Heart, BarChart3, MessageSquare } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts'
 import { getStats } from '../../lib/api'
 import { categories } from '../../data/demoProducts'
@@ -61,6 +61,7 @@ export default function AdminDashboard() {
     { label: 'Просмотры', value: stats.totalViews, icon: Eye, color: '#B08D57' },
     { label: 'Выручка', value: `${totalRevenue}\u20ac`, icon: BarChart3, color: '#B08D57' },
     { label: 'В избранном', value: favCount, icon: Heart, color: '#B08D57' },
+    { label: 'Запросы', value: stats.newInquiries || 0, icon: MessageSquare, color: stats.newInquiries > 0 ? '#C9A96E' : '#B08D57', highlight: stats.newInquiries > 0 },
   ]
 
   const chartTabs = [

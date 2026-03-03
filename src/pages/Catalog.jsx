@@ -14,6 +14,8 @@ const PRICE_RANGES = [
   { id: '500+', label: 'От 500\u20ac', min: 500, max: Infinity },
 ]
 
+const ITEMS_PER_PAGE = 12
+
 export default function Catalog() {
   const { category: paramCategory } = useParams()
   const [searchParams] = useSearchParams()
@@ -29,9 +31,11 @@ export default function Catalog() {
   const [sortBy, setSortBy] = useState('newest')
   const [showFilters, setShowFilters] = useState(false)
   const [showSort, setShowSort] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE)
 
   useEffect(() => {
     setActiveCategory(paramCategory || '')
+    setVisibleCount(ITEMS_PER_PAGE)
   }, [paramCategory])
 
   useEffect(() => {
@@ -89,6 +93,7 @@ export default function Catalog() {
     }
 
     setProducts(filtered)
+    setVisibleCount(ITEMS_PER_PAGE)
   }, [allProducts, activeCondition, activeEra, activePriceRange, sortBy])
 
   const currentCategory = categories.find(c => c.id === activeCategory)
@@ -304,13 +309,33 @@ export default function Catalog() {
             <button onClick={clearAllFilters} className="btn-secondary">Сбросить фильтры</button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product, i) => (
-              <div key={product.id} className="animate-slide-up" style={{ animationDelay: `${i * 50}ms` }}>
-                <ProductCard product={product} showCompare />
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {products.slice(0, visibleCount).map((product, i) => (
+                <div key={product.id} className="animate-slide-up" style={{ animationDelay: `${(i % ITEMS_PER_PAGE) * 50}ms` }}>
+                  <ProductCard product={product} showCompare />
+                </div>
+              ))}
+            </div>
+
+            {/* Load More */}
+            {visibleCount < products.length && (
+              <div className="text-center mt-16">
+                <button
+                  onClick={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)}
+                  className="btn-secondary group"
+                >
+                  Показать ещё
+                  <span className="ml-2 font-body text-xs" style={{ opacity: 0.5 }}>
+                    ({Math.min(ITEMS_PER_PAGE, products.length - visibleCount)} из {products.length - visibleCount})
+                  </span>
+                </button>
+                <p className="font-body text-xs mt-3" style={{ color: 'rgba(44, 36, 32, 0.25)' }}>
+                  Показано {Math.min(visibleCount, products.length)} из {products.length}
+                </p>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </div>

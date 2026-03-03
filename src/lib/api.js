@@ -246,6 +246,85 @@ export async function removeFavorite(userId, productId) {
 
 // ---- Statistics API ----
 
+// ---- Inquiries API ----
+
+let localInquiries = []
+let inquiryId = 100
+
+export async function createInquiry({ name, email, phone, message, product_id, product_title }) {
+  const inquiry = {
+    name, email, phone: phone || null, message,
+    product_id: product_id || null,
+    product_title: product_title || null,
+    status: 'new',
+    created_at: new Date().toISOString(),
+  }
+
+  if (!isSupabaseConfigured) {
+    inquiry.id = String(++inquiryId)
+    localInquiries.unshift(inquiry)
+    return { data: inquiry, error: null }
+  }
+
+  try {
+    const { data, error } = await supabase.from('inquiries').insert([inquiry]).select().single()
+    if (error) return { data: null, error }
+    return { data, error: null }
+  } catch (e) {
+    console.error('createInquiry exception:', e)
+    return { data: null, error: { message: e.message } }
+  }
+}
+
+export async function getInquiries() {
+  if (!isSupabaseConfigured) {
+    return { data: localInquiries, error: null }
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('inquiries')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error) return { data: [], error }
+    return { data: data || [], error: null }
+  } catch (e) {
+    console.error('getInquiries exception:', e)
+    return { data: [], error: { message: e.message } }
+  }
+}
+
+export async function updateInquiryStatus(id, status) {
+  if (!isSupabaseConfigured) {
+    const idx = localInquiries.findIndex(i => i.id === id)
+    if (idx !== -1) localInquiries[idx].status = status
+    return { error: null }
+  }
+
+  try {
+    const { error } = await supabase.from('inquiries').update({ status }).eq('id', id)
+    return { error }
+  } catch (e) {
+    return { error: { message: e.message } }
+  }
+}
+
+export async function deleteInquiry(id) {
+  if (!isSupabaseConfigured) {
+    localInquiries = localInquiries.filter(i => i.id !== id)
+    return { error: null }
+  }
+
+  try {
+    const { error } = await supabase.from('inquiries').delete().eq('id', id)
+    return { error }
+  } catch (e) {
+    return { error: { message: e.message } }
+  }
+}
+
+// ---- Statistics API ----
+
 export async function getCategoryAvgPrice(categoryId) {
   if (!isSupabaseConfigured) {
     const catProducts = localProducts.filter(p => p.category === categoryId && p.price)
@@ -311,6 +390,8 @@ export async function getStats() {
         topCategory: topCategory ? topCategory[0] : '-',
         categories: cats, priceRanges, monthlyData,
         totalRevenue, revenueByCategory, topByViews, topByFavorites, totalFavorites,
+        newInquiries: localInquiries.filter(i => i.status === 'new').length,
+        totalInquiries: localInquiries.length,
       },
       error: null,
     }
@@ -379,12 +460,23 @@ export async function getStats() {
       }
     } catch (e) { /* favorites table may not exist yet */ }
 
+    // Inquiry counts (safe to fail)
+    let newInquiries = 0, totalInquiries = 0
+    try {
+      const { data: inqData } = await supabase.from('inquiries').select('status')
+      if (inqData) {
+        totalInquiries = inqData.length
+        newInquiries = inqData.filter(i => i.status === 'new').length
+      }
+    } catch (e) { /* inquiries table may not exist */ }
+
     return {
       data: {
         total, active, sold, avgPrice, totalViews,
         topCategory: topCategory ? topCategory[0] : '-',
         categories: cats, priceRanges, monthlyData,
         totalRevenue, revenueByCategory, topByViews, topByFavorites, totalFavorites,
+        newInquiries, totalInquiries,
       },
       error: null,
     }

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { categories, categoryGroups } from '../../data/demoProducts'
+import { siteConfig } from '../../lib/siteConfig'
 
 export default function Footer() {
   const vintageCats = categories.filter(c => c.group === 'vintage').slice(0, 5)
@@ -27,6 +28,35 @@ export default function Footer() {
               Мы находим уникальные вещи с историей
               и даём им вторую жизнь.
             </p>
+            <div className="flex gap-3 mt-6">
+              {siteConfig.whatsapp && (
+                <a href={`https://wa.me/${siteConfig.whatsapp}`} target="_blank" rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full flex items-center justify-center font-body text-xs transition-all"
+                  style={{ border: '1px solid rgba(176, 141, 87, 0.15)', color: 'rgba(176, 141, 87, 0.4)' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#25D366'; e.currentTarget.style.color = '#25D366' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.15)'; e.currentTarget.style.color = 'rgba(176, 141, 87, 0.4)' }}>
+                  WA
+                </a>
+              )}
+              {siteConfig.telegram && (
+                <a href={`https://t.me/${siteConfig.telegram}`} target="_blank" rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full flex items-center justify-center font-body text-xs transition-all"
+                  style={{ border: '1px solid rgba(176, 141, 87, 0.15)', color: 'rgba(176, 141, 87, 0.4)' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#26A3EE'; e.currentTarget.style.color = '#26A3EE' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.15)'; e.currentTarget.style.color = 'rgba(176, 141, 87, 0.4)' }}>
+                  TG
+                </a>
+              )}
+              {siteConfig.instagram && (
+                <a href={siteConfig.instagram} target="_blank" rel="noopener noreferrer"
+                  className="w-9 h-9 rounded-full flex items-center justify-center font-body text-xs transition-all"
+                  style={{ border: '1px solid rgba(176, 141, 87, 0.15)', color: 'rgba(176, 141, 87, 0.4)' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#E1306C'; e.currentTarget.style.color = '#E1306C' }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.15)'; e.currentTarget.style.color = 'rgba(176, 141, 87, 0.4)' }}>
+                  IG
+                </a>
+              )}
+            </div>
           </div>
 
           {/* Navigation */}

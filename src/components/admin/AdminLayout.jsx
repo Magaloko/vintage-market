@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom'
-import { LayoutDashboard, Package, Plus, LogOut, Menu, X, ChevronLeft, AlertTriangle } from 'lucide-react'
+import { LayoutDashboard, Package, Plus, LogOut, Menu, X, ChevronLeft, AlertTriangle, MessageSquare } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 import { isSupabaseConfigured } from '../../lib/supabase'
 
@@ -8,6 +8,7 @@ const sidebarLinks = [
   { to: '/admin', icon: LayoutDashboard, label: 'Панель управления', end: true },
   { to: '/admin/products', icon: Package, label: 'Товары' },
   { to: '/admin/products/new', icon: Plus, label: 'Добавить товар' },
+  { to: '/admin/inquiries', icon: MessageSquare, label: 'Запросы' },
 ]
 
 export default function AdminLayout() {
