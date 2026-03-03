@@ -10,6 +10,7 @@ import About from './pages/About'
 import Contact from './pages/Contact'
 import Favorites from './pages/Favorites'
 import Compare from './pages/Compare'
+import AuthCallback from './pages/AuthCallback'
 
 // Admin pages
 import AdminLogin from './pages/admin/AdminLogin'
@@ -67,6 +68,9 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
           </Route>
+
+          {/* Auth Callback (OAuth redirect) */}
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />

@@ -24,7 +24,6 @@ export function AuthProvider({ children }) {
       return
     }
 
-    // Real Supabase auth with error safety
     let mounted = true
 
     supabase.auth.getSession()
@@ -58,9 +57,9 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  // Email/Password sign in
   const signIn = async (email, password) => {
     if (!isSupabaseConfigured) {
-      // Demo login
       if (email === 'admin@vintage.demo' && password === 'demo123') {
         const fakeSession = { user: DEMO_ADMIN }
         sessionStorage.setItem('vintage_demo_session', JSON.stringify(fakeSession))
@@ -74,7 +73,40 @@ export function AuthProvider({ children }) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       return { data, error }
     } catch (e) {
-      return { data: null, error: { message: e.message || 'Verbindungsfehler' } }
+      return { data: null, error: { message: e.message || 'Ошибка подключения' } }
+    }
+  }
+
+  // Email/Password sign up
+  const signUp = async (email, password) => {
+    if (!isSupabaseConfigured) {
+      return { data: null, error: { message: 'Регистрация недоступна в демо-режиме' } }
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signUp({ email, password })
+      return { data, error }
+    } catch (e) {
+      return { data: null, error: { message: e.message || 'Ошибка подключения' } }
+    }
+  }
+
+  // Google OAuth
+  const signInWithGoogle = async () => {
+    if (!isSupabaseConfigured) {
+      return { data: null, error: { message: 'Google вход недоступен в демо-режиме' } }
+    }
+
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+      return { data, error }
+    } catch (e) {
+      return { data: null, error: { message: e.message || 'Ошибка подключения' } }
     }
   }
 
@@ -88,8 +120,10 @@ export function AuthProvider({ children }) {
     setSession(null)
   }
 
+  const user = session?.user || null
+
   return (
-    <AuthContext.Provider value={{ session, loading, signIn, signOut, isDemoMode }}>
+    <AuthContext.Provider value={{ session, user, loading, signIn, signUp, signInWithGoogle, signOut, isDemoMode }}>
       {children}
     </AuthContext.Provider>
   )
