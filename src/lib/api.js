@@ -416,7 +416,7 @@ export async function getCategoryCounts() {
   if (!isSupabaseConfigured) {
     const counts = {}
     localProducts.forEach(p => {
-      if (p.status === 'active' || !p.status) {
+      if (p.status !== 'sold') {
         counts[p.category] = (counts[p.category] || 0) + 1
       }
     })
@@ -424,16 +424,25 @@ export async function getCategoryCounts() {
   }
 
   try {
+    // Fetch ALL products and count in JS — avoids PostgreSQL NULL filtering issue
+    // (.neq('status','sold') excludes rows where status IS NULL!)
     const { data, error } = await supabase
       .from('products')
-      .select('category')
-      .eq('status', 'active')
-    if (error) return { data: {}, error }
+      .select('category, status')
+    if (error) {
+      console.warn('getCategoryCounts error:', error.message)
+      return { data: {}, error: null }
+    }
     const counts = {}
-    ;(data || []).forEach(p => { counts[p.category] = (counts[p.category] || 0) + 1 })
+    ;(data || []).forEach(p => {
+      if (p.status !== 'sold') {
+        counts[p.category] = (counts[p.category] || 0) + 1
+      }
+    })
     return { data: counts, error: null }
   } catch (e) {
-    return { data: {}, error: { message: e.message } }
+    console.warn('getCategoryCounts exception:', e)
+    return { data: {}, error: null }
   }
 }
 

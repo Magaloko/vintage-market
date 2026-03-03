@@ -11,7 +11,10 @@ export default function Footer() {
     getCategoryCounts().then(r => setCategoryCounts(r.data || {}))
   }, [])
 
-  const activeCats = categories.filter(c => categoryCounts[c.id] > 0).slice(0, 8)
+  const hasAnyCounts = Object.keys(categoryCounts).length > 0
+  const activeCats = hasAnyCounts
+    ? categories.filter(c => categoryCounts[c.id] > 0).slice(0, 8)
+    : categories.slice(0, 8)
 
   return (
     <footer style={{ backgroundColor: '#0C0A08' }}>

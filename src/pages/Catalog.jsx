@@ -162,7 +162,10 @@ export default function Catalog() {
               Все
             </Link>
             {categoryGroups.map(group => {
-              const groupCats = categories.filter(c => c.group === group.id && categoryCounts[c.id] > 0)
+              const hasAnyCounts = Object.keys(categoryCounts).length > 0
+              const groupCats = hasAnyCounts
+                ? categories.filter(c => c.group === group.id && categoryCounts[c.id] > 0)
+                : categories.filter(c => c.group === group.id)
               if (groupCats.length === 0) return null
               return groupCats.map(cat => (
                 <Link key={cat.id} to={`/catalog/${cat.id}`} onClick={() => setActiveCategory(cat.id)}

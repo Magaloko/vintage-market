@@ -16,6 +16,7 @@ export default function Home() {
   const [products, setProducts] = useState([])
   const [categoryCounts, setCategoryCounts] = useState({})
   const [activeBG, setActiveBG] = useState(0)
+  const [productsLoading, setProductsLoading] = useState(true)
   const heroRef = useRef(null)
 
   useEffect(() => {
@@ -25,9 +26,10 @@ export default function Home() {
           getProducts({}),
           getCategoryCounts(),
         ])
-        setProducts((prodResult.data || []).filter(p => p.status === 'active').slice(0, 8))
+        setProducts((prodResult.data || []).filter(p => p.status !== 'sold').slice(0, 8))
         setCategoryCounts(countResult.data || {})
-      } catch (e) { console.error(e) }
+      } catch (e) { console.error('Home load error:', e) }
+      setProductsLoading(false)
     }
     load()
   }, [])
@@ -145,9 +147,17 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {categoryGroups
-              .filter(group => categories.filter(c => c.group === group.id).some(c => categoryCounts[c.id] > 0))
+              .filter(group => {
+                // If no counts loaded yet, show all groups
+                const hasAnyCounts = Object.keys(categoryCounts).length > 0
+                if (!hasAnyCounts) return true
+                return categories.filter(c => c.group === group.id).some(c => categoryCounts[c.id] > 0)
+              })
               .map((group, i) => {
-              const groupCats = categories.filter(c => c.group === group.id && categoryCounts[c.id] > 0)
+              const hasAnyCounts = Object.keys(categoryCounts).length > 0
+              const groupCats = hasAnyCounts
+                ? categories.filter(c => c.group === group.id && categoryCounts[c.id] > 0)
+                : categories.filter(c => c.group === group.id)
               return (
                 <Link
                   key={group.id}
@@ -204,7 +214,19 @@ export default function Home() {
             </Link>
           </div>
 
-          {products.length > 0 ? (
+          {productsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="aspect-[4/5]" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)', borderRadius: '2px' }} />
+                  <div className="p-4 space-y-2">
+                    <div className="h-4 w-3/4 rounded" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }} />
+                    <div className="h-3 w-1/4 rounded" style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : products.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {products.map((product, i) => (
                 <div key={product.id} className="animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
@@ -215,7 +237,7 @@ export default function Home() {
           ) : (
             <div className="text-center py-16">
               <p className="font-display text-xl italic" style={{ color: 'rgba(12, 10, 8, 0.25)' }}>
-                Загрузка коллекции...
+                Коллекция скоро появится
               </p>
             </div>
           )}

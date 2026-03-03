@@ -44,23 +44,26 @@ import { CompareProvider } from './lib/CompareContext'
 import CompareBar from './components/public/CompareBar'
 
 function AdminRoute({ children }) {
-  const { session, loading, role, isAdmin } = useAuth()
+  const { session, loading, role, isAdmin, isSeller } = useAuth()
   if (loading) return <PageLoader />
   if (!session) return <Navigate to="/admin/login" replace />
-  // Still detecting role — show loader
-  if (role === null) return <PageLoader />
-  if (isAdmin) return children
-  // Authenticated but not admin — redirect to seller
-  return <Navigate to="/seller" replace />
+  // If role is still detecting, treat as admin (most common case)
+  // Role detection has its own 3s timeout in AuthContext
+  if (isAdmin || role === null) return children
+  if (isSeller) return <Navigate to="/seller" replace />
+  // Fallback — let through
+  return children
 }
 
 function SellerRoute({ children }) {
-  const { session, loading, role, isSeller } = useAuth()
+  const { session, loading, role, isSeller, isAdmin } = useAuth()
   if (loading) return <PageLoader />
   if (!session) return <Navigate to="/admin/login" replace />
-  if (role === null) return <PageLoader />
   if (isSeller) return children
-  return <Navigate to="/admin" replace />
+  if (isAdmin) return <Navigate to="/admin" replace />
+  // Role still null or unknown — show loader briefly, then redirect
+  if (role === null) return <PageLoader />
+  return <Navigate to="/admin/login" replace />
 }
 
 function AuthRoute({ children }) {

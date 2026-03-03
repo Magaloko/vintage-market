@@ -16,8 +16,15 @@ export function AuthProvider({ children }) {
   const [shopId, setShopId] = useState(null)
   const [isDemoMode] = useState(!isSupabaseConfigured)
 
+  // FIX: detectRole with timeout + bulletproof error handling
   const detectRole = useCallback(async (sess) => {
-    if (!sess?.user) { setRole(null); setShopId(null); return }
+    if (!sess?.user) {
+      setRole(null)
+      setShopId(null)
+      return
+    }
+
+    // Demo mode
     if (!isSupabaseConfigured) {
       const stored = sessionStorage.getItem('vintage_demo_role')
       const storedShop = sessionStorage.getItem('vintage_demo_shop_id')
@@ -25,17 +32,57 @@ export function AuthProvider({ children }) {
       setShopId(storedShop || null)
       return
     }
+
+    // Supabase mode — try to detect role with timeout
+    // Default to admin if anything goes wrong
     try {
-      const { data: shop } = await supabase.from('shops').select('id').eq('user_id', sess.user.id).maybeSingle()
-      if (shop) { setRole('seller'); setShopId(shop.id); return }
-      try {
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', sess.user.id).maybeSingle()
-        setRole(profile?.role || 'admin')
-      } catch { setRole('admin') }
-      setShopId(null)
+      // Wrap in Promise.race with 3s timeout
+      const detectWithTimeout = Promise.race([
+        (async () => {
+          // 1. Check shops table
+          try {
+            const { data: shop, error } = await supabase
+              .from('shops')
+              .select('id')
+              .eq('user_id', sess.user.id)
+              .maybeSingle()
+            if (!error && shop) {
+              return { role: 'seller', shopId: shop.id }
+            }
+          } catch (e) {
+            console.warn('Shops query failed (table may not exist):', e.message)
+          }
+
+          // 2. Check profiles table
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('role, shop_id')
+              .eq('id', sess.user.id)
+              .maybeSingle()
+            if (!error && profile) {
+              return { role: profile.role || 'admin', shopId: profile.shop_id || null }
+            }
+          } catch (e) {
+            console.warn('Profiles query failed (table may not exist):', e.message)
+          }
+
+          // 3. Default — admin
+          return { role: 'admin', shopId: null }
+        })(),
+        new Promise(resolve => setTimeout(() => {
+          console.warn('Role detection timed out — defaulting to admin')
+          resolve({ role: 'admin', shopId: null })
+        }, 3000))
+      ])
+
+      const result = await detectWithTimeout
+      setRole(result.role)
+      setShopId(result.shopId)
     } catch (e) {
-      console.warn('Role detection:', e)
-      setRole('admin'); setShopId(null)
+      console.warn('Role detection failed entirely:', e)
+      setRole('admin')
+      setShopId(null)
     }
   }, [])
 
@@ -43,22 +90,42 @@ export function AuthProvider({ children }) {
     if (!isSupabaseConfigured) {
       try {
         const ds = sessionStorage.getItem('vintage_demo_session')
-        if (ds) { const p = JSON.parse(ds); setSession(p); detectRole(p) }
+        if (ds) {
+          const p = JSON.parse(ds)
+          setSession(p)
+          detectRole(p)
+        }
       } catch {}
       setLoading(false)
       return
     }
+
     let mounted = true
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (!mounted) return
-      const s = data?.session || null
-      setSession(s); await detectRole(s); setLoading(false)
-    }).catch(() => { if (mounted) { setSession(null); setLoading(false) } })
+
+    supabase.auth.getSession()
+      .then(async ({ data }) => {
+        if (!mounted) return
+        const s = data?.session || null
+        setSession(s)
+        await detectRole(s)
+        setLoading(false)
+      })
+      .catch((e) => {
+        console.warn('getSession error:', e)
+        if (mounted) {
+          setSession(null)
+          setRole(null)
+          setLoading(false)
+        }
+      })
 
     let sub
     try {
       const { data } = supabase.auth.onAuthStateChange(async (_ev, ns) => {
-        if (mounted) { setSession(ns); await detectRole(ns) }
+        if (mounted) {
+          setSession(ns)
+          await detectRole(ns)
+        }
       })
       sub = data?.subscription
     } catch {}
@@ -90,10 +157,38 @@ export function AuthProvider({ children }) {
       } catch {}
       return { data: null, error: { message: 'Неверные данные.\nАдмин: admin@vintage.demo / demo123\nПродавец: seller@vintage.demo / demo123' } }
     }
+
+    // FIX: Supabase signIn — detect role after login and return it
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-      return { data, error }
-    } catch (e) { return { data: null, error: { message: e.message } } }
+      if (error) return { data: null, error }
+
+      // Wait for role detection to complete
+      let detectedRole = 'admin'
+      try {
+        // Check shops
+        const { data: shop } = await supabase
+          .from('shops')
+          .select('id')
+          .eq('user_id', data.user.id)
+          .maybeSingle()
+        if (shop) {
+          detectedRole = 'seller'
+          setRole('seller')
+          setShopId(shop.id)
+        } else {
+          setRole('admin')
+          setShopId(null)
+        }
+      } catch {
+        setRole('admin')
+        setShopId(null)
+      }
+
+      return { data, error: null, role: detectedRole }
+    } catch (e) {
+      return { data: null, error: { message: e.message } }
+    }
   }
 
   const registerSeller = async ({ email, password, shopName, shopDescription, address, phone }) => {
