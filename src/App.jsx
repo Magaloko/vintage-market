@@ -1,22 +1,26 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import { lazy, Suspense } from 'react'
 import ErrorBoundary from './components/ErrorBoundary'
 
-// Public pages
+// Public pages (eager — critical path)
 import Home from './pages/Home'
 import Catalog from './pages/Catalog'
 import ProductPage from './pages/ProductPage'
-import About from './pages/About'
-import Contact from './pages/Contact'
-import Favorites from './pages/Favorites'
-import Compare from './pages/Compare'
-import AuthCallback from './pages/AuthCallback'
+import NotFound from './pages/NotFound'
 
-// Admin pages
-import AdminLogin from './pages/admin/AdminLogin'
-import AdminDashboard from './pages/admin/AdminDashboard'
-import AdminProducts from './pages/admin/AdminProducts'
-import AdminProductForm from './pages/admin/AdminProductForm'
+// Lazy-loaded public pages
+const About = lazy(() => import('./pages/About'))
+const Contact = lazy(() => import('./pages/Contact'))
+const Favorites = lazy(() => import('./pages/Favorites'))
+const Compare = lazy(() => import('./pages/Compare'))
+const AuthCallback = lazy(() => import('./pages/AuthCallback'))
+
+// Admin pages (lazy — only loaded for admins)
+const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
+const AdminProducts = lazy(() => import('./pages/admin/AdminProducts'))
+const AdminProductForm = lazy(() => import('./pages/admin/AdminProductForm'))
 
 // Layouts
 import PublicLayout from './components/public/PublicLayout'
@@ -30,13 +34,17 @@ import CompareBar from './components/public/CompareBar'
 
 function ProtectedRoute({ children }) {
   const { session, loading } = useAuth()
-  if (loading) return (
+  if (loading) return <PageLoader />
+  if (!session) return <Navigate to="/admin/login" replace />
+  return children
+}
+
+function PageLoader() {
+  return (
     <div className="min-h-screen flex items-center justify-center bg-vintage-paper">
       <div className="w-8 h-8 border-2 border-vintage-brown border-t-transparent rounded-full animate-spin" />
     </div>
   )
-  if (!session) return <Navigate to="/admin/login" replace />
-  return children
 }
 
 export default function App() {
@@ -56,9 +64,10 @@ export default function App() {
             },
           }}
         />
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public Routes */}
-          <Route element={<PublicLayout />}>
+          <Route element={<><PublicLayout /><CompareBar /></>}>
             <Route path="/" element={<Home />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/catalog/:category" element={<Catalog />} />
@@ -88,9 +97,12 @@ export default function App() {
             <Route path="products/edit/:id" element={<AdminProductForm />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* 404 */}
+          <Route element={<PublicLayout />}>
+            <Route path="*" element={<NotFound />} />
+          </Route>
         </Routes>
-        <CompareBar />
+        </Suspense>
         </CompareProvider>
       </FavoritesProvider>
     </AuthProvider>

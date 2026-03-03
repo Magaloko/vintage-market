@@ -24,10 +24,10 @@ export default class ErrorBoundary extends Component {
         }}>
           <div style={{ textAlign: 'center', maxWidth: '500px' }}>
             <h1 style={{ fontSize: '1.5rem', color: '#3A2A1D', marginBottom: '0.5rem' }}>
-              Etwas ist schiefgelaufen
+              Что-то пошло не так
             </h1>
             <p style={{ color: '#6B4C3B', marginBottom: '1.5rem' }}>
-              Bitte lade die Seite neu.
+              Пожалуйста, перезагрузите страницу.
             </p>
             <p style={{ color: '#999', fontSize: '12px', fontFamily: 'monospace', marginBottom: '1.5rem' }}>
               {this.state.error?.message}
@@ -40,7 +40,7 @@ export default class ErrorBoundary extends Component {
                 letterSpacing: '2px', textTransform: 'uppercase',
               }}
             >
-              Seite neu laden
+              Перезагрузить
             </button>
           </div>
         </div>

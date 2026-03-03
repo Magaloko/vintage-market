@@ -12,15 +12,9 @@ const LOCAL_KEY = 'vintage_favorites'
 export function FavoritesProvider({ children }) {
   const { session } = useAuth()
   const [favorites, setFavorites] = useState([]) // Array of product IDs
-  const [favoriteProducts, setFavoriteProducts] = useState([]) // Full product objects
   const [loading, setLoading] = useState(true)
 
-  // Load favorites on auth change
-  useEffect(() => {
-    loadFavorites()
-  }, [session])
-
-  const loadFavorites = async () => {
+  const loadFavorites = useCallback(async () => {
     setLoading(true)
 
     try {
@@ -60,7 +54,12 @@ export function FavoritesProvider({ children }) {
     }
 
     setLoading(false)
-  }
+  }, [session])
+
+  // Load favorites on auth change
+  useEffect(() => {
+    loadFavorites()
+  }, [loadFavorites])
 
   // Persist demo favorites to localStorage
   const persistLocal = (ids) => {

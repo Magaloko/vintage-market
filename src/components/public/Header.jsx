@@ -353,7 +353,7 @@ export default function Header() {
         {/* Search Bar */}
         {searchOpen && (
           <div className="pb-4 animate-fade-in">
-            <form onSubmit={(e) => { e.preventDefault(); const q = e.target.elements.search.value; if (q.trim()) window.location.href = `/catalog?search=${encodeURIComponent(q)}` }}>
+            <form onSubmit={(e) => { e.preventDefault(); const q = e.target.elements.search.value; if (q.trim()) { navigate(`/catalog?search=${encodeURIComponent(q)}`); setSearchOpen(false) } }}>
               <input name="search" type="text" placeholder="Поиск по каталогу..." className="vintage-input-dark" autoFocus />
             </form>
           </div>
