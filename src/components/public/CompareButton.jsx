@@ -15,14 +15,21 @@ export default function CompareButton({ product, size = 'sm' }) {
     <button
       onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleCompare(product) }}
       disabled={disabled}
-      title={active ? 'Aus Vergleich entfernen' : disabled ? `Max ${maxCompare} Produkte` : 'Vergleichen'}
+      title={active ? 'Убрать из сравнения' : disabled ? `Максимум ${maxCompare} товара` : 'Сравнить'}
       className={`${sizes[size]} rounded-full flex items-center justify-center transition-all duration-200
         ${active
-          ? 'bg-vintage-green text-white shadow-md scale-110'
+          ? 'text-white shadow-md scale-110'
           : disabled
-            ? 'bg-white/60 text-vintage-brown/20 cursor-not-allowed'
-            : 'bg-white/80 text-vintage-brown/40 hover:text-vintage-green hover:bg-vintage-green/10'
+            ? 'bg-white/60 cursor-not-allowed'
+            : 'bg-white/80 hover:bg-white'
         }`}
+      style={
+        active
+          ? { backgroundColor: '#5A6B3C' }
+          : disabled
+            ? { color: 'rgba(91, 58, 41, 0.2)' }
+            : { color: 'rgba(91, 58, 41, 0.4)' }
+      }
     >
       <GitCompareArrows size={size === 'sm' ? 14 : 18} />
     </button>

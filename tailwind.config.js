@@ -32,6 +32,12 @@ export default {
           ink: '#1C1C1A',
           cream: '#F2EDE3',
           'warm-light': '#E8DFD1',
+          // Aliases used in components
+          dark: '#0E1A2B',
+          beige: '#F2EDE3',
+          sand: '#E5DDD1',
+          green: '#5A6B3C',
+          copper: '#C2642C',
         }
       },
       fontFamily: {

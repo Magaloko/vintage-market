@@ -2,17 +2,21 @@ import { useState } from 'react'
 import { Heart } from 'lucide-react'
 import { useFavorites } from '../../lib/FavoritesContext'
 
-export default function FavoriteButton({ productId, size = 'md', className = '' }) {
+export default function FavoriteButton({ product, productId, size = 'md', className = '' }) {
   const { isFavorite, toggleFavorite } = useFavorites()
   const [animating, setAnimating] = useState(false)
 
-  const active = isFavorite(productId)
+  // Accept both product object and raw productId
+  const id = productId || product?.id
+  if (!id) return null
+
+  const active = isFavorite(id)
 
   const handleClick = async (e) => {
     e.preventDefault()
     e.stopPropagation()
     setAnimating(true)
-    await toggleFavorite(productId)
+    await toggleFavorite(id)
     setTimeout(() => setAnimating(false), 400)
   }
 
@@ -32,12 +36,13 @@ export default function FavoriteButton({ productId, size = 'md', className = '' 
         ${s.button} rounded-full flex items-center justify-center transition-all duration-200
         ${active
           ? 'bg-red-50 text-red-500 hover:bg-red-100'
-          : 'bg-white/80 backdrop-blur-sm text-vintage-brown/40 hover:text-red-400 hover:bg-white'
+          : 'bg-white/80 backdrop-blur-sm hover:text-red-400 hover:bg-white'
         }
         shadow-sm hover:shadow-md
         ${animating ? 'scale-125' : 'scale-100'}
         ${className}
       `}
+      style={!active ? { color: 'rgba(91, 58, 41, 0.4)' } : undefined}
     >
       <Heart
         size={s.icon}

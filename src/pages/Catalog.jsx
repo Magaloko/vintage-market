@@ -3,7 +3,7 @@ import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { X, SlidersHorizontal, ChevronDown } from 'lucide-react'
 import ProductCard from '../components/public/ProductCard'
 import { getProducts } from '../lib/api'
-import { categories, conditions, sortOptions, eras } from '../data/demoProducts'
+import { categories, conditions, sortOptions, eras, categoryGroups } from '../data/demoProducts'
 
 const PRICE_RANGES = [
   { id: 'all', label: 'Все цены', min: 0, max: Infinity },
@@ -151,17 +151,20 @@ export default function Catalog() {
               }}>
               Все
             </Link>
-            {categories.map(cat => (
-              <Link key={cat.id} to={`/catalog/${cat.id}`} onClick={() => setActiveCategory(cat.id)}
-                className="px-4 py-2 font-sans text-xs tracking-wider rounded-full transition-all"
-                style={{
-                  backgroundColor: activeCategory === cat.id ? '#0E1A2B' : 'transparent',
-                  color: activeCategory === cat.id ? '#F2EDE3' : 'rgba(91, 58, 41, 0.5)',
-                  border: `1px solid ${activeCategory === cat.id ? '#0E1A2B' : 'rgba(91, 58, 41, 0.2)'}`,
-                }}>
-                {cat.icon} {cat.name}
-              </Link>
-            ))}
+            {categoryGroups.map(group => {
+              const groupCats = categories.filter(c => c.group === group.id)
+              return groupCats.map(cat => (
+                <Link key={cat.id} to={`/catalog/${cat.id}`} onClick={() => setActiveCategory(cat.id)}
+                  className="px-3 py-2 font-sans text-xs tracking-wider rounded-full transition-all"
+                  style={{
+                    backgroundColor: activeCategory === cat.id ? '#0E1A2B' : 'transparent',
+                    color: activeCategory === cat.id ? '#F2EDE3' : 'rgba(91, 58, 41, 0.5)',
+                    border: `1px solid ${activeCategory === cat.id ? '#0E1A2B' : 'rgba(91, 58, 41, 0.2)'}`,
+                  }}>
+                  {cat.icon} {cat.name}
+                </Link>
+              ))
+            })}
           </div>
 
           {/* Sort Dropdown */}

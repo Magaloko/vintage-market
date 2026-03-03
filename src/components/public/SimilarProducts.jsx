@@ -25,15 +25,15 @@ export default function SimilarProducts({ currentProduct }) {
       }
     }
     if (currentProduct?.category) load()
-  }, [currentProduct?.id, currentProduct?.category])
+  }, [currentProduct?.id, currentProduct?.category, currentProduct?.price])
 
   if (similar.length === 0) return null
 
   return (
-    <section className="mt-16 pt-12 border-t border-vintage-sand/30">
+    <section className="mt-16 pt-12" style={{ borderTop: '1px solid rgba(91, 58, 41, 0.1)' }}>
       <div className="flex items-center gap-4 mb-8">
-        <div className="vintage-divider !w-8 !mx-0" />
-        <h2 className="font-display text-2xl text-vintage-dark">{'\u041f\u043e\u0445\u043e\u0436\u0438\u0435 \u0442\u043e\u0432\u0430\u0440\u044b'}</h2>
+        <div className="w-8 h-px" style={{ backgroundColor: '#B89A5A' }} />
+        <h2 className="font-display text-2xl" style={{ color: '#0E1A2B' }}>Похожие товары</h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {similar.map((product, i) => (

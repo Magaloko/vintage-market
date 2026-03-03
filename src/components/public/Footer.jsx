@@ -1,9 +1,13 @@
 import { Link } from 'react-router-dom'
+import { categoryGroups, categories } from '../../data/demoProducts'
 
 export default function Footer() {
+  // Show first 4 vintage categories in footer
+  const vintageCats = categories.filter(c => c.group === 'vintage').slice(0, 5)
+  const otherCats = categories.filter(c => c.group !== 'vintage').slice(0, 3)
+
   return (
     <footer style={{ backgroundColor: '#0E1A2B' }}>
-      {/* Gold separator at top */}
       <div className="section-gold-line" />
 
       <div className="max-w-7xl mx-auto px-6 py-16">
@@ -18,7 +22,7 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Links */}
+          {/* Navigation */}
           <div>
             <h4 className="font-sans text-xs tracking-[0.2em] uppercase mb-4"
               style={{ color: 'rgba(184, 154, 90, 0.6)' }}>
@@ -27,6 +31,7 @@ export default function Footer() {
             <div className="flex flex-col gap-3">
               {[
                 { to: '/catalog', label: 'Каталог' },
+                { to: '/favorites', label: 'Избранное' },
                 { to: '/about', label: 'О нас' },
                 { to: '/contact', label: 'Контакты' },
               ].map(link => (
@@ -34,8 +39,7 @@ export default function Footer() {
                   className="font-body text-sm transition-colors duration-200"
                   style={{ color: 'rgba(242, 237, 227, 0.4)' }}
                   onMouseEnter={e => e.currentTarget.style.color = '#F2EDE3'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(242, 237, 227, 0.4)'}
-                >
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(242, 237, 227, 0.4)'}>
                   {link.label}
                 </Link>
               ))}
@@ -49,26 +53,29 @@ export default function Footer() {
               Категории
             </h4>
             <div className="flex flex-col gap-3">
-              {[
-                { to: '/catalog/clothing', label: 'Одежда' },
-                { to: '/catalog/accessories', label: 'Аксессуары' },
-                { to: '/catalog/furniture', label: 'Мебель' },
-                { to: '/catalog/collectibles', label: 'Коллекционное' },
-              ].map(link => (
-                <Link key={link.to} to={link.to}
+              {vintageCats.map(cat => (
+                <Link key={cat.id} to={`/catalog/${cat.id}`}
                   className="font-body text-sm transition-colors duration-200"
                   style={{ color: 'rgba(242, 237, 227, 0.4)' }}
                   onMouseEnter={e => e.currentTarget.style.color = '#F2EDE3'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(242, 237, 227, 0.4)'}
-                >
-                  {link.label}
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(242, 237, 227, 0.4)'}>
+                  {cat.icon} {cat.name}
+                </Link>
+              ))}
+              {otherCats.map(cat => (
+                <Link key={cat.id} to={`/catalog/${cat.id}`}
+                  className="font-body text-sm transition-colors duration-200"
+                  style={{ color: 'rgba(242, 237, 227, 0.4)' }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#F2EDE3'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(242, 237, 227, 0.4)'}>
+                  {cat.icon} {cat.name}
                 </Link>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Bottom bar with thin gold separator */}
+        {/* Bottom */}
         <div className="mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4"
           style={{ borderTop: '1px solid rgba(184, 154, 90, 0.15)' }}>
           <p className="font-sans text-xs" style={{ color: 'rgba(242, 237, 227, 0.25)' }}>

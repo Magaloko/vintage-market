@@ -1,13 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Share2, ShoppingBag, Tag, Clock, Award, Ruler } from 'lucide-react'
+import { ArrowLeft, Share2, ShoppingBag, Tag, Clock, Award, Ruler, MapPin, Home, Phone, Globe, Mail } from 'lucide-react'
 import { getProduct, getCategoryAvgPrice } from '../lib/api'
-import { categories, conditions } from '../data/demoProducts'
+import { categories, conditions, categoryFields } from '../data/demoProducts'
 import ImageGallery from '../components/public/ImageGallery'
 import FavoriteButton from '../components/public/FavoriteButton'
 import CompareButton from '../components/public/CompareButton'
 import PriceInsight from '../components/public/PriceInsight'
 import SimilarProducts from '../components/public/SimilarProducts'
+
+// Icons for detail field types
+const fieldIcons = {
+  rooms: Home, area_m2: Ruler, floor: Home, address: MapPin,
+  phone: Phone, email: Mail, website: Globe,
+  default: Tag,
+}
 
 export default function ProductPage() {
   const { id } = useParams()
@@ -38,7 +45,7 @@ export default function ProductPage() {
     }
     load()
     window.scrollTo(0, 0)
-  }, [id])
+  }, [id, navigate])
 
   if (loading) {
     return (
@@ -57,14 +64,18 @@ export default function ProductPage() {
 
   if (!product) return null
 
+  // Fix: pass correct format {url, alt_text} to ImageGallery
   const images = product.images?.length > 0
-    ? product.images.map(img => ({ src: img.url, alt: img.alt_text || product.title }))
+    ? product.images.map(img => ({ url: img.url, alt_text: img.alt_text || product.title }))
     : product.image_url
-      ? [{ src: product.image_url, alt: product.title }]
+      ? [{ url: product.image_url, alt_text: product.title }]
       : []
 
   const category = categories.find(c => c.id === product.category)
   const condition = conditions.find(c => c.id === product.condition)
+  const isRealEstate = category?.group === 'realestate'
+  const isShop = category?.group === 'shops'
+  const showPrice = product.price > 0
 
   const handleShare = async () => {
     const url = window.location.href
@@ -75,13 +86,26 @@ export default function ProductPage() {
     }
   }
 
-  const details = [
-    { icon: Tag, label: 'Категория', value: category?.name },
-    { icon: Award, label: 'Состояние', value: condition?.name },
-    { icon: Clock, label: 'Эпоха', value: product.era },
-    { icon: ShoppingBag, label: 'Бренд', value: product.brand },
-    { icon: Ruler, label: 'Размер', value: product.size },
-  ].filter(d => d.value)
+  // Base details
+  const baseDetails = [
+    category && { icon: Tag, label: 'Категория', value: category.name },
+    condition && { icon: Award, label: 'Состояние', value: condition.name },
+    product.era && { icon: Clock, label: 'Эпоха', value: product.era },
+    product.brand && { icon: ShoppingBag, label: 'Бренд', value: product.brand },
+  ].filter(Boolean)
+
+  // Category-specific details from product.details
+  const catFields = categoryFields[product.category] || []
+  const customDetails = catFields
+    .filter(f => product.details?.[f.key] != null && product.details[f.key] !== '')
+    .map(f => {
+      let value = product.details[f.key]
+      if (f.unit) value = `${value} ${f.unit}`
+      const IconComp = fieldIcons[f.key] || fieldIcons.default
+      return { icon: IconComp, label: f.label, value: String(value) }
+    })
+
+  const allDetails = [...baseDetails, ...customDetails]
 
   return (
     <div className="page-enter">
@@ -89,14 +113,18 @@ export default function ProductPage() {
       <div className="max-w-7xl mx-auto px-6 pt-6">
         <div className="flex items-center gap-2 font-sans text-xs"
           style={{ color: 'rgba(91, 58, 41, 0.35)' }}>
-          <Link to="/catalog" className="flex items-center gap-1 transition-colors hover:text-vintage-brown">
+          <Link to="/catalog" className="flex items-center gap-1 transition-colors"
+            onMouseEnter={e => e.currentTarget.style.color = '#5B3A29'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(91, 58, 41, 0.35)'}>
             <ArrowLeft size={14} />
             Каталог
           </Link>
           {category && (
             <>
               <span>/</span>
-              <Link to={`/catalog/${category.id}`} className="transition-colors hover:text-vintage-brown">
+              <Link to={`/catalog/${category.id}`} className="transition-colors"
+                onMouseEnter={e => e.currentTarget.style.color = '#5B3A29'}
+                onMouseLeave={e => e.currentTarget.style.color = 'rgba(91, 58, 41, 0.35)'}>
                 {category.name}
               </Link>
             </>
@@ -110,7 +138,7 @@ export default function ProductPage() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Gallery */}
-          <ImageGallery images={images} isSold={product.status === 'sold'} />
+          <ImageGallery images={images} title={product.title} />
 
           {/* Product Info */}
           <div className="space-y-6">
@@ -132,18 +160,23 @@ export default function ProductPage() {
             </div>
 
             {/* Price + Insight */}
-            <div className="flex items-center gap-4">
-              <span className={`font-sans text-3xl font-bold ${product.status === 'sold' ? 'line-through' : ''}`}
-                style={{ color: product.status === 'sold' ? 'rgba(91, 58, 41, 0.3)' : '#0E1A2B' }}>
-                {product.price}&euro;
-              </span>
-              {product.status === 'sold' && (
-                <span className="font-sans text-sm tracking-widest uppercase" style={{ color: '#C2642C' }}>Продано</span>
-              )}
-            </div>
+            {showPrice && (
+              <div className="flex items-center gap-4">
+                <span className={`font-sans text-3xl font-bold ${product.status === 'sold' ? 'line-through' : ''}`}
+                  style={{ color: product.status === 'sold' ? 'rgba(91, 58, 41, 0.3)' : '#0E1A2B' }}>
+                  {isRealEstate && product.details?.rent_or_buy === 'Аренда'
+                    ? `${product.price}\u20ac / мес.`
+                    : `${product.price}\u20ac`
+                  }
+                </span>
+                {product.status === 'sold' && (
+                  <span className="font-sans text-sm tracking-widest uppercase" style={{ color: '#C2642C' }}>Продано</span>
+                )}
+              </div>
+            )}
 
-            {/* Price insight */}
-            {avgPrice && product.status !== 'sold' && (
+            {/* Price insight (only for vintage items) */}
+            {avgPrice && product.status !== 'sold' && !isRealEstate && !isShop && (
               <PriceInsight price={product.price} avgPrice={avgPrice} />
             )}
 
@@ -156,30 +189,40 @@ export default function ProductPage() {
             </p>
 
             {/* Details Grid */}
-            <div className="grid grid-cols-2 gap-4">
-              {details.map(({ icon: Icon, label, value }) => (
-                <div key={label} className="flex items-center gap-3 p-3"
-                  style={{ backgroundColor: 'rgba(91, 58, 41, 0.04)', borderRadius: '6px' }}>
-                  <Icon size={18} className="shrink-0" style={{ color: 'rgba(91, 58, 41, 0.25)' }} />
-                  <div>
-                    <p className="font-sans text-[10px] uppercase tracking-wider" style={{ color: 'rgba(91, 58, 41, 0.35)' }}>{label}</p>
-                    <p className="font-body" style={{ color: '#1C1C1A' }}>{value}</p>
+            {allDetails.length > 0 && (
+              <div className="grid grid-cols-2 gap-3">
+                {allDetails.map(({ icon: Icon, label, value }) => (
+                  <div key={label} className="flex items-center gap-3 p-3"
+                    style={{ backgroundColor: 'rgba(91, 58, 41, 0.04)', borderRadius: '6px' }}>
+                    <Icon size={18} className="shrink-0" style={{ color: 'rgba(91, 58, 41, 0.25)' }} />
+                    <div className="min-w-0">
+                      <p className="font-sans text-[10px] uppercase tracking-wider" style={{ color: 'rgba(91, 58, 41, 0.35)' }}>{label}</p>
+                      <p className="font-body truncate" style={{ color: '#1C1C1A' }}>{value}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
+
+            {/* Shop specialization (textarea field) */}
+            {isShop && product.details?.specialization && (
+              <div className="p-4" style={{ backgroundColor: 'rgba(91, 58, 41, 0.04)', borderRadius: '6px' }}>
+                <p className="font-sans text-[10px] uppercase tracking-wider mb-2" style={{ color: 'rgba(91, 58, 41, 0.35)' }}>Специализация</p>
+                <p className="font-body" style={{ color: 'rgba(91, 58, 41, 0.6)' }}>{product.details.specialization}</p>
+              </div>
+            )}
 
             {/* CTA */}
             {product.status !== 'sold' && (
               <Link to="/contact" className="btn-primary w-full text-center justify-center">
-                Связаться для покупки
+                {isShop ? 'Связаться с магазином' : isRealEstate ? 'Запросить просмотр' : 'Связаться для покупки'}
               </Link>
             )}
           </div>
         </div>
 
-        {/* Similar Products */}
-        <SimilarProducts currentProduct={product} />
+        {/* Similar Products (not for shops) */}
+        {!isShop && <SimilarProducts currentProduct={product} />}
       </div>
     </div>
   )

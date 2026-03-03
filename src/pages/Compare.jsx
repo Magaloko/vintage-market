@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft, X } from 'lucide-react'
 import { useCompare } from '../lib/CompareContext'
-import { categories, conditions } from '../data/demoProducts'
+import { categories, conditions, categoryFields } from '../data/demoProducts'
 
 export default function Compare() {
   const { compareItems, removeFromCompare, clearCompare } = useCompare()
@@ -43,6 +43,31 @@ export default function Compare() {
     { label: 'Просмотры', key: 'views', format: (v) => v || 0 },
     { label: 'Статус', key: 'status', format: (v) => v === 'sold' ? 'Продано' : 'В наличии' },
   ]
+
+  // Add dynamic fields from category-specific details
+  const allDetailKeys = new Set()
+  compareItems.forEach(item => {
+    const fields = categoryFields[item.category] || []
+    fields.forEach(f => {
+      if (compareItems.some(i => i.details?.[f.key])) {
+        allDetailKeys.add(JSON.stringify({ key: f.key, label: f.label, unit: f.unit || '' }))
+      }
+    })
+  })
+  const detailRows = [...allDetailKeys].map(json => {
+    const { key, label, unit } = JSON.parse(json)
+    return {
+      label,
+      key: `detail_${key}`,
+      format: (_, item) => {
+        const val = item?.details?.[key]
+        if (val == null || val === '') return '\u2014'
+        return unit ? `${val} ${unit}` : String(val)
+      },
+      isDetail: true,
+      detailKey: key,
+    }
+  })
 
   return (
     <div className="page-enter">
@@ -109,6 +134,21 @@ export default function Compare() {
                       </td>
                     )
                   })}
+                </tr>
+              ))}
+              {/* Category-specific detail rows */}
+              {detailRows.map((row, ri) => (
+                <tr key={row.key} style={{ backgroundColor: (rows.length + ri) % 2 === 0 ? 'rgba(91, 58, 41, 0.03)' : 'transparent' }}>
+                  <td className="px-4 py-3 font-sans text-xs tracking-wider uppercase font-medium"
+                    style={{ color: 'rgba(184, 154, 90, 0.5)' }}>
+                    {row.label}
+                  </td>
+                  {compareItems.map(item => (
+                    <td key={item.id} className="px-4 py-3 text-center font-body text-lg"
+                      style={{ color: '#1C1C1A' }}>
+                      {row.format(null, item)}
+                    </td>
+                  ))}
                 </tr>
               ))}
               {/* Description row */}
