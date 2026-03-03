@@ -42,7 +42,7 @@ export default function FavoriteButton({ product, productId, size = 'md', classN
         ${animating ? 'scale-125' : 'scale-100'}
         ${className}
       `}
-      style={!active ? { color: 'rgba(91, 58, 41, 0.4)' } : undefined}
+      style={!active ? { color: 'rgba(44, 36, 32, 0.4)' } : undefined}
     >
       <Heart
         size={s.icon}

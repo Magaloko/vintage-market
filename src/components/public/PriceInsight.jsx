@@ -26,7 +26,7 @@ export default function PriceInsight({ price, avgPrice, compact = false }) {
 
   if (compact) {
     return (
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-sans ${color} ${bgColor}`}>
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-body ${color} ${bgColor}`}>
         <Icon size={10} />
         {label}
       </span>
@@ -35,11 +35,11 @@ export default function PriceInsight({ price, avgPrice, compact = false }) {
 
   return (
     <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${bgColor}`}
-      style={diff > -15 && diff < 15 ? { backgroundColor: 'rgba(91, 58, 41, 0.04)', borderColor: 'rgba(91, 58, 41, 0.15)' } : undefined}>
+      style={diff > -15 && diff < 15 ? { backgroundColor: 'rgba(44, 36, 32, 0.04)', borderColor: 'rgba(44, 36, 32, 0.15)' } : undefined}>
       <Icon size={16} className={color} />
       <div>
-        <p className={`font-sans text-sm font-medium ${color}`}>{label}</p>
-        <p className="font-sans text-xs" style={{ color: 'rgba(91, 58, 41, 0.4)' }}>
+        <p className={`font-body text-sm font-medium ${color}`}>{label}</p>
+        <p className="font-body text-xs" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>
           Средняя по категории: {avgPrice}\u20ac
         </p>
       </div>

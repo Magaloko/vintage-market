@@ -1,76 +1,89 @@
 import { Link } from 'react-router-dom'
-import { Images } from 'lucide-react'
+import { categories, conditions } from '../../data/demoProducts'
 import FavoriteButton from './FavoriteButton'
 import CompareButton from './CompareButton'
 
-export default function ProductCard({ product, showFavorite = true, showCompare = false }) {
-  const imageCount = product.images?.length || (product.image_url ? 1 : 0)
-  const mainImage = product.images?.[0]?.url || product.image_url
+export default function ProductCard({ product, showCompare = false }) {
+  const category = categories.find(c => c.id === product.category)
+  const imageUrl = product.image_url || product.images?.[0]?.url
+  const isSold = product.status === 'sold'
+  const isShop = category?.group === 'shops'
 
   return (
-    <div className="vintage-card group relative overflow-hidden">
-      {/* Action buttons */}
-      <div className="absolute top-3 right-3 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        {showFavorite && <FavoriteButton product={product} size="sm" />}
-        {showCompare && <CompareButton product={product} size="sm" />}
-      </div>
-
-      {/* Image badge: multi-image count */}
-      {imageCount > 1 && (
-        <div className="absolute bottom-[calc(40%+8px)] left-3 z-10 flex items-center gap-1 px-2 py-1 rounded-full"
-          style={{ backgroundColor: 'rgba(14, 26, 43, 0.6)', color: '#F2EDE3' }}>
-          <Images size={12} />
-          <span className="font-sans text-[10px]">{imageCount}</span>
-        </div>
-      )}
-
-      <Link to={`/product/${product.id}`}>
-        <div className="aspect-square overflow-hidden relative">
+    <Link
+      to={`/product/${product.id}`}
+      className="group block transition-all duration-500"
+      style={{ borderRadius: '2px' }}
+    >
+      {/* Image */}
+      <div className="relative aspect-[4/5] overflow-hidden" style={{ backgroundColor: '#E0D4C0', borderRadius: '2px' }}>
+        {imageUrl ? (
           <img
-            src={mainImage}
+            src={imageUrl}
             alt={product.title}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             loading="lazy"
           />
-          {/* Hover darker overlay */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-            style={{ backgroundColor: 'rgba(14, 26, 43, 0.08)' }} />
-
-          {product.status === 'sold' && (
-            <div className="absolute inset-0 flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(14, 26, 43, 0.65)' }}>
-              <span className="font-sans text-sm tracking-[0.3em] uppercase"
-                style={{ color: 'rgba(242, 237, 227, 0.8)' }}>
-                Продано
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="p-5">
-          {/* Category label in olive */}
-          {product.category && (
-            <span className="font-sans text-[10px] tracking-[0.2em] uppercase"
-              style={{ color: '#5A6B3C' }}>
-              {product.category}
-            </span>
-          )}
-          <h3 className="font-display text-lg leading-tight mt-1 transition-colors duration-200"
-            style={{ color: '#0E1A2B' }}>
-            {product.title}
-          </h3>
-          <div className="flex items-center justify-between mt-3">
-            <span className="font-sans text-lg font-semibold" style={{ color: '#0E1A2B' }}>
-              {product.price}&euro;
-            </span>
-            {product.era && (
-              <span className="font-sans text-xs" style={{ color: 'rgba(91, 58, 41, 0.4)' }}>
-                {product.era}
-              </span>
-            )}
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="text-4xl opacity-30">{category?.icon || '🏺'}</span>
           </div>
+        )}
+
+        {/* Overlay on hover */}
+        <div className="absolute inset-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"
+          style={{ background: 'linear-gradient(to top, rgba(12,10,8,0.4), transparent 60%)' }} />
+
+        {/* Sold badge */}
+        {isSold && (
+          <div className="absolute top-3 left-3 px-3 py-1 font-body text-[10px] tracking-[0.2em] uppercase"
+            style={{ backgroundColor: 'rgba(12, 10, 8, 0.8)', color: '#B08D57', backdropFilter: 'blur(4px)', borderRadius: '1px' }}>
+            Продано
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="absolute top-3 right-3 flex flex-col gap-2 transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0">
+          <FavoriteButton product={product} size="sm" />
+          {showCompare && <CompareButton product={product} size="sm" />}
         </div>
-      </Link>
-    </div>
+
+        {/* Category badge */}
+        {category && (
+          <div className="absolute bottom-3 left-3 px-2.5 py-1 font-body text-[10px] tracking-[0.15em] uppercase transition-all duration-300 opacity-0 group-hover:opacity-100"
+            style={{ backgroundColor: 'rgba(247, 242, 235, 0.9)', color: '#2C2420', backdropFilter: 'blur(4px)', borderRadius: '1px' }}>
+            {category.name}
+          </div>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="pt-4 pb-2">
+        <h3 className="font-display text-lg leading-snug transition-colors duration-300"
+          style={{ color: '#0C0A08' }}>
+          {product.title}
+        </h3>
+
+        <div className="flex items-center justify-between mt-2">
+          {product.price > 0 ? (
+            <span className={`font-body text-sm tracking-wide ${isSold ? 'line-through' : ''}`}
+              style={{ color: isSold ? 'rgba(44, 36, 32, 0.3)' : '#B08D57' }}>
+              {product.price}&euro;
+              {category?.group === 'realestate' && product.details?.rent_or_buy === 'Аренда' && ' / мес.'}
+            </span>
+          ) : isShop ? (
+            <span className="font-body text-xs tracking-wide" style={{ color: 'rgba(176, 141, 87, 0.6)' }}>
+              Магазин
+            </span>
+          ) : null}
+
+          {product.era && (
+            <span className="font-body text-[11px]" style={{ color: 'rgba(44, 36, 32, 0.3)' }}>
+              {product.era}
+            </span>
+          )}
+        </div>
+      </div>
+    </Link>
   )
 }

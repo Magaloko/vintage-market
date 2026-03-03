@@ -14,12 +14,12 @@ export default function Contact() {
   return (
     <div className="page-enter">
       {/* Hero header — Deep Navy */}
-      <div className="py-20" style={{ backgroundColor: '#0E1A2B' }}>
+      <div className="pt-28 pb-16" style={{ backgroundColor: '#0C0A08' }}>
         <div className="max-w-7xl mx-auto px-6">
           <span className="font-sans text-xs tracking-[0.3em] uppercase"
-            style={{ color: 'rgba(184, 154, 90, 0.5)' }}>Связаться</span>
+            style={{ color: 'rgba(176, 141, 87, 0.5)' }}>Связаться</span>
           <h1 className="font-display text-4xl md:text-6xl font-bold mt-3"
-            style={{ color: '#F2EDE3' }}>Контакты</h1>
+            style={{ color: '#F0E6D6' }}>Контакты</h1>
         </div>
         <div className="section-gold-line mt-16" />
       </div>
@@ -28,10 +28,10 @@ export default function Contact() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           {/* Contact Info */}
           <div>
-            <h2 className="font-display text-2xl font-bold mb-8" style={{ color: '#0E1A2B' }}>
+            <h2 className="font-display text-2xl font-bold mb-8" style={{ color: '#0C0A08' }}>
               Мы всегда рады вашим вопросам
             </h2>
-            <p className="font-body text-lg mb-12 leading-relaxed" style={{ color: 'rgba(91, 58, 41, 0.5)' }}>
+            <p className="font-body text-lg mb-12 leading-relaxed" style={{ color: 'rgba(44, 36, 32, 0.5)' }}>
               Свяжитесь с нами любым удобным способом. Мы отвечаем в течение 24 часов.
             </p>
 
@@ -43,21 +43,21 @@ export default function Contact() {
               ].map(({ icon: Icon, title, value, href }) => (
                 <div key={title} className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: 'rgba(91, 58, 41, 0.06)' }}>
-                    <Icon size={18} style={{ color: '#5B3A29' }} />
+                    style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }}>
+                    <Icon size={18} style={{ color: '#2C2420' }} />
                   </div>
                   <div>
-                    <h3 className="font-sans text-sm font-medium" style={{ color: '#0E1A2B' }}>{title}</h3>
+                    <h3 className="font-sans text-sm font-medium" style={{ color: '#0C0A08' }}>{title}</h3>
                     {href ? (
                       <a href={href} className="font-body transition-colors"
-                        style={{ color: 'rgba(91, 58, 41, 0.5)' }}
-                        onMouseEnter={e => e.currentTarget.style.color = '#0E1A2B'}
-                        onMouseLeave={e => e.currentTarget.style.color = 'rgba(91, 58, 41, 0.5)'}
+                        style={{ color: 'rgba(44, 36, 32, 0.5)' }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#0C0A08'}
+                        onMouseLeave={e => e.currentTarget.style.color = 'rgba(44, 36, 32, 0.5)'}
                       >
                         {value}
                       </a>
                     ) : (
-                      <p className="font-body" style={{ color: 'rgba(91, 58, 41, 0.5)' }}>{value}</p>
+                      <p className="font-body" style={{ color: 'rgba(44, 36, 32, 0.5)' }}>{value}</p>
                     )}
                   </div>
                 </div>
@@ -67,14 +67,14 @@ export default function Contact() {
 
           {/* Contact Form */}
           <div className="vintage-card p-8">
-            <h3 className="font-display text-xl font-semibold mb-6" style={{ color: '#0E1A2B' }}>
+            <h3 className="font-display text-xl font-semibold mb-6" style={{ color: '#0C0A08' }}>
               Написать нам
             </h3>
             <div className="vintage-divider !mx-0 !w-10 mb-6" />
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block font-sans text-xs tracking-wider uppercase mb-2"
-                  style={{ color: 'rgba(91, 58, 41, 0.4)' }}>
+                  style={{ color: 'rgba(44, 36, 32, 0.4)' }}>
                   Имя
                 </label>
                 <input
@@ -88,7 +88,7 @@ export default function Contact() {
               </div>
               <div>
                 <label className="block font-sans text-xs tracking-wider uppercase mb-2"
-                  style={{ color: 'rgba(91, 58, 41, 0.4)' }}>
+                  style={{ color: 'rgba(44, 36, 32, 0.4)' }}>
                   Email
                 </label>
                 <input
@@ -102,7 +102,7 @@ export default function Contact() {
               </div>
               <div>
                 <label className="block font-sans text-xs tracking-wider uppercase mb-2"
-                  style={{ color: 'rgba(91, 58, 41, 0.4)' }}>
+                  style={{ color: 'rgba(44, 36, 32, 0.4)' }}>
                   Сообщение
                 </label>
                 <textarea

@@ -7,64 +7,48 @@ export default {
   theme: {
     extend: {
       colors: {
-        vintage: {
-          // Primary palette
-          orange: '#C2642C',
-          navy: '#0E1A2B',
-          olive: '#5A6B3C',
-          brown: '#5B3A29',
-          paper: '#F2EDE3',
-          gold: '#B89A5A',
-          // Derived shades
-          'navy-light': '#162438',
-          'navy-dark': '#0A1220',
-          'orange-light': '#D4784A',
-          'orange-dark': '#A45322',
-          'olive-light': '#6E7F4E',
-          'olive-dark': '#485A30',
-          'brown-light': '#7A5340',
-          'brown-dark': '#3E271C',
-          'paper-dark': '#E5DDD1',
-          'paper-light': '#F7F3EC',
-          'gold-light': '#CBB077',
-          'gold-dark': '#9A7E42',
-          // Text colors (no pure black/white)
-          ink: '#1C1C1A',
-          cream: '#F2EDE3',
-          'warm-light': '#E8DFD1',
-          // Aliases used in components
-          dark: '#0E1A2B',
-          beige: '#F2EDE3',
-          sand: '#E5DDD1',
-          green: '#5A6B3C',
-          copper: '#C2642C',
+        gdt: {
+          // Core palette — Galerie du Temps
+          black: '#0C0A08',
+          charcoal: '#1A1410',
+          bronze: '#B08D57',
+          'bronze-light': '#C9A96E',
+          'bronze-dark': '#8A6D3B',
+          gold: '#D4AF6A',
+          copper: '#C9956B',
+          cream: '#F0E6D6',
+          'cream-dark': '#E0D4C0',
+          pearl: '#F7F2EB',
+          ink: '#2C2420',
+          warm: '#3D3229',
+          // Accent
+          rose: '#B5736A',
+          sage: '#7A8B6F',
         }
       },
       fontFamily: {
-        display: ['Playfair Display', 'Georgia', 'serif'],
-        body: ['Cormorant Garamond', 'Garamond', 'serif'],
-        sans: ['Outfit', 'sans-serif'],
+        display: ['Cormorant Garamond', 'Garamond', 'serif'],
+        heading: ['Playfair Display', 'Georgia', 'serif'],
+        body: ['DM Sans', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
       borderRadius: {
-        btn: '6px',
-      },
-      borderColor: {
-        'vintage-border': 'rgba(91, 58, 41, 0.2)',
+        btn: '4px',
       },
       boxShadow: {
-        'vintage-sm': '0 1px 3px rgba(91, 58, 41, 0.06)',
-        'vintage': '0 4px 12px rgba(91, 58, 41, 0.08)',
-        'vintage-lg': '0 8px 24px rgba(91, 58, 41, 0.12)',
-        'vintage-card': '0 2px 8px rgba(14, 26, 43, 0.06)',
-        'vintage-card-hover': '0 8px 24px rgba(14, 26, 43, 0.12)',
-      },
-      backgroundImage: {
-        'paper-texture': "url('data:image/svg+xml,%3Csvg width=\"200\" height=\"200\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cfilter id=\"noise\"%3E%3CfeTurbulence baseFrequency=\"0.65\" numOctaves=\"3\" stitchTiles=\"stitch\"/%3E%3C/filter%3E%3Crect width=\"100%25\" height=\"100%25\" filter=\"url(%23noise)\" opacity=\"0.03\"/%3E%3C/svg%3E')",
+        'glow': '0 0 40px rgba(176, 141, 87, 0.15)',
+        'glow-sm': '0 0 20px rgba(176, 141, 87, 0.1)',
+        'card': '0 4px 20px rgba(12, 10, 8, 0.08)',
+        'card-hover': '0 12px 40px rgba(12, 10, 8, 0.15)',
+        'luxury': '0 8px 32px rgba(176, 141, 87, 0.12)',
       },
       animation: {
-        'fade-in': 'fadeIn 0.6s ease-out both',
-        'slide-up': 'slideUp 0.5s ease-out both',
-        'scale-in': 'scaleIn 0.4s ease-out both',
+        'fade-in': 'fadeIn 0.8s ease-out both',
+        'slide-up': 'slideUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'slide-down': 'slideDown 0.5s ease-out both',
+        'scale-in': 'scaleIn 0.5s ease-out both',
+        'shimmer': 'shimmer 3s ease-in-out infinite',
+        'float': 'float 6s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -72,12 +56,24 @@ export default {
           '100%': { opacity: '1' },
         },
         slideUp: {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '0%': { opacity: '0', transform: 'translateY(30px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideDown: {
+          '0%': { opacity: '0', transform: 'translateY(-10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         scaleIn: {
           '0%': { opacity: '0', transform: 'scale(0.95)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        shimmer: {
+          '0%, 100%': { opacity: '0.5' },
+          '50%': { opacity: '1' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-8px)' },
         },
       },
     },

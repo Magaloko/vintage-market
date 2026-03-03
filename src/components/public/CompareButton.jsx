@@ -25,10 +25,10 @@ export default function CompareButton({ product, size = 'sm' }) {
         }`}
       style={
         active
-          ? { backgroundColor: '#5A6B3C' }
+          ? { backgroundColor: '#B08D57' }
           : disabled
-            ? { color: 'rgba(91, 58, 41, 0.2)' }
-            : { color: 'rgba(91, 58, 41, 0.4)' }
+            ? { color: 'rgba(44, 36, 32, 0.2)' }
+            : { color: 'rgba(44, 36, 32, 0.4)' }
       }
     >
       <GitCompareArrows size={size === 'sm' ? 14 : 18} />

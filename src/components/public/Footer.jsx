@@ -1,45 +1,52 @@
 import { Link } from 'react-router-dom'
-import { categoryGroups, categories } from '../../data/demoProducts'
+import { categories, categoryGroups } from '../../data/demoProducts'
 
 export default function Footer() {
-  // Show first 4 vintage categories in footer
   const vintageCats = categories.filter(c => c.group === 'vintage').slice(0, 5)
   const otherCats = categories.filter(c => c.group !== 'vintage').slice(0, 3)
 
   return (
-    <footer style={{ backgroundColor: '#0E1A2B' }}>
-      <div className="section-gold-line" />
+    <footer style={{ backgroundColor: '#0C0A08' }}>
+      <div className="gdt-divider" />
 
-      <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+      <div className="max-w-7xl mx-auto px-6 py-20">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-16">
           {/* Brand */}
           <div className="md:col-span-2">
-            <h3 className="font-display text-2xl font-bold mb-4" style={{ color: '#F2EDE3' }}>ЭПОХА</h3>
-            <div className="w-12 h-px mb-6" style={{ backgroundColor: '#B89A5A' }} />
-            <p className="font-body leading-relaxed max-w-md" style={{ color: 'rgba(242, 237, 227, 0.4)' }}>
-              Мы находим уникальные вещи с историей и даём им вторую жизнь.
-              Каждый предмет — это часть прошлого, которая украсит ваше настоящее.
+            <div className="mb-6">
+              <span className="font-display text-2xl tracking-[0.3em] uppercase" style={{ color: '#B08D57' }}>
+                Galerie
+              </span>
+              <br />
+              <span className="font-display text-sm italic tracking-[0.2em]" style={{ color: 'rgba(176, 141, 87, 0.5)' }}>
+                du Temps
+              </span>
+            </div>
+            <div className="w-12 h-px mb-6" style={{ backgroundColor: 'rgba(176, 141, 87, 0.2)' }} />
+            <p className="font-display text-lg italic leading-relaxed max-w-sm" style={{ color: 'rgba(240, 230, 214, 0.3)' }}>
+              Мы находим уникальные вещи с историей
+              и даём им вторую жизнь.
             </p>
           </div>
 
           {/* Navigation */}
           <div>
-            <h4 className="font-sans text-xs tracking-[0.2em] uppercase mb-4"
-              style={{ color: 'rgba(184, 154, 90, 0.6)' }}>
+            <h4 className="font-body text-[10px] tracking-[0.3em] uppercase mb-6"
+              style={{ color: 'rgba(176, 141, 87, 0.4)' }}>
               Навигация
             </h4>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4">
               {[
                 { to: '/catalog', label: 'Каталог' },
                 { to: '/favorites', label: 'Избранное' },
-                { to: '/about', label: 'О нас' },
-                { to: '/contact', label: 'Контакты' },
+                { to: '/about', label: 'О галерее' },
+                { to: '/contact', label: 'Контакт' },
               ].map(link => (
                 <Link key={link.to} to={link.to}
-                  className="font-body text-sm transition-colors duration-200"
-                  style={{ color: 'rgba(242, 237, 227, 0.4)' }}
-                  onMouseEnter={e => e.currentTarget.style.color = '#F2EDE3'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(242, 237, 227, 0.4)'}>
+                  className="font-display text-sm italic tracking-wide transition-colors duration-300"
+                  style={{ color: 'rgba(240, 230, 214, 0.3)' }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#B08D57'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(240, 230, 214, 0.3)'}>
                   {link.label}
                 </Link>
               ))}
@@ -48,26 +55,17 @@ export default function Footer() {
 
           {/* Categories */}
           <div>
-            <h4 className="font-sans text-xs tracking-[0.2em] uppercase mb-4"
-              style={{ color: 'rgba(184, 154, 90, 0.6)' }}>
+            <h4 className="font-body text-[10px] tracking-[0.3em] uppercase mb-6"
+              style={{ color: 'rgba(176, 141, 87, 0.4)' }}>
               Категории
             </h4>
-            <div className="flex flex-col gap-3">
-              {vintageCats.map(cat => (
+            <div className="flex flex-col gap-4">
+              {[...vintageCats, ...otherCats].map(cat => (
                 <Link key={cat.id} to={`/catalog/${cat.id}`}
-                  className="font-body text-sm transition-colors duration-200"
-                  style={{ color: 'rgba(242, 237, 227, 0.4)' }}
-                  onMouseEnter={e => e.currentTarget.style.color = '#F2EDE3'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(242, 237, 227, 0.4)'}>
-                  {cat.icon} {cat.name}
-                </Link>
-              ))}
-              {otherCats.map(cat => (
-                <Link key={cat.id} to={`/catalog/${cat.id}`}
-                  className="font-body text-sm transition-colors duration-200"
-                  style={{ color: 'rgba(242, 237, 227, 0.4)' }}
-                  onMouseEnter={e => e.currentTarget.style.color = '#F2EDE3'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(242, 237, 227, 0.4)'}>
+                  className="font-display text-sm italic tracking-wide transition-colors duration-300"
+                  style={{ color: 'rgba(240, 230, 214, 0.3)' }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#B08D57'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(240, 230, 214, 0.3)'}>
                   {cat.icon} {cat.name}
                 </Link>
               ))}
@@ -76,13 +74,13 @@ export default function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4"
-          style={{ borderTop: '1px solid rgba(184, 154, 90, 0.15)' }}>
-          <p className="font-sans text-xs" style={{ color: 'rgba(242, 237, 227, 0.25)' }}>
-            &copy; {new Date().getFullYear()} ЭПОХА. Все права защищены.
+        <div className="mt-20 pt-8 flex flex-col md:flex-row justify-between items-center gap-4"
+          style={{ borderTop: '1px solid rgba(176, 141, 87, 0.08)' }}>
+          <p className="font-body text-[11px] tracking-wide" style={{ color: 'rgba(240, 230, 214, 0.15)' }}>
+            &copy; {new Date().getFullYear()} Galerie du Temps. Wien, Austria.
           </p>
-          <p className="font-sans text-xs italic" style={{ color: 'rgba(184, 154, 90, 0.3)' }}>
-            Винтаж — это не старое. Это вечное.
+          <p className="font-display text-sm italic" style={{ color: 'rgba(176, 141, 87, 0.2)' }}>
+            Le temps embellit toute chose
           </p>
         </div>
       </div>

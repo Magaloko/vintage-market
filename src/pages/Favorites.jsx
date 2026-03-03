@@ -38,11 +38,11 @@ export default function Favorites() {
   return (
     <div className="page-enter">
       {/* Header */}
-      <div style={{ backgroundColor: 'rgba(91, 58, 41, 0.04)' }}>
-        <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
+      <div style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)' }}>
+        <div className="max-w-7xl mx-auto px-6 pt-28 pb-16">
           <div className="flex items-center gap-3 mb-3">
-            <Heart size={24} style={{ color: '#C2642C' }} fill="currentColor" />
-            <h1 className="font-display text-3xl md:text-4xl font-bold" style={{ color: '#0E1A2B' }}>
+            <Heart size={24} style={{ color: '#B08D57' }} fill="currentColor" />
+            <h1 className="font-display text-3xl md:text-4xl font-bold" style={{ color: '#0C0A08' }}>
               Избранное
             </h1>
           </div>
@@ -60,9 +60,9 @@ export default function Favorites() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mt-8">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="animate-pulse">
-                <div className="aspect-[4/5]" style={{ backgroundColor: 'rgba(91, 58, 41, 0.06)', borderRadius: '6px' }} />
-                <div className="mt-4 h-4 rounded w-3/4" style={{ backgroundColor: 'rgba(91, 58, 41, 0.06)' }} />
-                <div className="mt-2 h-4 rounded w-1/4" style={{ backgroundColor: 'rgba(91, 58, 41, 0.06)' }} />
+                <div className="aspect-[4/5]" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)', borderRadius: '2px' }} />
+                <div className="mt-4 h-4 rounded w-3/4" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }} />
+                <div className="mt-2 h-4 rounded w-1/4" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }} />
               </div>
             ))}
           </div>
@@ -71,10 +71,10 @@ export default function Favorites() {
         {!loading && products.length === 0 && (
           <div className="text-center py-20">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(91, 58, 41, 0.04)' }}>
-              <Heart size={32} style={{ color: 'rgba(91, 58, 41, 0.15)' }} />
+              style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)' }}>
+              <Heart size={32} style={{ color: 'rgba(44, 36, 32, 0.15)' }} />
             </div>
-            <h3 className="font-display text-xl mb-2" style={{ color: '#0E1A2B' }}>
+            <h3 className="font-display text-xl mb-2" style={{ color: '#0C0A08' }}>
               Пока ничего не добавлено
             </h3>
             <p className="font-body mb-8 max-w-md mx-auto" style={{ color: 'rgba(28, 28, 26, 0.4)' }}>

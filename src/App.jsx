@@ -56,7 +56,7 @@ export default function App() {
           position="top-right"
           toastOptions={{
             style: {
-              fontFamily: 'Outfit, sans-serif',
+              fontFamily: 'DM Sans, sans-serif',
               fontSize: '14px',
               background: '#3A2A1D',
               color: '#F5F0E8',

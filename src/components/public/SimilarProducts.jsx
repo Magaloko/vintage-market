@@ -30,10 +30,10 @@ export default function SimilarProducts({ currentProduct }) {
   if (similar.length === 0) return null
 
   return (
-    <section className="mt-16 pt-12" style={{ borderTop: '1px solid rgba(91, 58, 41, 0.1)' }}>
+    <section className="mt-16 pt-12" style={{ borderTop: '1px solid rgba(44, 36, 32, 0.1)' }}>
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-8 h-px" style={{ backgroundColor: '#B89A5A' }} />
-        <h2 className="font-display text-2xl" style={{ color: '#0E1A2B' }}>Похожие товары</h2>
+        <div className="w-8 h-px" style={{ backgroundColor: '#B08D57' }} />
+        <h2 className="font-display text-2xl" style={{ color: '#0C0A08' }}>Похожие товары</h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {similar.map((product, i) => (
