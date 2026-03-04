@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Edit, Trash2, Eye, Search, Package } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, Search, Package, Star } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { getProducts, deleteProduct } from '../../lib/api'
+import { getProducts, deleteProduct, togglePromoted } from '../../lib/api'
 import { useAuth } from '../../lib/AuthContext'
 import { categories } from '../../data/demoProducts'
 
@@ -55,7 +55,7 @@ function EmptyState() {
   )
 }
 
-function ProductRow({ product, onDelete }) {
+function ProductRow({ product, onDelete, onTogglePromote }) {
   const category = categories.find((c) => c.id === product.category)
 
   return (
@@ -88,6 +88,14 @@ function ProductRow({ product, onDelete }) {
           <Eye size={12} className="inline mr-1" />
           {product.views || 0}
         </span>
+        <button
+          onClick={() => onTogglePromote(product.id, !product.is_promoted)}
+          className="w-8 h-8 flex items-center justify-center transition-colors"
+          style={{ color: product.is_promoted ? GOLD : TEXT_MUTED }}
+          title={product.is_promoted ? 'Убрать из продвигаемых' : 'Продвигать'}
+        >
+          <Star size={14} fill={product.is_promoted ? GOLD : 'none'} />
+        </button>
         <Link
           to={`/seller/products/edit/${product.id}`}
           className="w-8 h-8 flex items-center justify-center transition-colors"
@@ -138,6 +146,16 @@ export default function SellerProducts() {
     }
   }
 
+  const handleTogglePromote = async (id, isPromoted) => {
+    const { error } = await togglePromoted(id, isPromoted)
+    if (error) {
+      toast.error('Ошибка обновления')
+    } else {
+      toast.success(isPromoted ? 'Товар продвигается' : 'Продвижение снято')
+      loadProducts()
+    }
+  }
+
   const filtered = search
     ? products.filter((p) => p.title.toLowerCase().includes(search.toLowerCase()))
     : products
@@ -178,7 +196,7 @@ export default function SellerProducts() {
       ) : (
         <div className="space-y-2">
           {filtered.map((product) => (
-            <ProductRow key={product.id} product={product} onDelete={handleDelete} />
+            <ProductRow key={product.id} product={product} onDelete={handleDelete} onTogglePromote={handleTogglePromote} />
           ))}
         </div>
       )}

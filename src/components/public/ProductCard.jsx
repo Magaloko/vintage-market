@@ -1,5 +1,6 @@
 import { memo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Star, TrendingUp, Flame } from 'lucide-react'
 import { categories } from '../../data/demoProducts'
 import FavoriteButton from './FavoriteButton'
 import CompareButton from './CompareButton'
@@ -16,7 +17,7 @@ const COLORS = {
   hoverGradient: 'linear-gradient(to top, rgba(12,10,8,0.4), transparent 60%)',
 }
 
-function ProductCard({ product, showCompare = false }) {
+function ProductCard({ product, showCompare = false, isBestseller = false, isPopular = false }) {
   const [imgError, setImgError] = useState(false)
 
   const category = categories.find((c) => c.id === product.category)
@@ -50,7 +51,12 @@ function ProductCard({ product, showCompare = false }) {
 
         {isSold && <SoldBadge />}
 
-        <div className="absolute top-3 right-3 flex flex-col gap-2 transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0">
+        {/* Product badges — top-right, always visible */}
+        <ProductBadges isPromoted={product.is_promoted} isBestseller={isBestseller} isPopular={isPopular} />
+
+        <div className="absolute top-3 right-3 flex flex-col gap-2 transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0"
+          style={{ top: (product.is_promoted || isBestseller || isPopular) ? '2.75rem' : '0.75rem' }}
+        >
           <FavoriteButton product={product} size="sm" />
           {showCompare && <CompareButton product={product} size="sm" />}
         </div>
@@ -132,6 +138,76 @@ function CategoryBadge({ name }) {
       }}
     >
       {name}
+    </div>
+  )
+}
+
+function ProductBadges({ isPromoted, isBestseller, isPopular }) {
+  const badges = []
+  if (isPromoted) badges.push('promoted')
+  if (isBestseller && badges.length < 2) badges.push('bestseller')
+  if (isPopular && !isBestseller && badges.length < 2) badges.push('popular')
+  if (badges.length === 0) return null
+
+  return (
+    <div className="absolute top-3 right-3 flex flex-col gap-1.5 z-10">
+      {badges.map((type) => {
+        if (type === 'promoted') return <PromotedBadge key={type} />
+        if (type === 'bestseller') return <BestsellerBadge key={type} />
+        return <PopularBadge key={type} />
+      })}
+    </div>
+  )
+}
+
+function PromotedBadge() {
+  return (
+    <div
+      className="px-2 py-1 font-body text-[9px] tracking-[0.15em] uppercase flex items-center gap-1"
+      style={{
+        background: 'linear-gradient(135deg, #B08D57, #C9A96E)',
+        color: '#0C0A08',
+        borderRadius: '1px',
+        boxShadow: '0 2px 8px rgba(176, 141, 87, 0.3)',
+      }}
+    >
+      <Star size={8} fill="#0C0A08" />
+      Реклама
+    </div>
+  )
+}
+
+function BestsellerBadge() {
+  return (
+    <div
+      className="px-2 py-1 font-body text-[9px] tracking-[0.15em] uppercase flex items-center gap-1"
+      style={{
+        backgroundColor: 'rgba(12, 10, 8, 0.85)',
+        color: '#C9A96E',
+        backdropFilter: 'blur(4px)',
+        borderRadius: '1px',
+        border: '1px solid rgba(176, 141, 87, 0.3)',
+      }}
+    >
+      <Flame size={8} />
+      Bestseller
+    </div>
+  )
+}
+
+function PopularBadge() {
+  return (
+    <div
+      className="px-2 py-1 font-body text-[9px] tracking-[0.15em] uppercase flex items-center gap-1"
+      style={{
+        backgroundColor: 'rgba(12, 10, 8, 0.7)',
+        color: 'rgba(240, 230, 214, 0.7)',
+        backdropFilter: 'blur(4px)',
+        borderRadius: '1px',
+      }}
+    >
+      <TrendingUp size={8} />
+      Популярное
     </div>
   )
 }

@@ -328,6 +328,7 @@ export const demoProducts = [
     },
     status: 'active',
     views: 203,
+    is_promoted: true,
     created_at: '2025-02-01T09:15:00Z',
   },
 
@@ -380,6 +381,7 @@ export const demoProducts = [
     },
     status: 'active',
     views: 178,
+    is_promoted: true,
     created_at: '2025-02-15T16:45:00Z',
   },
 
@@ -515,6 +517,7 @@ export const demoProducts = [
     },
     status: 'active',
     views: 267,
+    is_promoted: true,
     created_at: '2025-03-12T09:45:00Z',
   },
 

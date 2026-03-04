@@ -134,6 +134,18 @@
   .gdt-divider {
     height: 1px;
     background: linear-gradient(90deg, transparent, #B08D57, transparent);
+    position: relative;
+  }
+  .gdt-divider::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    width: 6px;
+    height: 6px;
+    background-color: #B08D57;
+    opacity: 0.4;
   }
 
   .vintage-divider {
@@ -187,5 +199,15 @@
 
 @keyframes pageEnter {
   from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hero slider content transition */
+.slide-content-enter {
+  animation: slideContentIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes slideContentIn {
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }

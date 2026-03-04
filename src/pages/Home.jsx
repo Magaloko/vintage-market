@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   ChevronDown,
   Sparkles,
   Store,
@@ -14,14 +16,16 @@ import { getProducts, getCategoryCounts } from '../lib/api'
 import { categoryGroups, categories } from '../data/demoProducts'
 import ProductCard from '../components/public/ProductCard'
 
+const POPULAR_THRESHOLD = 100
+
 /* ------------------------------------------------------------------ */
 /*  Static data                                                        */
 /* ------------------------------------------------------------------ */
 
-const HERO_BACKGROUNDS = [
-  '/images/bg-bronze.jpg',
-  '/images/bg-silk.jpg',
-  '/images/bg-wave.jpg',
+const HERO_SLIDES = [
+  { id: 'branding', bg: '/images/bg-bronze.jpg', type: 'branding' },
+  { id: 'promoted', bg: '/images/bg-silk.jpg', type: 'promoted' },
+  { id: 'arrivals', bg: '/images/bg-wave.jpg', type: 'arrivals' },
 ]
 
 const COLLECTIONS = [
@@ -120,7 +124,8 @@ export default function Home() {
   const [categoryCounts, setCategoryCounts] = useState({})
   const [productsLoading, setProductsLoading] = useState(true)
 
-  const [activeBG, setActiveBG] = useState(0)
+  const [activeSlide, setActiveSlide] = useState(0)
+  const [slidePaused, setSlidePaused] = useState(false)
   const [activeCollection, setActiveCollection] = useState(0)
 
   // Quiz: -1 = not started, 0..2 = question index, 3 = results
@@ -151,12 +156,13 @@ export default function Home() {
   /* ---------- Auto-rotate timers ---------- */
 
   useEffect(() => {
+    if (slidePaused) return
     const id = setInterval(
-      () => setActiveBG((prev) => (prev + 1) % HERO_BACKGROUNDS.length),
+      () => setActiveSlide((prev) => (prev + 1) % HERO_SLIDES.length),
       6000,
     )
     return () => clearInterval(id)
-  }, [])
+  }, [slidePaused])
 
   useEffect(() => {
     if (quizStep >= 0) return
@@ -193,19 +199,49 @@ export default function Home() {
 
   const hasAnyCounts = Object.keys(categoryCounts).length > 0
 
+  const prevSlide = () =>
+    setActiveSlide((prev) => (prev - 1 + HERO_SLIDES.length) % HERO_SLIDES.length)
+  const nextSlide = () =>
+    setActiveSlide((prev) => (prev + 1) % HERO_SLIDES.length)
+
+  const promotedProducts = useMemo(
+    () => products.filter((p) => p.is_promoted),
+    [products],
+  )
+  const newestProducts = useMemo(
+    () => [...products].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 4),
+    [products],
+  )
+
+  const { bestsellerIds, popularIds } = useMemo(() => {
+    const sorted = [...products].sort((a, b) => (b.views || 0) - (a.views || 0))
+    const bIds = new Set(sorted.slice(0, 3).map((p) => p.id))
+    const pIds = new Set(
+      products
+        .filter((p) => (p.views || 0) > POPULAR_THRESHOLD && !bIds.has(p.id))
+        .map((p) => p.id),
+    )
+    return { bestsellerIds: bIds, popularIds: pIds }
+  }, [products])
+
   /* ---------- Render ---------- */
 
   return (
     <div className="page-enter">
-      {/* ═══════════════ HERO ═══════════════ */}
-      <section className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden">
-        {HERO_BACKGROUNDS.map((bg, i) => (
+      {/* ═══════════════ HERO SLIDER ═══════════════ */}
+      <section
+        className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden"
+        onMouseEnter={() => setSlidePaused(true)}
+        onMouseLeave={() => setSlidePaused(false)}
+      >
+        {/* Backgrounds */}
+        {HERO_SLIDES.map((slide, i) => (
           <div
-            key={bg}
+            key={slide.id}
             className="absolute inset-0 bg-cover bg-center transition-opacity duration-[2000ms]"
             style={{
-              backgroundImage: `url(${bg})`,
-              opacity: activeBG === i ? 1 : 0,
+              backgroundImage: `url(${slide.bg})`,
+              opacity: activeSlide === i ? 1 : 0,
             }}
           />
         ))}
@@ -218,94 +254,147 @@ export default function Home() {
           }}
         />
 
-        <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
-          {/* Tagline */}
-          <div
-            className="flex items-center justify-center gap-4 mb-8 animate-fade-in"
-            style={{ animationDelay: '200ms' }}
-          >
-            <div className="w-16 h-px" style={{ backgroundColor: 'rgba(176, 141, 87, 0.4)' }} />
-            <span
-              className="font-body text-[10px] tracking-[0.5em] uppercase"
-              style={{ color: 'rgba(176, 141, 87, 0.6)' }}
-            >
-              Вена &middot; Est. 2025
-            </span>
-            <div className="w-16 h-px" style={{ backgroundColor: 'rgba(176, 141, 87, 0.4)' }} />
-          </div>
+        {/* Vintage decorative frame */}
+        <div className="absolute inset-8 md:inset-16 pointer-events-none z-[5]" style={{ border: '1px solid rgba(176, 141, 87, 0.06)', borderRadius: '2px' }}>
+          <div className="absolute -top-px -left-px w-8 h-8" style={{ borderTop: '2px solid rgba(176, 141, 87, 0.15)', borderLeft: '2px solid rgba(176, 141, 87, 0.15)' }} />
+          <div className="absolute -top-px -right-px w-8 h-8" style={{ borderTop: '2px solid rgba(176, 141, 87, 0.15)', borderRight: '2px solid rgba(176, 141, 87, 0.15)' }} />
+          <div className="absolute -bottom-px -left-px w-8 h-8" style={{ borderBottom: '2px solid rgba(176, 141, 87, 0.15)', borderLeft: '2px solid rgba(176, 141, 87, 0.15)' }} />
+          <div className="absolute -bottom-px -right-px w-8 h-8" style={{ borderBottom: '2px solid rgba(176, 141, 87, 0.15)', borderRight: '2px solid rgba(176, 141, 87, 0.15)' }} />
+        </div>
 
-          {/* Title */}
-          <h1 className="animate-slide-up" style={{ animationDelay: '400ms' }}>
-            <span
-              className="block font-display text-6xl md:text-8xl lg:text-9xl tracking-[0.15em] uppercase"
-              style={{ color: '#F0E6D6' }}
-            >
-              Galerie
-            </span>
-            <span
-              className="block font-display text-3xl md:text-5xl italic tracking-[0.1em] -mt-2 md:-mt-4"
-              style={{ color: '#B08D57' }}
-            >
-              du Temps
-            </span>
-          </h1>
+        {/* Slide content */}
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-6" key={activeSlide}>
+          {HERO_SLIDES[activeSlide].type === 'branding' && (
+            <div className="text-center max-w-4xl mx-auto slide-content-enter">
+              <div className="flex items-center justify-center gap-4 mb-8">
+                <div className="w-16 h-px" style={{ backgroundColor: 'rgba(176, 141, 87, 0.4)' }} />
+                <span className="font-body text-[10px] tracking-[0.5em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.6)' }}>
+                  Вена &middot; Est. 2025
+                </span>
+                <div className="w-16 h-px" style={{ backgroundColor: 'rgba(176, 141, 87, 0.4)' }} />
+              </div>
+              <h1>
+                <span className="block font-display text-6xl md:text-8xl lg:text-9xl tracking-[0.15em] uppercase" style={{ color: '#F0E6D6' }}>
+                  Galerie
+                </span>
+                <span className="block font-display text-3xl md:text-5xl italic tracking-[0.1em] -mt-2 md:-mt-4" style={{ color: '#B08D57' }}>
+                  du Temps
+                </span>
+              </h1>
+              <p className="font-display text-lg md:text-xl italic mt-8 leading-relaxed max-w-xl mx-auto" style={{ color: 'rgba(240, 230, 214, 0.45)' }}>
+                Винтаж, антиквариат и уникальные находки.<br />Маркетплейс для ценителей прекрасного.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12">
+                <Link to="/catalog" className="btn-primary group">
+                  Каталог
+                  <ArrowRight size={16} className="ml-3 transition-transform duration-300 group-hover:translate-x-1" />
+                </Link>
+                <button onClick={() => scrollTo('quiz')} className="btn-secondary group">
+                  <Sparkles size={14} className="mr-2" /> Подобрать стиль
+                </button>
+                <Link to="/seller/register" className="btn-light group">
+                  <Store size={14} className="mr-2" /> Открыть магазин
+                </Link>
+              </div>
+            </div>
+          )}
 
-          {/* Subtitle */}
-          <p
-            className="font-display text-lg md:text-xl italic mt-8 leading-relaxed animate-slide-up max-w-xl mx-auto"
-            style={{ color: 'rgba(240, 230, 214, 0.45)', animationDelay: '600ms' }}
-          >
-            Винтаж, антиквариат и уникальные находки.
-            <br />
-            Маркетплейс для ценителей прекрасного.
-          </p>
+          {HERO_SLIDES[activeSlide].type === 'promoted' && (
+            <div className="text-center slide-content-enter">
+              <span className="font-body text-[10px] tracking-[0.5em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.5)' }}>
+                Рекомендуем
+              </span>
+              <h2 className="font-display text-4xl md:text-5xl italic mt-3 mb-10" style={{ color: '#F0E6D6' }}>
+                Избранные товары
+              </h2>
+              {promotedProducts.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+                  {promotedProducts.slice(0, 3).map((p) => (
+                    <Link key={p.id} to={`/product/${p.id}`} className="group text-left">
+                      <div className="aspect-square overflow-hidden" style={{ borderRadius: '2px', border: '1px solid rgba(176, 141, 87, 0.15)' }}>
+                        <img src={p.image_url || p.images?.[0]?.url} alt={p.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+                      </div>
+                      <p className="font-display text-sm italic mt-3 truncate" style={{ color: '#F0E6D6' }}>{p.title}</p>
+                      <p className="font-body text-xs mt-1" style={{ color: '#B08D57' }}>{p.price}&euro;</p>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="font-display text-lg italic" style={{ color: 'rgba(240, 230, 214, 0.3)' }}>Скоро появятся</p>
+              )}
+              <Link to="/catalog" className="btn-primary mt-10 inline-flex items-center group">
+                Весь каталог <ArrowRight size={14} className="ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+            </div>
+          )}
 
-          {/* CTAs */}
-          <div
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12 animate-slide-up"
-            style={{ animationDelay: '800ms' }}
-          >
-            <Link to="/catalog" className="btn-primary group">
-              Каталог
-              <ArrowRight
-                size={16}
-                className="ml-3 transition-transform duration-300 group-hover:translate-x-1"
-              />
-            </Link>
-            <button onClick={() => scrollTo('quiz')} className="btn-secondary group">
-              <Sparkles size={14} className="mr-2" /> Подобрать стиль
-            </button>
-            <Link to="/seller/register" className="btn-light group">
-              <Store size={14} className="mr-2" /> Открыть магазин
-            </Link>
-          </div>
+          {HERO_SLIDES[activeSlide].type === 'arrivals' && (
+            <div className="text-center slide-content-enter">
+              <span className="font-body text-[10px] tracking-[0.5em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.5)' }}>
+                Свежие поступления
+              </span>
+              <h2 className="font-display text-4xl md:text-5xl italic mt-3 mb-10" style={{ color: '#F0E6D6' }}>
+                Новые поступления
+              </h2>
+              {newestProducts.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+                  {newestProducts.map((p) => (
+                    <Link key={p.id} to={`/product/${p.id}`} className="group text-left">
+                      <div className="aspect-[4/5] overflow-hidden" style={{ borderRadius: '2px', border: '1px solid rgba(176, 141, 87, 0.15)' }}>
+                        <img src={p.image_url || p.images?.[0]?.url} alt={p.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
+                      </div>
+                      <p className="font-display text-sm italic mt-3 truncate" style={{ color: '#F0E6D6' }}>{p.title}</p>
+                      <p className="font-body text-xs mt-1" style={{ color: '#B08D57' }}>{p.price}&euro;</p>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="font-display text-lg italic" style={{ color: 'rgba(240, 230, 214, 0.3)' }}>Скоро появятся</p>
+              )}
+              <Link to="/catalog" className="btn-primary mt-10 inline-flex items-center group">
+                Смотреть все <ArrowRight size={14} className="ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+            </div>
+          )}
+        </div>
 
-          {/* BG indicator dots */}
-          <div
-            className="flex items-center justify-center gap-2 mt-16 animate-fade-in"
-            style={{ animationDelay: '1000ms' }}
-          >
-            {HERO_BACKGROUNDS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveBG(i)}
-                className="transition-all duration-500"
-                style={{
-                  width: activeBG === i ? '24px' : '6px',
-                  height: '2px',
-                  backgroundColor:
-                    activeBG === i ? '#B08D57' : 'rgba(176, 141, 87, 0.3)',
-                  borderRadius: '1px',
-                }}
-              />
-            ))}
-          </div>
+        {/* Arrow navigation */}
+        <button
+          onClick={prevSlide}
+          className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center transition-all duration-300 hover:scale-110"
+          style={{ backgroundColor: 'rgba(12, 10, 8, 0.4)', border: '1px solid rgba(176, 141, 87, 0.2)', borderRadius: '2px', color: 'rgba(176, 141, 87, 0.6)' }}
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <button
+          onClick={nextSlide}
+          className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center transition-all duration-300 hover:scale-110"
+          style={{ backgroundColor: 'rgba(12, 10, 8, 0.4)', border: '1px solid rgba(176, 141, 87, 0.2)', borderRadius: '2px', color: 'rgba(176, 141, 87, 0.6)' }}
+        >
+          <ChevronRight size={20} />
+        </button>
+
+        {/* Dot indicators */}
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3">
+          {HERO_SLIDES.map((slide, i) => (
+            <button
+              key={slide.id}
+              onClick={() => setActiveSlide(i)}
+              className="transition-all duration-500"
+              style={{
+                width: activeSlide === i ? '28px' : '6px',
+                height: '2px',
+                backgroundColor: activeSlide === i ? '#B08D57' : 'rgba(176, 141, 87, 0.3)',
+                borderRadius: '1px',
+              }}
+            />
+          ))}
         </div>
 
         {/* Scroll-down arrow */}
         <button
           onClick={() => scrollTo('products')}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-float"
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-float z-20"
           style={{ color: 'rgba(176, 141, 87, 0.4)' }}
         >
           <ChevronDown size={24} />
@@ -313,8 +402,10 @@ export default function Home() {
       </section>
 
       {/* ═══════════════ FEATURED PRODUCTS ═══════════════ */}
-      <section id="products" className="py-24" style={{ backgroundColor: '#F7F2EB' }}>
-        <div className="max-w-7xl mx-auto px-6">
+      <section id="products" className="py-24 relative overflow-hidden" style={{ backgroundColor: '#F7F2EB' }}>
+        {/* Vintage dot overlay */}
+        <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #B08D57 0.5px, transparent 0)', backgroundSize: '32px 32px' }} />
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="flex items-end justify-between mb-12">
             <div>
               <span
@@ -372,7 +463,11 @@ export default function Home() {
                   className="animate-slide-up"
                   style={{ animationDelay: `${i * 80}ms` }}
                 >
-                  <ProductCard product={product} />
+                  <ProductCard
+                    product={product}
+                    isBestseller={bestsellerIds.has(product.id)}
+                    isPopular={popularIds.has(product.id)}
+                  />
                 </div>
               ))}
             </div>
@@ -710,89 +805,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══════════════ FEATURED PRODUCTS ═══════════════ */}
-      <section className="py-24" style={{ backgroundColor: '#F7F2EB' }}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex items-end justify-between mb-12">
-            <div>
-              <span
-                className="font-body text-[10px] tracking-[0.5em] uppercase"
-                style={{ color: 'rgba(176, 141, 87, 0.6)' }}
-              >
-                Каталог
-              </span>
-              <h2
-                className="font-display text-4xl md:text-5xl italic mt-3"
-                style={{ color: '#0C0A08' }}
-              >
-                Новые поступления
-              </h2>
-            </div>
-            <Link
-              to="/catalog"
-              className="hidden md:inline-flex items-center gap-2 font-body text-sm tracking-[0.1em] uppercase transition-all duration-300 group"
-              style={{ color: '#B08D57' }}
-            >
-              Все товары
-              <ArrowRight
-                size={14}
-                className="transition-transform duration-300 group-hover:translate-x-1"
-              />
-            </Link>
-          </div>
-
-          {productsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div
-                    className="aspect-[4/5]"
-                    style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)', borderRadius: '2px' }}
-                  />
-                  <div className="p-4 space-y-2">
-                    <div
-                      className="h-4 w-3/4 rounded"
-                      style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }}
-                    />
-                    <div
-                      className="h-3 w-1/4 rounded"
-                      style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)' }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : products.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {products.map((product, i) => (
-                <div
-                  key={product.id}
-                  className="animate-slide-up"
-                  style={{ animationDelay: `${i * 80}ms` }}
-                >
-                  <ProductCard product={product} />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <p className="font-display text-xl italic" style={{ color: 'rgba(12, 10, 8, 0.25)' }}>
-                Коллекция скоро появится
-              </p>
-            </div>
-          )}
-
-          <div className="text-center mt-12 md:hidden">
-            <Link to="/catalog" className="btn-secondary">
-              Все товары <ArrowRight size={14} className="ml-2" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {/* ═══════════════ CATEGORIES ═══════════════ */}
-      <section className="py-24" style={{ backgroundColor: '#0C0A08' }}>
-        <div className="max-w-7xl mx-auto px-6">
+      <section className="py-24 relative" style={{ backgroundColor: '#0C0A08' }}>
+        {/* Decorative corner accents */}
+        <div className="absolute top-0 left-0 w-48 h-48 opacity-[0.05] pointer-events-none" style={{ background: 'radial-gradient(circle at top left, #B08D57, transparent 70%)' }} />
+        <div className="absolute bottom-0 right-0 w-48 h-48 opacity-[0.05] pointer-events-none" style={{ background: 'radial-gradient(circle at bottom right, #B08D57, transparent 70%)' }} />
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
             <span
               className="font-body text-[10px] tracking-[0.5em] uppercase"

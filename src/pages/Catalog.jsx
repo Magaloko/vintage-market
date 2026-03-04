@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { X, SlidersHorizontal, ChevronDown } from 'lucide-react'
 import ProductCard from '../components/public/ProductCard'
@@ -80,6 +80,15 @@ export default function Catalog() {
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE)
 
   const abortRef = useRef(null)
+
+  const { bestsellerIds, popularIds } = useMemo(() => {
+    const sorted = [...allProducts].sort((a, b) => (b.views || 0) - (a.views || 0))
+    const bIds = new Set(sorted.slice(0, 3).map((p) => p.id))
+    const pIds = new Set(
+      allProducts.filter((p) => (p.views || 0) > 100 && !bIds.has(p.id)).map((p) => p.id),
+    )
+    return { bestsellerIds: bIds, popularIds: pIds }
+  }, [allProducts])
 
   /* ---------- Load category counts once ---------- */
 
@@ -503,7 +512,12 @@ export default function Catalog() {
                   className="animate-slide-up"
                   style={{ animationDelay: `${(i % ITEMS_PER_PAGE) * 50}ms` }}
                 >
-                  <ProductCard product={product} showCompare />
+                  <ProductCard
+                    product={product}
+                    showCompare
+                    isBestseller={bestsellerIds.has(product.id)}
+                    isPopular={popularIds.has(product.id)}
+                  />
                 </div>
               ))}
             </div>

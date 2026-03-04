@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Edit, Trash2, Eye, Search, Package, X } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, Search, Package, X, Star } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { getProducts, deleteProduct } from '../../lib/api'
+import { getProducts, deleteProduct, togglePromoted } from '../../lib/api'
 import { categories } from '../../data/demoProducts'
 
 /* ── Shared style tokens ─────────────────────────────────────── */
@@ -87,7 +87,7 @@ function EmptyState() {
 }
 
 /* ── Product table row ───────────────────────────────────────── */
-function ProductRow({ product, onDelete }) {
+function ProductRow({ product, onDelete, onTogglePromote }) {
   const categoryName = categories.find((c) => c.id === product.category)?.name || product.category
 
   const handleMouseEnter = (e) => { e.currentTarget.style.backgroundColor = alpha.cream02 }
@@ -172,6 +172,14 @@ function ProductRow({ product, onDelete }) {
       {/* Actions */}
       <td className="px-4 py-3">
         <div className="flex items-center justify-end gap-1">
+          <button
+            onClick={() => onTogglePromote(product.id, !product.is_promoted)}
+            className="p-2 transition-colors"
+            style={{ color: product.is_promoted ? colors.gold : alpha.cream30, borderRadius: '2px' }}
+            title={product.is_promoted ? 'Убрать из продвигаемых' : 'Продвинуть'}
+          >
+            <Star size={16} fill={product.is_promoted ? colors.gold : 'none'} />
+          </button>
           <Link
             to={`/product/${product.id}`}
             target="_blank"
@@ -261,6 +269,18 @@ export default function AdminProducts() {
     load()
   }
 
+  const handleTogglePromote = async (id, isPromoted) => {
+    const { error } = await togglePromoted(id, isPromoted)
+    if (error) {
+      toast.error('Ошибка обновления')
+      return
+    }
+    toast.success(isPromoted ? 'Товар продвинут' : 'Продвижение снято')
+    setProducts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, is_promoted: isPromoted } : p))
+    )
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -347,7 +367,7 @@ export default function AdminProducts() {
               </thead>
               <tbody>
                 {products.map((product) => (
-                  <ProductRow key={product.id} product={product} onDelete={handleDelete} />
+                  <ProductRow key={product.id} product={product} onDelete={handleDelete} onTogglePromote={handleTogglePromote} />
                 ))}
               </tbody>
             </table>

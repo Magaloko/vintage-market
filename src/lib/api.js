@@ -261,6 +261,25 @@ export async function deleteProduct(id) {
   }, {})
 }
 
+export async function togglePromoted(id, isPromoted) {
+  if (!isSupabaseConfigured) {
+    const idx = localProducts.findIndex((p) => p.id === id)
+    if (idx === -1) return { data: null, error: { message: 'Not found' } }
+    localProducts[idx].is_promoted = isPromoted
+    return { data: localProducts[idx], error: null }
+  }
+
+  return safeQuery(async () => {
+    const { data, error } = await supabase
+      .from('products')
+      .update({ is_promoted: isPromoted })
+      .eq('id', id)
+      .select()
+      .single()
+    return { data, error }
+  })
+}
+
 // =============================================================================
 // Product Images API
 // =============================================================================
