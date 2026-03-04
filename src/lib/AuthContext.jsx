@@ -9,6 +9,24 @@ const DEMO_ACCOUNTS = {
   'seller@vintage.demo': { id: 'demo-seller-001', role: 'seller', password: 'demo123', shop_id: 'demo-shop-001' },
 }
 
+const ROLE_TIMEOUT_MS = 3000
+
+async function detectRoleFromDB(userId) {
+  try {
+    const { data: shop, error } = await supabase
+      .from('shops').select('id').eq('user_id', userId).maybeSingle()
+    if (!error && shop) return { role: 'seller', shopId: shop.id }
+  } catch {}
+
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles').select('role, shop_id').eq('id', userId).maybeSingle()
+    if (!error && profile) return { role: profile.role || 'admin', shopId: profile.shop_id || null }
+  } catch {}
+
+  return { role: 'admin', shopId: null }
+}
+
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -16,7 +34,6 @@ export function AuthProvider({ children }) {
   const [shopId, setShopId] = useState(null)
   const [isDemoMode] = useState(!isSupabaseConfigured)
 
-  // FIX: detectRole with timeout + bulletproof error handling
   const detectRole = useCallback(async (sess) => {
     if (!sess?.user) {
       setRole(null)
@@ -24,63 +41,22 @@ export function AuthProvider({ children }) {
       return
     }
 
-    // Demo mode
     if (!isSupabaseConfigured) {
-      const stored = sessionStorage.getItem('vintage_demo_role')
-      const storedShop = sessionStorage.getItem('vintage_demo_shop_id')
-      setRole(stored || 'admin')
-      setShopId(storedShop || null)
+      setRole(sessionStorage.getItem('vintage_demo_role') || 'admin')
+      setShopId(sessionStorage.getItem('vintage_demo_shop_id') || null)
       return
     }
 
-    // Supabase mode — try to detect role with timeout
-    // Default to admin if anything goes wrong
     try {
-      // Wrap in Promise.race with 3s timeout
-      const detectWithTimeout = Promise.race([
-        (async () => {
-          // 1. Check shops table
-          try {
-            const { data: shop, error } = await supabase
-              .from('shops')
-              .select('id')
-              .eq('user_id', sess.user.id)
-              .maybeSingle()
-            if (!error && shop) {
-              return { role: 'seller', shopId: shop.id }
-            }
-          } catch (e) {
-            console.warn('Shops query failed (table may not exist):', e.message)
-          }
-
-          // 2. Check profiles table
-          try {
-            const { data: profile, error } = await supabase
-              .from('profiles')
-              .select('role, shop_id')
-              .eq('id', sess.user.id)
-              .maybeSingle()
-            if (!error && profile) {
-              return { role: profile.role || 'admin', shopId: profile.shop_id || null }
-            }
-          } catch (e) {
-            console.warn('Profiles query failed (table may not exist):', e.message)
-          }
-
-          // 3. Default — admin
-          return { role: 'admin', shopId: null }
-        })(),
-        new Promise(resolve => setTimeout(() => {
-          console.warn('Role detection timed out — defaulting to admin')
-          resolve({ role: 'admin', shopId: null })
-        }, 3000))
+      const result = await Promise.race([
+        detectRoleFromDB(sess.user.id),
+        new Promise((resolve) =>
+          setTimeout(() => resolve({ role: 'admin', shopId: null }), ROLE_TIMEOUT_MS),
+        ),
       ])
-
-      const result = await detectWithTimeout
       setRole(result.role)
       setShopId(result.shopId)
-    } catch (e) {
-      console.warn('Role detection failed entirely:', e)
+    } catch {
       setRole('admin')
       setShopId(null)
     }
@@ -89,11 +65,11 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!isSupabaseConfigured) {
       try {
-        const ds = sessionStorage.getItem('vintage_demo_session')
-        if (ds) {
-          const p = JSON.parse(ds)
-          setSession(p)
-          detectRole(p)
+        const stored = sessionStorage.getItem('vintage_demo_session')
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          setSession(parsed)
+          detectRole(parsed)
         }
       } catch {}
       setLoading(false)
@@ -110,8 +86,7 @@ export function AuthProvider({ children }) {
         await detectRole(s)
         setLoading(false)
       })
-      .catch((e) => {
-        console.warn('getSession error:', e)
+      .catch(() => {
         if (mounted) {
           setSession(null)
           setRole(null)
@@ -121,57 +96,32 @@ export function AuthProvider({ children }) {
 
     let sub
     try {
-      const { data } = supabase.auth.onAuthStateChange(async (_ev, ns) => {
+      const { data } = supabase.auth.onAuthStateChange(async (_ev, newSession) => {
         if (mounted) {
-          setSession(ns)
-          await detectRole(ns)
+          setSession(newSession)
+          await detectRole(newSession)
         }
       })
       sub = data?.subscription
     } catch {}
-    return () => { mounted = false; try { sub?.unsubscribe?.() } catch {} }
+
+    return () => {
+      mounted = false
+      try { sub?.unsubscribe?.() } catch {}
+    }
   }, [detectRole])
 
   const signIn = async (email, password) => {
-    if (!isSupabaseConfigured) {
-      const demo = DEMO_ACCOUNTS[email]
-      if (demo && password === demo.password) {
-        const fs = { user: { id: demo.id, email } }
-        sessionStorage.setItem('vintage_demo_session', JSON.stringify(fs))
-        sessionStorage.setItem('vintage_demo_role', demo.role)
-        if (demo.shop_id) sessionStorage.setItem('vintage_demo_shop_id', demo.shop_id)
-        setSession(fs); setRole(demo.role); setShopId(demo.shop_id || null)
-        return { data: fs, error: null, role: demo.role }
-      }
-      try {
-        const sellers = JSON.parse(localStorage.getItem('vintage_demo_sellers') || '[]')
-        const s = sellers.find(x => x.email === email && x.password === password)
-        if (s) {
-          const fs = { user: { id: s.id, email } }
-          sessionStorage.setItem('vintage_demo_session', JSON.stringify(fs))
-          sessionStorage.setItem('vintage_demo_role', 'seller')
-          sessionStorage.setItem('vintage_demo_shop_id', s.shop_id)
-          setSession(fs); setRole('seller'); setShopId(s.shop_id)
-          return { data: fs, error: null, role: 'seller' }
-        }
-      } catch {}
-      return { data: null, error: { message: 'Неверные данные.\nАдмин: admin@vintage.demo / demo123\nПродавец: seller@vintage.demo / demo123' } }
-    }
+    if (!isSupabaseConfigured) return demoSignIn(email, password)
 
-    // FIX: Supabase signIn — detect role after login and return it
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) return { data: null, error }
 
-      // Wait for role detection to complete
       let detectedRole = 'admin'
       try {
-        // Check shops
         const { data: shop } = await supabase
-          .from('shops')
-          .select('id')
-          .eq('user_id', data.user.id)
-          .maybeSingle()
+          .from('shops').select('id').eq('user_id', data.user.id).maybeSingle()
         if (shop) {
           detectedRole = 'seller'
           setRole('seller')
@@ -191,39 +141,94 @@ export function AuthProvider({ children }) {
     }
   }
 
+  const demoSignIn = (email, password) => {
+    const demo = DEMO_ACCOUNTS[email]
+    if (demo && password === demo.password) {
+      const fakeSession = { user: { id: demo.id, email } }
+      sessionStorage.setItem('vintage_demo_session', JSON.stringify(fakeSession))
+      sessionStorage.setItem('vintage_demo_role', demo.role)
+      if (demo.shop_id) sessionStorage.setItem('vintage_demo_shop_id', demo.shop_id)
+      setSession(fakeSession)
+      setRole(demo.role)
+      setShopId(demo.shop_id || null)
+      return { data: fakeSession, error: null, role: demo.role }
+    }
+
+    try {
+      const sellers = JSON.parse(localStorage.getItem('vintage_demo_sellers') || '[]')
+      const seller = sellers.find((s) => s.email === email && s.password === password)
+      if (seller) {
+        const fakeSession = { user: { id: seller.id, email } }
+        sessionStorage.setItem('vintage_demo_session', JSON.stringify(fakeSession))
+        sessionStorage.setItem('vintage_demo_role', 'seller')
+        sessionStorage.setItem('vintage_demo_shop_id', seller.shop_id)
+        setSession(fakeSession)
+        setRole('seller')
+        setShopId(seller.shop_id)
+        return { data: fakeSession, error: null, role: 'seller' }
+      }
+    } catch {}
+
+    return {
+      data: null,
+      error: {
+        message: 'Неверные данные.\nАдмин: admin@vintage.demo / demo123\nПродавец: seller@vintage.demo / demo123',
+      },
+    }
+  }
+
   const registerSeller = async ({ email, password, shopName, shopDescription, address, phone }) => {
     const slug = shopName.toLowerCase().replace(/[^a-zа-яё0-9]+/gi, '-').replace(/-+$/, '')
+
     if (!isSupabaseConfigured) {
       const nid = 'demo-seller-' + Date.now()
       const sid = 'demo-shop-' + Date.now()
+
       const sellers = JSON.parse(localStorage.getItem('vintage_demo_sellers') || '[]')
       sellers.push({ id: nid, email, password, shop_id: sid })
       localStorage.setItem('vintage_demo_sellers', JSON.stringify(sellers))
+
       const shops = JSON.parse(localStorage.getItem('vintage_demo_shops') || '[]')
       shops.push({
-        id: sid, user_id: nid, name: shopName, slug, description: shopDescription || '',
-        address: address || '', phone: phone || '', email, logo_url: null,
-        status: 'active', created_at: new Date().toISOString(), rating: 0, review_count: 0,
+        id: sid, user_id: nid, name: shopName, slug,
+        description: shopDescription || '', address: address || '',
+        phone: phone || '', email, logo_url: null,
+        status: 'active', created_at: new Date().toISOString(),
+        rating: 0, review_count: 0,
       })
       localStorage.setItem('vintage_demo_shops', JSON.stringify(shops))
-      const fs = { user: { id: nid, email } }
-      sessionStorage.setItem('vintage_demo_session', JSON.stringify(fs))
+
+      const fakeSession = { user: { id: nid, email } }
+      sessionStorage.setItem('vintage_demo_session', JSON.stringify(fakeSession))
       sessionStorage.setItem('vintage_demo_role', 'seller')
       sessionStorage.setItem('vintage_demo_shop_id', sid)
-      setSession(fs); setRole('seller'); setShopId(sid)
+      setSession(fakeSession)
+      setRole('seller')
+      setShopId(sid)
       return { data: { user: { id: nid } }, error: null }
     }
+
     try {
-      const { data: auth, error: ae } = await supabase.auth.signUp({ email, password })
-      if (ae) return { data: null, error: ae }
-      const { data: shop, error: se } = await supabase.from('shops').insert([{
-        user_id: auth.user.id, name: shopName, slug, description: shopDescription || '',
-        address: address || '', phone: phone || '', email, status: 'active',
+      const { data: auth, error: authErr } = await supabase.auth.signUp({ email, password })
+      if (authErr) return { data: null, error: authErr }
+
+      const { data: shop, error: shopErr } = await supabase.from('shops').insert([{
+        user_id: auth.user.id, name: shopName, slug,
+        description: shopDescription || '', address: address || '',
+        phone: phone || '', email, status: 'active',
       }]).select().single()
-      if (se) return { data: null, error: se }
-      try { await supabase.from('profiles').upsert([{ id: auth.user.id, role: 'seller', shop_id: shop.id }]) } catch {}
+      if (shopErr) return { data: null, error: shopErr }
+
+      try {
+        await supabase.from('profiles').upsert([{
+          id: auth.user.id, role: 'seller', shop_id: shop.id,
+        }])
+      } catch {}
+
       return { data: auth, error: null }
-    } catch (e) { return { data: null, error: { message: e.message } } }
+    } catch (e) {
+      return { data: null, error: { message: e.message } }
+    }
   }
 
   const signOut = async () => {
@@ -231,16 +236,24 @@ export function AuthProvider({ children }) {
       sessionStorage.removeItem('vintage_demo_session')
       sessionStorage.removeItem('vintage_demo_role')
       sessionStorage.removeItem('vintage_demo_shop_id')
-    } else { try { await supabase.auth.signOut() } catch {} }
-    setSession(null); setRole(null); setShopId(null)
+    } else {
+      try { await supabase.auth.signOut() } catch {}
+    }
+    setSession(null)
+    setRole(null)
+    setShopId(null)
   }
 
   const user = session?.user || null
-  const isAdmin = role === 'admin'
-  const isSeller = role === 'seller'
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, role, shopId, isAdmin, isSeller, isDemoMode, signIn, signOut, registerSeller }}>
+    <AuthContext.Provider value={{
+      session, user, loading, role, shopId,
+      isAdmin: role === 'admin',
+      isSeller: role === 'seller',
+      isDemoMode,
+      signIn, signOut, registerSeller,
+    }}>
       {children}
     </AuthContext.Provider>
   )

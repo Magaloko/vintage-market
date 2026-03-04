@@ -1,19 +1,55 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { categories, categoryGroups } from '../../data/demoProducts'
+import { categories } from '../../data/demoProducts'
 import { siteConfig } from '../../lib/siteConfig'
 import { getCategoryCounts } from '../../lib/api'
+
+const NAV_LINKS = [
+  { to: '/catalog', label: 'Каталог' },
+  { to: '/shops', label: 'Магазины' },
+  { to: '/favorites', label: 'Избранное' },
+  { to: '/about', label: 'О галерее' },
+  { to: '/contact', label: 'Контакт' },
+  { to: '/seller/register', label: 'Стать продавцом' },
+]
+
+const SOCIAL_LINKS = [
+  { key: 'whatsapp', label: 'WA', hrefFn: (v) => `https://wa.me/${v}`, hoverColor: '#25D366' },
+  { key: 'telegram', label: 'TG', hrefFn: (v) => `https://t.me/${v}`, hoverColor: '#26A3EE' },
+  { key: 'instagram', label: 'IG', hrefFn: (v) => v, hoverColor: '#E1306C' },
+]
+
+const COLORS = {
+  gold: '#B08D57',
+  goldFaded: 'rgba(176, 141, 87, 0.5)',
+  goldDim: 'rgba(176, 141, 87, 0.4)',
+  goldBorder: 'rgba(176, 141, 87, 0.15)',
+  goldDivider: 'rgba(176, 141, 87, 0.2)',
+  goldSubtle: 'rgba(176, 141, 87, 0.08)',
+  creamFaded: 'rgba(240, 230, 214, 0.3)',
+  creamDim: 'rgba(240, 230, 214, 0.15)',
+}
+
+const footerLinkStyle = { color: COLORS.creamFaded }
+
+function useHoverStyle(hoverColor, baseColor = COLORS.creamFaded) {
+  return {
+    style: { color: baseColor },
+    onMouseEnter: (e) => { e.currentTarget.style.color = hoverColor },
+    onMouseLeave: (e) => { e.currentTarget.style.color = baseColor },
+  }
+}
 
 export default function Footer() {
   const [categoryCounts, setCategoryCounts] = useState({})
 
   useEffect(() => {
-    getCategoryCounts().then(r => setCategoryCounts(r.data || {}))
+    getCategoryCounts().then((r) => setCategoryCounts(r.data || {}))
   }, [])
 
   const hasAnyCounts = Object.keys(categoryCounts).length > 0
   const activeCats = hasAnyCounts
-    ? categories.filter(c => categoryCounts[c.id] > 0).slice(0, 8)
+    ? categories.filter((c) => categoryCounts[c.id] > 0).slice(0, 8)
     : categories.slice(0, 8)
 
   return (
@@ -22,110 +58,139 @@ export default function Footer() {
 
       <div className="max-w-7xl mx-auto px-6 py-20">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-16">
-          {/* Brand */}
-          <div className="md:col-span-2">
-            <div className="mb-6">
-              <span className="font-display text-2xl tracking-[0.3em] uppercase" style={{ color: '#B08D57' }}>
-                Galerie
-              </span>
-              <br />
-              <span className="font-display text-sm italic tracking-[0.2em]" style={{ color: 'rgba(176, 141, 87, 0.5)' }}>
-                du Temps
-              </span>
-            </div>
-            <div className="w-12 h-px mb-6" style={{ backgroundColor: 'rgba(176, 141, 87, 0.2)' }} />
-            <p className="font-display text-lg italic leading-relaxed max-w-sm" style={{ color: 'rgba(240, 230, 214, 0.3)' }}>
-              Мы находим уникальные вещи с историей
-              и даём им вторую жизнь.
-            </p>
-            <div className="flex gap-3 mt-6">
-              {siteConfig.whatsapp && (
-                <a href={`https://wa.me/${siteConfig.whatsapp}`} target="_blank" rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full flex items-center justify-center font-body text-xs transition-all"
-                  style={{ border: '1px solid rgba(176, 141, 87, 0.15)', color: 'rgba(176, 141, 87, 0.4)' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#25D366'; e.currentTarget.style.color = '#25D366' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.15)'; e.currentTarget.style.color = 'rgba(176, 141, 87, 0.4)' }}>
-                  WA
-                </a>
-              )}
-              {siteConfig.telegram && (
-                <a href={`https://t.me/${siteConfig.telegram}`} target="_blank" rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full flex items-center justify-center font-body text-xs transition-all"
-                  style={{ border: '1px solid rgba(176, 141, 87, 0.15)', color: 'rgba(176, 141, 87, 0.4)' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#26A3EE'; e.currentTarget.style.color = '#26A3EE' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.15)'; e.currentTarget.style.color = 'rgba(176, 141, 87, 0.4)' }}>
-                  TG
-                </a>
-              )}
-              {siteConfig.instagram && (
-                <a href={siteConfig.instagram} target="_blank" rel="noopener noreferrer"
-                  className="w-9 h-9 rounded-full flex items-center justify-center font-body text-xs transition-all"
-                  style={{ border: '1px solid rgba(176, 141, 87, 0.15)', color: 'rgba(176, 141, 87, 0.4)' }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#E1306C'; e.currentTarget.style.color = '#E1306C' }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.15)'; e.currentTarget.style.color = 'rgba(176, 141, 87, 0.4)' }}>
-                  IG
-                </a>
-              )}
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <div>
-            <h4 className="font-body text-[10px] tracking-[0.3em] uppercase mb-6"
-              style={{ color: 'rgba(176, 141, 87, 0.4)' }}>
-              Навигация
-            </h4>
-            <div className="flex flex-col gap-4">
-              {[
-                { to: '/catalog', label: 'Каталог' },
-                { to: '/shops', label: 'Магазины' },
-                { to: '/favorites', label: 'Избранное' },
-                { to: '/about', label: 'О галерее' },
-                { to: '/contact', label: 'Контакт' },
-                { to: '/seller/register', label: 'Стать продавцом' },
-              ].map(link => (
-                <Link key={link.to} to={link.to}
-                  className="font-display text-sm italic tracking-wide transition-colors duration-300"
-                  style={{ color: 'rgba(240, 230, 214, 0.3)' }}
-                  onMouseEnter={e => e.currentTarget.style.color = '#B08D57'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(240, 230, 214, 0.3)'}>
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Categories */}
-          <div>
-            <h4 className="font-body text-[10px] tracking-[0.3em] uppercase mb-6"
-              style={{ color: 'rgba(176, 141, 87, 0.4)' }}>
-              Категории
-            </h4>
-            <div className="flex flex-col gap-4">
-              {activeCats.map(cat => (
-                <Link key={cat.id} to={`/catalog/${cat.id}`}
-                  className="font-display text-sm italic tracking-wide transition-colors duration-300"
-                  style={{ color: 'rgba(240, 230, 214, 0.3)' }}
-                  onMouseEnter={e => e.currentTarget.style.color = '#B08D57'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(240, 230, 214, 0.3)'}>
-                  {cat.icon} {cat.name}
-                </Link>
-              ))}
-            </div>
-          </div>
+          <BrandColumn />
+          <NavColumn />
+          <CategoriesColumn categories={activeCats} />
         </div>
 
-        {/* Bottom */}
-        <div className="mt-20 pt-8 flex flex-col md:flex-row justify-between items-center gap-4"
-          style={{ borderTop: '1px solid rgba(176, 141, 87, 0.08)' }}>
-          <p className="font-body text-[11px] tracking-wide" style={{ color: 'rgba(240, 230, 214, 0.15)' }}>
+        <div
+          className="mt-20 pt-8 flex flex-col md:flex-row justify-between items-center gap-4"
+          style={{ borderTop: `1px solid ${COLORS.goldSubtle}` }}
+        >
+          <p className="font-body text-[11px] tracking-wide" style={{ color: COLORS.creamDim }}>
             &copy; {new Date().getFullYear()} Galerie du Temps. Wien, Austria.
           </p>
-          <p className="font-display text-sm italic" style={{ color: 'rgba(176, 141, 87, 0.2)' }}>
+          <p className="font-display text-sm italic" style={{ color: COLORS.goldDivider }}>
             Le temps embellit toute chose
           </p>
         </div>
       </div>
     </footer>
+  )
+}
+
+function BrandColumn() {
+  return (
+    <div className="md:col-span-2">
+      <div className="mb-6">
+        <span className="font-display text-2xl tracking-[0.3em] uppercase" style={{ color: COLORS.gold }}>
+          Galerie
+        </span>
+        <br />
+        <span className="font-display text-sm italic tracking-[0.2em]" style={{ color: COLORS.goldFaded }}>
+          du Temps
+        </span>
+      </div>
+
+      <div className="w-12 h-px mb-6" style={{ backgroundColor: COLORS.goldDivider }} />
+
+      <p
+        className="font-display text-lg italic leading-relaxed max-w-sm"
+        style={{ color: COLORS.creamFaded }}
+      >
+        Мы находим уникальные вещи с историей
+        и даём им вторую жизнь.
+      </p>
+
+      <div className="flex gap-3 mt-6">
+        {SOCIAL_LINKS.map(({ key, label, hrefFn, hoverColor }) => {
+          const value = siteConfig[key]
+          if (!value) return null
+          return (
+            <SocialIcon
+              key={key}
+              href={hrefFn(value)}
+              label={label}
+              hoverColor={hoverColor}
+            />
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function SocialIcon({ href, label, hoverColor }) {
+  const baseStyle = { border: `1px solid ${COLORS.goldBorder}`, color: COLORS.goldDim }
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="w-9 h-9 rounded-full flex items-center justify-center font-body text-xs transition-all"
+      style={baseStyle}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = hoverColor
+        e.currentTarget.style.color = hoverColor
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = COLORS.goldBorder
+        e.currentTarget.style.color = COLORS.goldDim
+      }}
+    >
+      {label}
+    </a>
+  )
+}
+
+function NavColumn() {
+  return (
+    <div>
+      <FooterHeading>Навигация</FooterHeading>
+      <div className="flex flex-col gap-4">
+        {NAV_LINKS.map(({ to, label }) => (
+          <Link
+            key={to}
+            to={to}
+            className="font-display text-sm italic tracking-wide transition-colors duration-300"
+            {...useHoverStyle(COLORS.gold)}
+          >
+            {label}
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function CategoriesColumn({ categories }) {
+  return (
+    <div>
+      <FooterHeading>Категории</FooterHeading>
+      <div className="flex flex-col gap-4">
+        {categories.map((cat) => (
+          <Link
+            key={cat.id}
+            to={`/catalog/${cat.id}`}
+            className="font-display text-sm italic tracking-wide transition-colors duration-300"
+            {...useHoverStyle(COLORS.gold)}
+          >
+            {cat.icon} {cat.name}
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FooterHeading({ children }) {
+  return (
+    <h4
+      className="font-body text-[10px] tracking-[0.3em] uppercase mb-6"
+      style={{ color: COLORS.goldDim }}
+    >
+      {children}
+    </h4>
   )
 }

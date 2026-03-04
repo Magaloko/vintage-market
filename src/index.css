@@ -22,7 +22,7 @@
 }
 
 @layer components {
-  /* === BUTTONS === */
+  /* Buttons */
   .btn-primary {
     @apply inline-flex items-center justify-center px-8 py-3.5
            font-body font-medium text-sm tracking-[0.15em] uppercase
@@ -83,7 +83,7 @@
     border-color: #2C2420;
   }
 
-  /* === FORM INPUTS === */
+  /* Form inputs */
   .gdt-input {
     @apply w-full px-4 py-3 font-body text-sm transition-all duration-300;
     background-color: rgba(240, 230, 214, 0.5);
@@ -98,7 +98,6 @@
     box-shadow: 0 0 0 3px rgba(176, 141, 87, 0.1);
   }
 
-  /* Alias for backward compat */
   .vintage-input { @apply gdt-input; }
 
   .gdt-input-dark {
@@ -117,7 +116,7 @@
 
   .vintage-input-dark { @apply gdt-input-dark; }
 
-  /* === CARDS === */
+  /* Cards */
   .vintage-card {
     @apply transition-all duration-500 ease-out;
     background-color: rgba(255, 255, 255, 0.7);
@@ -131,7 +130,7 @@
     transform: translateY(-2px);
   }
 
-  /* === DECORATIVE === */
+  /* Decorative */
   .gdt-divider {
     height: 1px;
     background: linear-gradient(90deg, transparent, #B08D57, transparent);
@@ -147,7 +146,7 @@
     background: linear-gradient(90deg, transparent, #B08D57, transparent);
   }
 
-  /* === ADMIN === */
+  /* Admin sidebar */
   .admin-sidebar-link {
     @apply flex items-center gap-3 px-4 py-3 text-sm font-body transition-all duration-200;
     color: rgba(240, 230, 214, 0.5);
@@ -162,6 +161,7 @@
     color: #B08D57;
   }
 
+  /* Stat cards */
   .stat-card {
     @apply p-6 transition-all duration-300;
     background-color: #1A1410;
@@ -180,7 +180,7 @@
 ::-webkit-scrollbar-thumb { background-color: rgba(176, 141, 87, 0.3); border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background-color: rgba(176, 141, 87, 0.5); }
 
-/* Page transitions */
+/* Page enter animation */
 .page-enter {
   animation: pageEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

@@ -3,120 +3,100 @@ import { supabase, isSupabaseConfigured } from './supabase'
 import { useAuth } from './AuthContext'
 
 const FavoritesContext = createContext({})
-
 export const useFavorites = () => useContext(FavoritesContext)
 
-// Local storage key for demo/anonymous favorites
 const LOCAL_KEY = 'vintage_favorites'
+
+function readLocal() {
+  try {
+    const stored = localStorage.getItem(LOCAL_KEY)
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+function writeLocal(ids) {
+  try {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(ids))
+  } catch {}
+}
 
 export function FavoritesProvider({ children }) {
   const { session } = useAuth()
-  const [favorites, setFavorites] = useState([]) // Array of product IDs
+  const [favorites, setFavorites] = useState([])
   const [loading, setLoading] = useState(true)
 
   const loadFavorites = useCallback(async () => {
     setLoading(true)
-
     try {
       if (isSupabaseConfigured && session?.user) {
-        // Load from Supabase — wrapped in try/catch for missing table
         const { data, error } = await supabase
           .from('favorites')
           .select('product_id')
           .eq('user_id', session.user.id)
 
         if (!error && data) {
-          setFavorites(data.map(f => f.product_id))
-        } else if (error) {
-          console.warn('Favorites load error:', error.message)
-          // Fallback to localStorage if table does not exist
-          try {
-            const stored = localStorage.getItem(LOCAL_KEY)
-            if (stored) setFavorites(JSON.parse(stored))
-          } catch (e) { /* silent */ }
+          setFavorites(data.map((f) => f.product_id))
+        } else {
+          setFavorites(readLocal())
         }
       } else {
-        // Load from localStorage (demo/anonymous mode)
-        try {
-          const stored = localStorage.getItem(LOCAL_KEY)
-          if (stored) setFavorites(JSON.parse(stored))
-        } catch (e) {
-          setFavorites([])
-        }
+        setFavorites(readLocal())
       }
-    } catch (e) {
-      console.warn('Favorites load exception:', e)
-      // Always fallback to localStorage
-      try {
-        const stored = localStorage.getItem(LOCAL_KEY)
-        if (stored) setFavorites(JSON.parse(stored))
-      } catch (e2) { /* silent */ }
+    } catch {
+      setFavorites(readLocal())
     }
-
     setLoading(false)
   }, [session])
 
-  // Load favorites on auth change
   useEffect(() => {
     loadFavorites()
   }, [loadFavorites])
 
-  // Persist demo favorites to localStorage
-  const persistLocal = (ids) => {
-    try {
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(ids))
-    } catch (e) { /* silent fail */ }
-  }
-
-  const isFavorite = useCallback((productId) => {
-    return favorites.includes(productId)
-  }, [favorites])
+  const isFavorite = useCallback(
+    (productId) => favorites.includes(productId),
+    [favorites],
+  )
 
   const toggleFavorite = async (productId) => {
-    const isCurrentlyFavorite = favorites.includes(productId)
+    const removing = favorites.includes(productId)
+    const updated = removing
+      ? favorites.filter((id) => id !== productId)
+      : [...favorites, productId]
 
-    if (isCurrentlyFavorite) {
-      // Remove
-      const updated = favorites.filter(id => id !== productId)
-      setFavorites(updated)
-      persistLocal(updated)
+    setFavorites(updated)
+    writeLocal(updated)
 
-      if (isSupabaseConfigured && session?.user) {
-        try {
-          await supabase
-            .from('favorites')
-            .delete()
+    if (isSupabaseConfigured && session?.user) {
+      try {
+        if (removing) {
+          await supabase.from('favorites').delete()
             .eq('user_id', session.user.id)
             .eq('product_id', productId)
-        } catch (e) { console.warn('Favorite remove error:', e) }
-      }
-    } else {
-      // Add
-      const updated = [...favorites, productId]
-      setFavorites(updated)
-      persistLocal(updated)
-
-      if (isSupabaseConfigured && session?.user) {
-        try {
-          await supabase
-            .from('favorites')
-            .insert({ user_id: session.user.id, product_id: productId })
-        } catch (e) { console.warn('Favorite add error:', e) }
+        } else {
+          await supabase.from('favorites').insert({
+            user_id: session.user.id,
+            product_id: productId,
+          })
+        }
+      } catch (e) {
+        console.warn('Favorite sync error:', e)
       }
     }
   }
 
-  const favoritesCount = favorites.length
-
   return (
-    <FavoritesContext.Provider value={{
-      favorites,
-      favoritesCount,
-      isFavorite,
-      toggleFavorite,
-      loading,
-      loadFavorites,
-    }}>
+    <FavoritesContext.Provider
+      value={{
+        favorites,
+        favoritesCount: favorites.length,
+        isFavorite,
+        toggleFavorite,
+        loading,
+        loadFavorites,
+      }}
+    >
       {children}
     </FavoritesContext.Provider>
   )

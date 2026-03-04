@@ -6,15 +6,120 @@ import { getProducts, deleteProduct } from '../../lib/api'
 import { useAuth } from '../../lib/AuthContext'
 import { categories } from '../../data/demoProducts'
 
+// -- Constants ----------------------------------------------------------------
+
+const GOLD = '#B08D57'
+const TEXT = '#F0E6D6'
+const TEXT_MUTED = 'rgba(240, 230, 214, 0.3)'
+const TEXT_GHOST = 'rgba(240, 230, 214, 0.2)'
+const TEXT_FAINT = 'rgba(240, 230, 214, 0.1)'
+
+const ROW_STYLE = {
+  backgroundColor: 'rgba(240, 230, 214, 0.02)',
+  border: '1px solid rgba(240, 230, 214, 0.05)',
+  borderRadius: '2px',
+}
+
+const THUMB_STYLE = {
+  backgroundColor: 'rgba(240, 230, 214, 0.05)',
+}
+
+// -- Helpers ------------------------------------------------------------------
+
+function Spinner() {
+  return (
+    <div className="text-center py-12">
+      <div
+        className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto"
+        style={{ color: GOLD }}
+      />
+    </div>
+  )
+}
+
+function EmptyState() {
+  return (
+    <div className="text-center py-16">
+      <Package size={40} className="mx-auto mb-4" style={{ color: TEXT_FAINT }} />
+      <p className="font-body" style={{ color: TEXT_MUTED }}>
+        Товаров пока нет
+      </p>
+      <Link
+        to="/seller/products/new"
+        className="inline-flex items-center gap-2 mt-4 text-sm font-body"
+        style={{ color: GOLD }}
+      >
+        <Plus size={14} /> Добавить первый товар
+      </Link>
+    </div>
+  )
+}
+
+function ProductRow({ product, onDelete }) {
+  const category = categories.find((c) => c.id === product.category)
+
+  return (
+    <div className="flex items-center gap-4 p-4" style={ROW_STYLE}>
+      {/* Thumbnail */}
+      <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0" style={THUMB_STYLE}>
+        {product.image_url ? (
+          <img src={product.image_url} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-lg">
+            {category?.icon || '📦'}
+          </div>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <p className="font-body text-sm font-medium truncate" style={{ color: TEXT }}>
+          {product.title}
+        </p>
+        <p className="font-body text-xs" style={{ color: TEXT_MUTED }}>
+          {category?.name || product.category} · {product.price}€
+          {product.status === 'sold' && ' · Продано'}
+        </p>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-1">
+        <span className="font-body text-xs mr-3" style={{ color: TEXT_GHOST }}>
+          <Eye size={12} className="inline mr-1" />
+          {product.views || 0}
+        </span>
+        <Link
+          to={`/seller/products/edit/${product.id}`}
+          className="w-8 h-8 flex items-center justify-center transition-colors"
+          style={{ color: 'rgba(176, 141, 87, 0.5)' }}
+        >
+          <Edit size={14} />
+        </Link>
+        <button
+          onClick={() => onDelete(product.id)}
+          className="w-8 h-8 flex items-center justify-center transition-colors"
+          style={{ color: 'rgba(181, 115, 106, 0.5)' }}
+        >
+          <Trash2 size={14} />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// -- Component ----------------------------------------------------------------
+
 export default function SellerProducts() {
   const { shopId } = useAuth()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
 
-  useEffect(() => { load() }, [shopId])
+  useEffect(() => {
+    loadProducts()
+  }, [shopId])
 
-  async function load() {
+  async function loadProducts() {
     if (!shopId) return
     setLoading(true)
     const { data } = await getProducts({ shop_id: shopId })
@@ -25,80 +130,56 @@ export default function SellerProducts() {
   const handleDelete = async (id) => {
     if (!confirm('Удалить товар?')) return
     const { error } = await deleteProduct(id)
-    if (error) toast.error('Ошибка удаления')
-    else { toast.success('Удалено'); load() }
+    if (error) {
+      toast.error('Ошибка удаления')
+    } else {
+      toast.success('Удалено')
+      loadProducts()
+    }
   }
 
   const filtered = search
-    ? products.filter(p => p.title.toLowerCase().includes(search.toLowerCase()))
+    ? products.filter((p) => p.title.toLowerCase().includes(search.toLowerCase()))
     : products
 
   return (
     <div>
+      {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <h1 className="font-display text-2xl italic" style={{ color: '#F0E6D6' }}>Мои товары</h1>
+        <h1 className="font-display text-2xl italic" style={{ color: TEXT }}>
+          Мои товары
+        </h1>
         <Link to="/seller/products/new" className="btn-primary text-sm py-2 px-4">
           <Plus size={14} className="mr-2" /> Добавить
         </Link>
       </div>
 
+      {/* Search */}
       <div className="relative mb-6">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(240, 230, 214, 0.2)' }} />
-        <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Поиск товаров..." className="gdt-input-dark pl-10" />
+        <Search
+          size={16}
+          className="absolute left-3 top-1/2 -translate-y-1/2"
+          style={{ color: TEXT_GHOST }}
+        />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Поиск товаров..."
+          className="gdt-input-dark pl-10"
+        />
       </div>
 
+      {/* Product List */}
       {loading ? (
-        <div className="text-center py-12">
-          <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto" style={{ color: '#B08D57' }} />
-        </div>
+        <Spinner />
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <Package size={40} className="mx-auto mb-4" style={{ color: 'rgba(240, 230, 214, 0.1)' }} />
-          <p className="font-body" style={{ color: 'rgba(240, 230, 214, 0.3)' }}>Товаров пока нет</p>
-          <Link to="/seller/products/new" className="inline-flex items-center gap-2 mt-4 text-sm font-body" style={{ color: '#B08D57' }}>
-            <Plus size={14} /> Добавить первый товар
-          </Link>
-        </div>
+        <EmptyState />
       ) : (
         <div className="space-y-2">
-          {filtered.map(product => {
-            const cat = categories.find(c => c.id === product.category)
-            return (
-              <div key={product.id} className="flex items-center gap-4 p-4"
-                style={{ backgroundColor: 'rgba(240, 230, 214, 0.02)', border: '1px solid rgba(240, 230, 214, 0.05)', borderRadius: '2px' }}>
-                <div className="w-12 h-12 rounded overflow-hidden flex-shrink-0" style={{ backgroundColor: 'rgba(240, 230, 214, 0.05)' }}>
-                  {product.image_url ? (
-                    <img src={product.image_url} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-lg">{cat?.icon || '📦'}</div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-body text-sm font-medium truncate" style={{ color: '#F0E6D6' }}>{product.title}</p>
-                  <p className="font-body text-xs" style={{ color: 'rgba(240, 230, 214, 0.3)' }}>
-                    {cat?.name || product.category} · {product.price}€
-                    {product.status === 'sold' && ' · Продано'}
-                  </p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <span className="font-body text-xs mr-3" style={{ color: 'rgba(240, 230, 214, 0.2)' }}>
-                    <Eye size={12} className="inline mr-1" />{product.views || 0}
-                  </span>
-                  <Link to={`/seller/products/edit/${product.id}`}
-                    className="w-8 h-8 flex items-center justify-center transition-colors"
-                    style={{ color: 'rgba(176, 141, 87, 0.5)' }}>
-                    <Edit size={14} />
-                  </Link>
-                  <button onClick={() => handleDelete(product.id)}
-                    className="w-8 h-8 flex items-center justify-center transition-colors"
-                    style={{ color: 'rgba(181, 115, 106, 0.5)' }}>
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
-            )
-          })}
+          {filtered.map((product) => (
+            <ProductRow key={product.id} product={product} onDelete={handleDelete} />
+          ))}
         </div>
       )}
     </div>
