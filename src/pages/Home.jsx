@@ -1,23 +1,103 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowRight, ChevronDown } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowRight, ChevronDown, Sparkles, Store, Star, Crown, Gem, Coffee, ChevronLeft, ChevronRight as ChevRight } from 'lucide-react'
 import { getProducts, getCategoryCounts } from '../lib/api'
 import { categoryGroups, categories } from '../data/demoProducts'
 import ProductCard from '../components/public/ProductCard'
 
-// Background images — user places these in /public/images/
-const heroBGs = [
-  '/images/bg-bronze.jpg',   // Bronze metallic flow
-  '/images/bg-silk.jpg',     // Pearl silk texture
-  '/images/bg-wave.jpg',     // White sculptural waves
+// ── Collections Data ─────────────────────────────
+const collections = [
+  {
+    id: 'ceramics',
+    title: 'Фарфор и посуда',
+    subtitle: 'Коллекция',
+    description: 'Мейсенский фарфор, богемское стекло, венский сервиз — каждый предмет хранит аромат торжественных ужинов прошлых столетий.',
+    category: 'ceramics',
+    gradient: 'linear-gradient(135deg, #1A1410 0%, #2C2218 50%, #1A1410 100%)',
+    accent: '#C9A96E',
+    icon: Coffee,
+    images: ['/images/col-ceramics-1.jpg', '/images/col-ceramics-2.jpg'],
+  },
+  {
+    id: 'jewelry',
+    title: 'Винтажные украшения',
+    subtitle: 'Коллекция',
+    description: 'Арт-деко броши, викторианские камеи, серебряные кулоны ручной работы — украшения с душой и историей.',
+    category: 'jewelry',
+    gradient: 'linear-gradient(135deg, #1A1014 0%, #2C1820 50%, #1A1014 100%)',
+    accent: '#D4A574',
+    icon: Gem,
+    images: ['/images/col-jewelry-1.jpg', '/images/col-jewelry-2.jpg'],
+  },
+  {
+    id: 'clothing',
+    title: 'Винтажная мода',
+    subtitle: 'Коллекция',
+    description: 'Шёлковые платья 50-х, кожаные куртки 70-х, дизайнерские находки прошлых десятилетий.',
+    category: 'clothing',
+    gradient: 'linear-gradient(135deg, #10140C 0%, #1C2218 50%, #10140C 100%)',
+    accent: '#8B9E7A',
+    icon: Crown,
+    images: ['/images/col-fashion-1.jpg', '/images/col-fashion-2.jpg'],
+  },
 ]
 
+// ── Quiz Data ────────────────────────────────────
+const quizSteps = [
+  {
+    question: 'Какая эпоха вас вдохновляет?',
+    options: [
+      { label: '1920-1940', tag: 'art-deco', icon: '✨', desc: 'Арт-деко, гламур, геометрия' },
+      { label: '1950-1960', tag: 'mid-century', icon: '🪑', desc: 'Модернизм, элегантность, простота' },
+      { label: '1970-1980', tag: 'retro', icon: '🎵', desc: 'Бохо, диско, свобода' },
+      { label: '1990+', tag: 'modern-vintage', icon: '📷', desc: 'Минимализм, ностальгия, Y2K' },
+    ],
+  },
+  {
+    question: 'Что вы ищете?',
+    options: [
+      { label: 'Для дома', tag: 'home', icon: '🏡', desc: 'Мебель, декор, посуда' },
+      { label: 'Для себя', tag: 'personal', icon: '👗', desc: 'Одежда, украшения, аксессуары' },
+      { label: 'Коллекционирование', tag: 'collect', icon: '🏺', desc: 'Редкости, искусство, книги' },
+      { label: 'Подарок', tag: 'gift', icon: '🎁', desc: 'Уникальные вещи для близких' },
+    ],
+  },
+  {
+    question: 'Ваш бюджет?',
+    options: [
+      { label: 'До 50€', tag: 'budget-low', icon: '💰' },
+      { label: '50-200€', tag: 'budget-mid', icon: '💎' },
+      { label: '200-500€', tag: 'budget-high', icon: '👑' },
+      { label: '500€+', tag: 'budget-premium', icon: '🌟' },
+    ],
+  },
+]
+
+const quizResults = {
+  'art-deco+home': { title: 'Арт-деко интерьер', categories: ['furniture', 'ceramics', 'art'], desc: 'Геометрические формы, золото, чёрный мрамор' },
+  'art-deco+personal': { title: 'Гэтсби стиль', categories: ['jewelry', 'accessories', 'clothing'], desc: 'Блеск, перья, длинные жемчужные нити' },
+  'mid-century+home': { title: 'Скандинавский модерн', categories: ['furniture', 'ceramics'], desc: 'Чистые линии, натуральные материалы' },
+  'mid-century+personal': { title: 'Классическая элегантность', categories: ['clothing', 'accessories'], desc: 'Шанель, Диор, вневременная мода' },
+  'retro+home': { title: 'Бохо-шик', categories: ['furniture', 'art', 'ceramics'], desc: 'Текстуры, паттерны, тёплые тона' },
+  'retro+personal': { title: 'Свободный стиль 70-х', categories: ['clothing', 'vinyl', 'accessories'], desc: 'Замша, бахрома, рок-н-ролл' },
+  default: { title: 'Винтажный микс', categories: ['clothing', 'jewelry', 'furniture', 'ceramics'], desc: 'Лучшее из каждой эпохи' },
+}
+
+// Background images
+const heroBGs = ['/images/bg-bronze.jpg', '/images/bg-silk.jpg', '/images/bg-wave.jpg']
+
 export default function Home() {
+  const navigate = useNavigate()
   const [products, setProducts] = useState([])
   const [categoryCounts, setCategoryCounts] = useState({})
   const [activeBG, setActiveBG] = useState(0)
   const [productsLoading, setProductsLoading] = useState(true)
-  const heroRef = useRef(null)
+  const [activeCollection, setActiveCollection] = useState(0)
+
+  // Quiz state
+  const [quizStep, setQuizStep] = useState(-1) // -1 = not started
+  const [quizAnswers, setQuizAnswers] = useState([])
+  const [quizResult, setQuizResult] = useState(null)
 
   useEffect(() => {
     async function load() {
@@ -34,41 +114,58 @@ export default function Home() {
     load()
   }, [])
 
-  // Cycle hero backgrounds
+  // Hero BG cycle
   useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveBG(prev => (prev + 1) % heroBGs.length)
-    }, 6000)
+    const timer = setInterval(() => setActiveBG(prev => (prev + 1) % heroBGs.length), 6000)
     return () => clearInterval(timer)
   }, [])
 
-  const scrollToContent = () => {
-    const el = document.getElementById('collection')
-    if (el) el.scrollIntoView({ behavior: 'smooth' })
+  // Collection auto-rotate
+  useEffect(() => {
+    if (quizStep >= 0) return // pause during quiz
+    const timer = setInterval(() => setActiveCollection(prev => (prev + 1) % collections.length), 5000)
+    return () => clearInterval(timer)
+  }, [quizStep])
+
+  const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+
+  // Quiz logic
+  const handleQuizAnswer = (option) => {
+    const newAnswers = [...quizAnswers, option.tag]
+    setQuizAnswers(newAnswers)
+
+    if (quizStep < quizSteps.length - 1) {
+      setQuizStep(quizStep + 1)
+    } else {
+      // Calculate result
+      const era = newAnswers[0] || 'default'
+      const purpose = newAnswers[1] || 'home'
+      const key = `${era}+${purpose}`
+      setQuizResult(quizResults[key] || quizResults.default)
+      setQuizStep(quizSteps.length) // show results
+    }
   }
+
+  const resetQuiz = () => {
+    setQuizStep(-1)
+    setQuizAnswers([])
+    setQuizResult(null)
+  }
+
+  const hasAnyCounts = Object.keys(categoryCounts).length > 0
 
   return (
     <div className="page-enter">
-      {/* ═══ HERO ═══ */}
-      <section ref={heroRef} className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden">
-        {/* BG Images with crossfade */}
+
+      {/* ═══════════════ HERO ═══════════════ */}
+      <section className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden">
         {heroBGs.map((bg, i) => (
-          <div
-            key={bg}
-            className="absolute inset-0 bg-cover bg-center transition-opacity duration-[2000ms]"
-            style={{
-              backgroundImage: `url(${bg})`,
-              opacity: activeBG === i ? 1 : 0,
-            }}
-          />
+          <div key={bg} className="absolute inset-0 bg-cover bg-center transition-opacity duration-[2000ms]"
+            style={{ backgroundImage: `url(${bg})`, opacity: activeBG === i ? 1 : 0 }} />
         ))}
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(12,10,8,0.45) 0%, rgba(12,10,8,0.65) 50%, rgba(12,10,8,0.92) 100%)' }} />
 
-        {/* Dark overlay */}
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(12,10,8,0.5) 0%, rgba(12,10,8,0.7) 50%, rgba(12,10,8,0.9) 100%)' }} />
-
-        {/* Content */}
-        <div className="relative z-10 text-center max-w-3xl mx-auto px-6">
-          {/* Decorative line */}
+        <div className="relative z-10 text-center max-w-4xl mx-auto px-6">
           <div className="flex items-center justify-center gap-4 mb-8 animate-fade-in" style={{ animationDelay: '200ms' }}>
             <div className="w-16 h-px" style={{ backgroundColor: 'rgba(176, 141, 87, 0.4)' }} />
             <span className="font-body text-[10px] tracking-[0.5em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.6)' }}>
@@ -77,114 +174,106 @@ export default function Home() {
             <div className="w-16 h-px" style={{ backgroundColor: 'rgba(176, 141, 87, 0.4)' }} />
           </div>
 
-          {/* Main Title */}
           <h1 className="animate-slide-up" style={{ animationDelay: '400ms' }}>
-            <span className="block font-display text-6xl md:text-8xl lg:text-9xl tracking-[0.15em] uppercase"
-              style={{ color: '#F0E6D6' }}>
+            <span className="block font-display text-6xl md:text-8xl lg:text-9xl tracking-[0.15em] uppercase" style={{ color: '#F0E6D6' }}>
               Galerie
             </span>
-            <span className="block font-display text-3xl md:text-5xl italic tracking-[0.1em] -mt-2 md:-mt-4"
-              style={{ color: '#B08D57' }}>
+            <span className="block font-display text-3xl md:text-5xl italic tracking-[0.1em] -mt-2 md:-mt-4" style={{ color: '#B08D57' }}>
               du Temps
             </span>
           </h1>
 
-          {/* Subtitle */}
           <p className="font-display text-lg md:text-xl italic mt-8 leading-relaxed animate-slide-up max-w-xl mx-auto"
             style={{ color: 'rgba(240, 230, 214, 0.45)', animationDelay: '600ms' }}>
-            Каждая вещь — это путешествие сквозь время.
             Винтаж, антиквариат и уникальные находки.
+            <br />Маркетплейс для ценителей прекрасного.
           </p>
 
-          {/* CTA */}
-          <div className="flex items-center justify-center gap-6 mt-12 animate-slide-up" style={{ animationDelay: '800ms' }}>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12 animate-slide-up" style={{ animationDelay: '800ms' }}>
             <Link to="/catalog" className="btn-primary group">
-              Коллекция
-              <ArrowRight size={16} className="ml-3 transition-transform duration-300 group-hover:translate-x-1" />
+              Каталог <ArrowRight size={16} className="ml-3 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
-            <Link to="/about" className="btn-secondary">
-              О галерее
+            <button onClick={() => scrollTo('quiz')} className="btn-secondary group">
+              <Sparkles size={14} className="mr-2" /> Подобрать стиль
+            </button>
+            <Link to="/seller/register" className="btn-light group">
+              <Store size={14} className="mr-2" /> Открыть магазин
             </Link>
           </div>
 
-          {/* BG indicator dots */}
+          {/* BG dots */}
           <div className="flex items-center justify-center gap-2 mt-16 animate-fade-in" style={{ animationDelay: '1000ms' }}>
             {heroBGs.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setActiveBG(i)}
-                className="transition-all duration-500"
-                style={{
-                  width: activeBG === i ? '24px' : '6px',
-                  height: '2px',
-                  backgroundColor: activeBG === i ? '#B08D57' : 'rgba(176, 141, 87, 0.3)',
-                  borderRadius: '1px',
-                }}
-              />
+              <button key={i} onClick={() => setActiveBG(i)} className="transition-all duration-500"
+                style={{ width: activeBG === i ? '24px' : '6px', height: '2px', backgroundColor: activeBG === i ? '#B08D57' : 'rgba(176, 141, 87, 0.3)', borderRadius: '1px' }} />
             ))}
           </div>
         </div>
 
-        {/* Scroll hint */}
-        <button onClick={scrollToContent}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-float"
-          style={{ color: 'rgba(176, 141, 87, 0.4)' }}>
+        <button onClick={() => scrollTo('collections')} className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-float" style={{ color: 'rgba(176, 141, 87, 0.4)' }}>
           <ChevronDown size={24} />
         </button>
       </section>
 
-      {/* ═══ CATEGORY GROUPS ═══ */}
-      <section className="py-24" style={{ backgroundColor: '#0C0A08' }}>
+
+      {/* ═══════════════ CURATED COLLECTIONS ═══════════════ */}
+      <section id="collections" className="py-24" style={{ backgroundColor: '#0C0A08' }}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
-            <span className="font-body text-[10px] tracking-[0.5em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.4)' }}>
-              Направления
-            </span>
-            <h2 className="font-display text-4xl md:text-5xl italic mt-4" style={{ color: '#F0E6D6' }}>
-              Что мы предлагаем
-            </h2>
+            <span className="font-body text-[10px] tracking-[0.5em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.4)' }}>Курированные</span>
+            <h2 className="font-display text-4xl md:text-5xl italic mt-4" style={{ color: '#F0E6D6' }}>Коллекции</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {categoryGroups
-              .filter(group => {
-                // If no counts loaded yet, show all groups
-                const hasAnyCounts = Object.keys(categoryCounts).length > 0
-                if (!hasAnyCounts) return true
-                return categories.filter(c => c.group === group.id).some(c => categoryCounts[c.id] > 0)
-              })
-              .map((group, i) => {
-              const hasAnyCounts = Object.keys(categoryCounts).length > 0
-              const groupCats = hasAnyCounts
-                ? categories.filter(c => c.group === group.id && categoryCounts[c.id] > 0)
-                : categories.filter(c => c.group === group.id)
+          {/* Collection Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {collections.map((col, i) => {
+              const Icon = col.icon
+              const isActive = activeCollection === i
               return (
-                <Link
-                  key={group.id}
-                  to={`/catalog/${groupCats[0]?.id || ''}`}
-                  className="group p-8 text-center transition-all duration-500 animate-slide-up"
+                <Link key={col.id} to={`/catalog/${col.category}`}
+                  className="group relative overflow-hidden transition-all duration-700"
                   style={{
-                    border: '1px solid rgba(176, 141, 87, 0.1)',
+                    background: col.gradient,
+                    border: `1px solid ${isActive ? col.accent + '40' : 'rgba(176, 141, 87, 0.08)'}`,
                     borderRadius: '2px',
-                    animationDelay: `${i * 120}ms`,
+                    minHeight: '380px',
                   }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.3)'
-                    e.currentTarget.style.backgroundColor = 'rgba(176, 141, 87, 0.03)'
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.1)'
-                    e.currentTarget.style.backgroundColor = 'transparent'
-                  }}
-                >
-                  <span className="text-4xl block mb-4">{group.icon}</span>
-                  <h3 className="font-display text-xl italic mb-3" style={{ color: '#F0E6D6' }}>
-                    {group.name}
-                  </h3>
-                  <div className="w-8 h-px mx-auto mb-3" style={{ backgroundColor: 'rgba(176, 141, 87, 0.3)' }} />
-                  <p className="font-body text-xs leading-relaxed" style={{ color: 'rgba(240, 230, 214, 0.3)' }}>
-                    {groupCats.map(c => c.name).join(' · ')}
-                  </p>
+                  onMouseEnter={() => setActiveCollection(i)}>
+                  {/* Glow */}
+                  <div className="absolute top-0 right-0 w-1/2 h-full opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+                    style={{ background: `radial-gradient(ellipse at 80% 30%, ${col.accent}15, transparent 70%)` }} />
+
+                  <div className="relative z-10 p-8 flex flex-col h-full">
+                    {/* Icon */}
+                    <div className="w-12 h-12 rounded flex items-center justify-center mb-6 transition-all duration-500 group-hover:scale-110"
+                      style={{ backgroundColor: `${col.accent}15`, border: `1px solid ${col.accent}25` }}>
+                      <Icon size={20} style={{ color: col.accent }} />
+                    </div>
+
+                    {/* Label */}
+                    <span className="font-body text-[9px] tracking-[0.4em] uppercase mb-2" style={{ color: `${col.accent}80` }}>
+                      {col.subtitle}
+                    </span>
+
+                    {/* Title */}
+                    <h3 className="font-display text-2xl italic mb-4" style={{ color: '#F0E6D6' }}>
+                      {col.title}
+                    </h3>
+
+                    {/* Divider */}
+                    <div className="w-10 h-px mb-4 transition-all duration-500 group-hover:w-16" style={{ backgroundColor: `${col.accent}40` }} />
+
+                    {/* Description */}
+                    <p className="font-body text-sm leading-relaxed flex-1" style={{ color: 'rgba(240, 230, 214, 0.3)' }}>
+                      {col.description}
+                    </p>
+
+                    {/* CTA */}
+                    <div className="flex items-center gap-2 mt-6 font-body text-xs tracking-[0.1em] uppercase transition-all duration-300 group-hover:gap-3"
+                      style={{ color: col.accent }}>
+                      Смотреть <ArrowRight size={12} className="transition-transform duration-300 group-hover:translate-x-1" />
+                    </div>
+                  </div>
                 </Link>
               )
             })}
@@ -192,25 +281,150 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══ GOLD DIVIDER ═══ */}
       <div className="gdt-divider" />
 
-      {/* ═══ FEATURED PRODUCTS ═══ */}
-      <section id="collection" className="py-24" style={{ backgroundColor: '#F7F2EB' }}>
+
+      {/* ═══════════════ STYLE QUIZ ═══════════════ */}
+      <section id="quiz" className="py-24 relative overflow-hidden" style={{ backgroundColor: '#F7F2EB' }}>
+        {/* Background texture */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #2C2420 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+
+        <div className="max-w-4xl mx-auto px-6 relative z-10">
+          <div className="text-center mb-12">
+            <span className="font-body text-[10px] tracking-[0.5em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.6)' }}>Интерактив</span>
+            <h2 className="font-display text-4xl md:text-5xl italic mt-4" style={{ color: '#0C0A08' }}>
+              Найдите свой стиль
+            </h2>
+            <p className="font-display text-lg italic mt-3" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>
+              Пройдите короткий квиз и получите персональные рекомендации
+            </p>
+          </div>
+
+          {/* Quiz Container */}
+          <div className="max-w-2xl mx-auto">
+            {quizStep === -1 ? (
+              /* Start Screen */
+              <div className="text-center p-12"
+                style={{ backgroundColor: 'rgba(255,255,255,0.5)', border: '1px solid rgba(176, 141, 87, 0.15)', borderRadius: '2px' }}>
+                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
+                  style={{ backgroundColor: 'rgba(176, 141, 87, 0.08)', border: '1px solid rgba(176, 141, 87, 0.15)' }}>
+                  <Sparkles size={28} style={{ color: '#B08D57' }} />
+                </div>
+                <h3 className="font-display text-2xl italic mb-3" style={{ color: '#0C0A08' }}>
+                  3 вопроса — 30 секунд
+                </h3>
+                <p className="font-body text-sm mb-8" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>
+                  Мы подберём коллекцию специально для вас
+                </p>
+                <button onClick={() => setQuizStep(0)} className="btn-primary">
+                  <Sparkles size={14} className="mr-2" /> Начать квиз
+                </button>
+              </div>
+            ) : quizStep < quizSteps.length ? (
+              /* Question */
+              <div className="p-8 md:p-12"
+                style={{ backgroundColor: 'rgba(255,255,255,0.5)', border: '1px solid rgba(176, 141, 87, 0.15)', borderRadius: '2px' }}>
+                {/* Progress */}
+                <div className="flex items-center gap-2 mb-8">
+                  {quizSteps.map((_, i) => (
+                    <div key={i} className="h-1 flex-1 rounded-full transition-all duration-500"
+                      style={{ backgroundColor: i <= quizStep ? '#B08D57' : 'rgba(176, 141, 87, 0.15)' }} />
+                  ))}
+                </div>
+
+                <p className="font-body text-[10px] tracking-[0.3em] uppercase mb-3" style={{ color: 'rgba(176, 141, 87, 0.5)' }}>
+                  Вопрос {quizStep + 1} из {quizSteps.length}
+                </p>
+                <h3 className="font-display text-2xl italic mb-8" style={{ color: '#0C0A08' }}>
+                  {quizSteps[quizStep].question}
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {quizSteps[quizStep].options.map((opt) => (
+                    <button key={opt.tag} onClick={() => handleQuizAnswer(opt)}
+                      className="group p-5 text-left transition-all duration-300"
+                      style={{
+                        backgroundColor: 'rgba(240, 230, 214, 0.3)',
+                        border: '1px solid rgba(176, 141, 87, 0.1)',
+                        borderRadius: '2px',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.4)'; e.currentTarget.style.backgroundColor = 'rgba(176, 141, 87, 0.08)' }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.1)'; e.currentTarget.style.backgroundColor = 'rgba(240, 230, 214, 0.3)' }}>
+                      <span className="text-2xl block mb-2">{opt.icon}</span>
+                      <span className="font-display text-lg italic block" style={{ color: '#0C0A08' }}>{opt.label}</span>
+                      {opt.desc && (
+                        <span className="font-body text-xs block mt-1" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>{opt.desc}</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : quizResult ? (
+              /* Results */
+              <div className="p-8 md:p-12"
+                style={{ backgroundColor: 'rgba(255,255,255,0.5)', border: '1px solid rgba(176, 141, 87, 0.15)', borderRadius: '2px' }}>
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                    style={{ backgroundColor: 'rgba(176, 141, 87, 0.1)', border: '1px solid rgba(176, 141, 87, 0.2)' }}>
+                    <Star size={24} style={{ color: '#B08D57' }} />
+                  </div>
+                  <p className="font-body text-[10px] tracking-[0.3em] uppercase mb-2" style={{ color: 'rgba(176, 141, 87, 0.5)' }}>
+                    Ваш стиль
+                  </p>
+                  <h3 className="font-display text-3xl italic" style={{ color: '#0C0A08' }}>
+                    {quizResult.title}
+                  </h3>
+                  <p className="font-body text-sm mt-2" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>
+                    {quizResult.desc}
+                  </p>
+                </div>
+
+                <p className="font-body text-[10px] tracking-[0.2em] uppercase mb-4 text-center" style={{ color: 'rgba(44, 36, 32, 0.3)' }}>
+                  Рекомендованные категории
+                </p>
+                <div className="flex flex-wrap justify-center gap-2 mb-8">
+                  {quizResult.categories.map(catId => {
+                    const cat = categories.find(c => c.id === catId)
+                    if (!cat) return null
+                    return (
+                      <Link key={catId} to={`/catalog/${catId}`}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 transition-all duration-300"
+                        style={{ backgroundColor: 'rgba(176, 141, 87, 0.08)', border: '1px solid rgba(176, 141, 87, 0.15)', borderRadius: '2px' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#B08D57'; e.currentTarget.style.backgroundColor = 'rgba(176, 141, 87, 0.15)' }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.15)'; e.currentTarget.style.backgroundColor = 'rgba(176, 141, 87, 0.08)' }}>
+                        <span>{cat.icon}</span>
+                        <span className="font-body text-sm" style={{ color: '#0C0A08' }}>{cat.name}</span>
+                      </Link>
+                    )
+                  })}
+                </div>
+
+                <div className="flex items-center justify-center gap-4">
+                  <Link to="/catalog" className="btn-primary text-sm py-2.5 px-6">
+                    В каталог <ArrowRight size={12} className="ml-2" />
+                  </Link>
+                  <button onClick={resetQuiz} className="btn-secondary text-sm py-2.5 px-6">
+                    Пройти заново
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </section>
+
+
+      {/* ═══════════════ FEATURED PRODUCTS ═══════════════ */}
+      <section className="py-24" style={{ backgroundColor: '#F7F2EB' }}>
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-end justify-between mb-12">
             <div>
-              <span className="font-body text-[10px] tracking-[0.5em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.6)' }}>
-                Избранное
-              </span>
-              <h2 className="font-display text-4xl md:text-5xl italic mt-3" style={{ color: '#0C0A08' }}>
-                Новые поступления
-              </h2>
+              <span className="font-body text-[10px] tracking-[0.5em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.6)' }}>Каталог</span>
+              <h2 className="font-display text-4xl md:text-5xl italic mt-3" style={{ color: '#0C0A08' }}>Новые поступления</h2>
             </div>
             <Link to="/catalog" className="hidden md:inline-flex items-center gap-2 font-body text-sm tracking-[0.1em] uppercase transition-all duration-300 group"
               style={{ color: '#B08D57' }}>
-              Вся коллекция
-              <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+              Все товары <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </div>
 
@@ -236,43 +450,167 @@ export default function Home() {
             </div>
           ) : (
             <div className="text-center py-16">
-              <p className="font-display text-xl italic" style={{ color: 'rgba(12, 10, 8, 0.25)' }}>
-                Коллекция скоро появится
-              </p>
+              <p className="font-display text-xl italic" style={{ color: 'rgba(12, 10, 8, 0.25)' }}>Коллекция скоро появится</p>
             </div>
           )}
 
           <div className="text-center mt-12 md:hidden">
+            <Link to="/catalog" className="btn-secondary">Все товары <ArrowRight size={14} className="ml-2" /></Link>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ═══════════════ CATEGORIES ═══════════════ */}
+      <section className="py-24" style={{ backgroundColor: '#0C0A08' }}>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <span className="font-body text-[10px] tracking-[0.5em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.4)' }}>Направления</span>
+            <h2 className="font-display text-4xl md:text-5xl italic mt-4" style={{ color: '#F0E6D6' }}>Категории</h2>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+            {categories
+              .filter(c => !hasAnyCounts || categoryCounts[c.id] > 0)
+              .slice(0, 10)
+              .map((cat, i) => (
+              <Link key={cat.id} to={`/catalog/${cat.id}`}
+                className="group p-6 text-center transition-all duration-500 animate-slide-up"
+                style={{ border: '1px solid rgba(176, 141, 87, 0.08)', borderRadius: '2px', animationDelay: `${i * 60}ms` }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.3)'; e.currentTarget.style.backgroundColor = 'rgba(176, 141, 87, 0.03)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.08)'; e.currentTarget.style.backgroundColor = 'transparent' }}>
+                <span className="text-3xl block mb-3">{cat.icon}</span>
+                <h3 className="font-display text-sm italic" style={{ color: '#F0E6D6' }}>{cat.name}</h3>
+                {hasAnyCounts && categoryCounts[cat.id] > 0 && (
+                  <span className="font-body text-[10px] mt-1 block" style={{ color: 'rgba(176, 141, 87, 0.4)' }}>
+                    {categoryCounts[cat.id]} товаров
+                  </span>
+                )}
+              </Link>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
             <Link to="/catalog" className="btn-secondary">
-              Вся коллекция <ArrowRight size={14} className="ml-2" />
+              Все категории <ArrowRight size={14} className="ml-2" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ═══ BRAND STORY ═══ */}
+      <div className="gdt-divider" />
+
+
+      {/* ═══════════════ BECOME A SELLER ═══════════════ */}
+      <section className="py-24 relative overflow-hidden" style={{ backgroundColor: '#F7F2EB' }}>
+        {/* Decorative shapes */}
+        <div className="absolute top-0 left-0 w-64 h-64 rounded-full opacity-[0.04]"
+          style={{ background: 'radial-gradient(circle, #B08D57, transparent)', transform: 'translate(-30%, -30%)' }} />
+        <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full opacity-[0.03]"
+          style={{ background: 'radial-gradient(circle, #B08D57, transparent)', transform: 'translate(30%, 30%)' }} />
+
+        <div className="max-w-5xl mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            {/* Left — Text */}
+            <div>
+              <span className="font-body text-[10px] tracking-[0.5em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.6)' }}>
+                Для продавцов
+              </span>
+              <h2 className="font-display text-4xl md:text-5xl italic mt-4 leading-tight" style={{ color: '#0C0A08' }}>
+                Откройте свой
+                <br />
+                <span style={{ color: '#B08D57' }}>магазин</span>
+              </h2>
+              <div className="w-12 h-px mt-6 mb-6" style={{ backgroundColor: '#B08D57' }} />
+              <p className="font-body text-base leading-relaxed" style={{ color: 'rgba(44, 36, 32, 0.5)' }}>
+                Присоединяйтесь к сообществу ценителей винтажа. Создайте свой магазин за пару минут и начните продавать уникальные вещи покупателям по всему миру.
+              </p>
+
+              <div className="mt-10 space-y-5">
+                {[
+                  { num: '01', text: 'Зарегистрируйтесь и создайте профиль магазина' },
+                  { num: '02', text: 'Добавьте товары с фотографиями и описанием' },
+                  { num: '03', text: 'Получайте запросы от покупателей напрямую' },
+                ].map((step) => (
+                  <div key={step.num} className="flex items-start gap-4">
+                    <span className="font-display text-xl italic flex-shrink-0" style={{ color: '#B08D57' }}>
+                      {step.num}
+                    </span>
+                    <p className="font-body text-sm pt-1" style={{ color: 'rgba(44, 36, 32, 0.5)' }}>
+                      {step.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-4 mt-10">
+                <Link to="/seller/register" className="btn-primary group">
+                  <Store size={14} className="mr-2" /> Создать магазин
+                  <ArrowRight size={14} className="ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+                </Link>
+                <Link to="/shops" className="btn-secondary">
+                  Все магазины
+                </Link>
+              </div>
+            </div>
+
+            {/* Right — Visual */}
+            <div className="relative">
+              <div className="p-8 relative" style={{ backgroundColor: 'rgba(12, 10, 8, 0.03)', border: '1px solid rgba(176, 141, 87, 0.12)', borderRadius: '2px' }}>
+                {/* Fake shop preview */}
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 rounded flex items-center justify-center font-display text-xl"
+                    style={{ backgroundColor: 'rgba(176, 141, 87, 0.1)', color: '#B08D57' }}>V</div>
+                  <div>
+                    <p className="font-display text-lg italic" style={{ color: '#0C0A08' }}>Vintage Corner</p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      {[1,2,3,4,5].map(s => <Star key={s} size={10} fill="#B08D57" style={{ color: '#B08D57' }} />)}
+                      <span className="font-body text-[10px] ml-1" style={{ color: 'rgba(44, 36, 32, 0.3)' }}>4.7</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[1,2,3].map(i => (
+                    <div key={i} className="aspect-square" style={{ backgroundColor: 'rgba(176, 141, 87, 0.06)', borderRadius: '2px' }}>
+                      <div className="w-full h-full flex items-center justify-center text-2xl opacity-30">
+                        {['🏺', '💎', '👗'][i-1]}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 flex items-center justify-between">
+                  <span className="font-body text-xs" style={{ color: 'rgba(44, 36, 32, 0.25)' }}>12 товаров</span>
+                  <span className="font-body text-xs" style={{ color: 'rgba(176, 141, 87, 0.4)' }}>Нашмаркт, Вена</span>
+                </div>
+              </div>
+              {/* Decorative offset card */}
+              <div className="absolute -bottom-3 -right-3 w-full h-full -z-10" style={{ border: '1px solid rgba(176, 141, 87, 0.08)', borderRadius: '2px' }} />
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ═══════════════ BRAND STORY ═══════════════ */}
       <section className="py-24 relative overflow-hidden" style={{ backgroundColor: '#1A1410' }}>
-        {/* Decorative gradient */}
         <div className="absolute top-0 right-0 w-1/2 h-full opacity-10"
           style={{ background: 'radial-gradient(ellipse at 70% 50%, rgba(176, 141, 87, 0.3), transparent 70%)' }} />
 
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
           <div className="w-12 h-px mx-auto mb-10" style={{ backgroundColor: 'rgba(176, 141, 87, 0.3)' }} />
-
           <blockquote className="font-display text-2xl md:text-4xl italic leading-relaxed"
             style={{ color: 'rgba(240, 230, 214, 0.7)' }}>
             &laquo;Время не уничтожает красоту &mdash;
             <br className="hidden md:block" />
             оно придаёт ей глубину&raquo;
           </blockquote>
-
           <div className="w-12 h-px mx-auto mt-10 mb-6" style={{ backgroundColor: 'rgba(176, 141, 87, 0.3)' }} />
-
           <p className="font-body text-xs tracking-[0.3em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.4)' }}>
             Galerie du Temps &middot; Вена
           </p>
         </div>
       </section>
+
     </div>
   )
 }
