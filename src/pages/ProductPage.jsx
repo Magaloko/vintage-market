@@ -16,6 +16,9 @@ import {
   MessageCircle,
   Send as SendIcon,
   Store,
+  Shield,
+  Gem,
+  Sparkles,
 } from 'lucide-react'
 import { getProduct, getCategoryAvgPrice, getShop } from '../lib/api'
 import { categories, conditions, categoryFields } from '../data/demoProducts'
@@ -41,6 +44,184 @@ const FIELD_ICONS = {
   email: Mail,
   website: Globe,
   default: Tag,
+}
+
+/* ------------------------------------------------------------------ */
+/*  Specs highlight strip                                              */
+/* ------------------------------------------------------------------ */
+
+function SpecsStrip({ product }) {
+  const specs = []
+
+  if (product.category === 'jewelry') {
+    if (product.details?.material) {
+      const val = product.details.hallmark
+        ? `${product.details.material} ${product.details.hallmark}`
+        : product.details.material
+      specs.push({ icon: Gem, label: 'Материал', value: val })
+    }
+    if (product.details?.stones) specs.push({ icon: Sparkles, label: 'Камни', value: product.details.stones })
+    if (product.details?.weight_grams) specs.push({ icon: Tag, label: 'Вес', value: `${product.details.weight_grams} г` })
+    if (product.details?.jewelry_type) specs.push({ icon: Award, label: 'Тип', value: product.details.jewelry_type })
+  } else if (product.category === 'ceramics') {
+    if (product.details?.manufacturer) specs.push({ icon: Award, label: 'Производитель', value: product.details.manufacturer })
+    if (product.details?.material) specs.push({ icon: Tag, label: 'Материал', value: product.details.material })
+    if (product.details?.ceramic_type) specs.push({ icon: ShoppingBag, label: 'Тип', value: product.details.ceramic_type })
+    if (product.details?.set_pieces) specs.push({ icon: Ruler, label: 'Комплект', value: `${product.details.set_pieces} пр.` })
+  } else {
+    if (product.condition) {
+      const cond = conditions.find(c => c.id === product.condition)
+      if (cond) specs.push({ icon: Award, label: 'Состояние', value: cond.name })
+    }
+    if (product.era) specs.push({ icon: Clock, label: 'Эпоха', value: product.era })
+    if (product.brand) specs.push({ icon: ShoppingBag, label: 'Бренд', value: product.brand })
+  }
+
+  if (specs.length === 0) return null
+
+  return (
+    <div
+      className="flex flex-wrap items-center gap-0"
+      style={{
+        backgroundColor: 'rgba(176, 141, 87, 0.04)',
+        border: '1px solid rgba(176, 141, 87, 0.1)',
+        borderRadius: '2px',
+        padding: '12px 16px',
+      }}
+    >
+      {specs.map(({ icon: Icon, label, value }, i) => (
+        <div key={label} className="flex items-center">
+          {i > 0 && (
+            <div className="w-px h-5 mx-3" style={{ backgroundColor: 'rgba(176, 141, 87, 0.2)' }} />
+          )}
+          <Icon size={14} className="mr-2 shrink-0" style={{ color: '#B08D57' }} />
+          <div>
+            <p className="font-body text-[9px] tracking-wider uppercase" style={{ color: 'rgba(44, 36, 32, 0.3)' }}>{label}</p>
+            <p className="font-body text-sm" style={{ color: '#2C2420' }}>{value}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Condition meter                                                    */
+/* ------------------------------------------------------------------ */
+
+const CONDITION_LEVELS = [
+  { id: 'vintage_character', level: 1, color: '#B5736A', label: 'Винтажный характер', desc: 'Следы времени добавляют шарм' },
+  { id: 'good', level: 2, color: '#C9956B', label: 'Хорошее', desc: 'Лёгкие следы использования' },
+  { id: 'excellent', level: 3, color: '#B08D57', label: 'Отличное', desc: 'Минимальные следы, почти идеал' },
+  { id: 'new', level: 4, color: '#7A8B6F', label: 'Новое', desc: 'Без следов использования' },
+]
+
+const SEGMENT_COLORS = ['#B5736A', '#C9956B', '#B08D57', '#7A8B6F']
+
+function ConditionMeter({ conditionId }) {
+  const condInfo = CONDITION_LEVELS.find(c => c.id === conditionId)
+  if (!condInfo) return null
+
+  return (
+    <div className="p-3" style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)', borderRadius: '2px' }}>
+      <div className="flex items-center gap-3 mb-2">
+        <Award size={14} style={{ color: condInfo.color }} />
+        <span className="font-body text-sm font-medium" style={{ color: condInfo.color }}>{condInfo.label}</span>
+      </div>
+      <div className="flex items-center gap-1 mb-1.5">
+        {SEGMENT_COLORS.map((color, i) => (
+          <div
+            key={i}
+            className="h-1 flex-1 rounded-sm"
+            style={{
+              backgroundColor: i < condInfo.level ? color : 'rgba(44, 36, 32, 0.08)',
+            }}
+          />
+        ))}
+      </div>
+      <p className="font-body text-[10px]" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>{condInfo.desc}</p>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Authenticity / Provenance section                                  */
+/* ------------------------------------------------------------------ */
+
+function AuthenticitySection({ product }) {
+  if (product.category === 'jewelry') {
+    const hasData = product.details?.hallmark || product.details?.material || product.details?.weight_grams
+    if (!hasData) return null
+
+    return (
+      <div className="p-5" style={{
+        backgroundColor: 'rgba(176, 141, 87, 0.04)',
+        border: '1px solid rgba(176, 141, 87, 0.1)',
+        borderLeft: '4px solid #B08D57',
+        borderRadius: '2px',
+      }}>
+        <div className="flex items-center gap-2 mb-3">
+          <Shield size={16} style={{ color: '#B08D57' }} />
+          <span className="font-display text-lg italic" style={{ color: '#0C0A08' }}>Подлинность</span>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          {product.details.hallmark && (
+            <div className="px-3 py-1.5" style={{ backgroundColor: 'rgba(176, 141, 87, 0.08)', borderRadius: '2px' }}>
+              <span className="font-body text-[9px] tracking-wider uppercase block" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>Проба</span>
+              <span className="font-body text-sm font-medium" style={{ color: '#B08D57' }}>{product.details.hallmark}</span>
+            </div>
+          )}
+          {product.details.material && (
+            <div className="px-3 py-1.5" style={{ backgroundColor: 'rgba(176, 141, 87, 0.08)', borderRadius: '2px' }}>
+              <span className="font-body text-[9px] tracking-wider uppercase block" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>Материал</span>
+              <span className="font-body text-sm font-medium" style={{ color: '#2C2420' }}>{product.details.material}</span>
+            </div>
+          )}
+          {product.details.weight_grams && (
+            <div className="px-3 py-1.5" style={{ backgroundColor: 'rgba(176, 141, 87, 0.08)', borderRadius: '2px' }}>
+              <span className="font-body text-[9px] tracking-wider uppercase block" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>Вес</span>
+              <span className="font-body text-sm font-medium" style={{ color: '#2C2420' }}>{product.details.weight_grams} г</span>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  if (product.category === 'ceramics') {
+    const hasData = product.details?.manufacturer || product.details?.material
+    if (!hasData) return null
+
+    return (
+      <div className="p-5" style={{
+        backgroundColor: 'rgba(176, 141, 87, 0.04)',
+        border: '1px solid rgba(176, 141, 87, 0.1)',
+        borderLeft: '4px solid #B08D57',
+        borderRadius: '2px',
+      }}>
+        <div className="flex items-center gap-2 mb-3">
+          <Award size={16} style={{ color: '#B08D57' }} />
+          <span className="font-display text-lg italic" style={{ color: '#0C0A08' }}>Происхождение</span>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          {product.details.manufacturer && (
+            <div className="px-3 py-1.5" style={{ backgroundColor: 'rgba(176, 141, 87, 0.08)', borderRadius: '2px' }}>
+              <span className="font-body text-[9px] tracking-wider uppercase block" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>Мануфактура</span>
+              <span className="font-body text-sm font-medium" style={{ color: '#B08D57' }}>{product.details.manufacturer}</span>
+            </div>
+          )}
+          {product.details.material && (
+            <div className="px-3 py-1.5" style={{ backgroundColor: 'rgba(176, 141, 87, 0.08)', borderRadius: '2px' }}>
+              <span className="font-body text-[9px] tracking-wider uppercase block" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>Материал</span>
+              <span className="font-body text-sm font-medium" style={{ color: '#2C2420' }}>{product.details.material}</span>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  return null
 }
 
 /* ------------------------------------------------------------------ */
@@ -317,6 +498,9 @@ export default function ProductPage() {
             {/* Price history chart */}
             {!isShop && <PriceHistoryChart productId={product.id} />}
 
+            {/* Specs highlight strip */}
+            <SpecsStrip product={product} />
+
             {/* Divider */}
             <div className="w-12 h-px" style={{ backgroundColor: '#B08D57' }} />
 
@@ -327,6 +511,9 @@ export default function ProductPage() {
             >
               {product.description}
             </p>
+
+            {/* Condition meter */}
+            {product.condition && <ConditionMeter conditionId={product.condition} />}
 
             {/* Details grid */}
             {allDetails.length > 0 && (
@@ -378,6 +565,9 @@ export default function ProductPage() {
                 </p>
               </div>
             )}
+
+            {/* Authenticity / Provenance */}
+            <AuthenticitySection product={product} />
 
             {/* Contact CTAs */}
             {product.status !== 'sold' && (

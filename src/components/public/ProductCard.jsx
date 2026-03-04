@@ -1,7 +1,7 @@
 import { memo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Star, TrendingUp, Flame } from 'lucide-react'
-import { categories } from '../../data/demoProducts'
+import { Star, TrendingUp, Flame, Sparkles } from 'lucide-react'
+import { categories, conditions } from '../../data/demoProducts'
 import FavoriteButton from './FavoriteButton'
 import CompareButton from './CompareButton'
 
@@ -14,7 +14,29 @@ const COLORS = {
   imageBg: '#E0D4C0',
   badgeBg: 'rgba(12, 10, 8, 0.8)',
   categoryBg: 'rgba(247, 242, 235, 0.9)',
-  hoverGradient: 'linear-gradient(to top, rgba(12,10,8,0.4), transparent 60%)',
+  hoverGradient: 'linear-gradient(to top, rgba(12,10,8,0.5), transparent 60%)',
+}
+
+const CONDITION_STYLES = {
+  new:               { color: '#7A8B6F', label: 'Новое' },
+  excellent:         { color: '#B08D57', label: 'Отличное' },
+  good:              { color: '#C9956B', label: 'Хорошее' },
+  vintage_character: { color: '#B5736A', label: 'Винтаж' },
+}
+
+const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000
+
+function getKeyDetail(product) {
+  if (product.category === 'jewelry') {
+    const mat = product.details?.material
+    const hall = product.details?.hallmark
+    if (mat && hall) return `${mat} ${hall}`
+    return mat || null
+  }
+  if (product.category === 'ceramics') {
+    return product.details?.manufacturer || product.details?.material || null
+  }
+  return null
 }
 
 function ProductCard({ product, showCompare = false, isBestseller = false, isPopular = false }) {
@@ -22,9 +44,13 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
 
   const category = categories.find((c) => c.id === product.category)
   const imageUrl = product.image_url || product.images?.[0]?.url
+  const imageCount = product.images?.length || (imageUrl ? 1 : 0)
   const isSold = product.status === 'sold'
   const isShop = category?.group === 'shops'
   const isRental = category?.group === 'realestate' && product.details?.rent_or_buy === 'Аренда'
+  const isNew = !isSold && product.created_at && (Date.now() - new Date(product.created_at).getTime()) < SEVEN_DAYS
+  const keyDetail = getKeyDetail(product)
+  const conditionStyle = CONDITION_STYLES[product.condition]
 
   return (
     <Link
@@ -49,9 +75,8 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
           style={{ background: COLORS.hoverGradient }}
         />
 
-        {isSold && <SoldBadge />}
+        {isSold ? <SoldBadge /> : isNew && <NewBadge />}
 
-        {/* Product badges — top-right, always visible */}
         <ProductBadges isPromoted={product.is_promoted} isBestseller={isBestseller} isPopular={isPopular} />
 
         <div className="absolute top-3 right-3 flex flex-col gap-2 transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0"
@@ -61,7 +86,11 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
           {showCompare && <CompareButton product={product} size="sm" />}
         </div>
 
-        {category && <CategoryBadge name={category.name} />}
+        {keyDetail ? <KeyDetailTag text={keyDetail} /> : category && <CategoryBadge name={category.name} />}
+
+        {imageCount > 1 && <ImageCountIndicator count={imageCount} />}
+
+        <HoverSpecs product={product} />
       </div>
 
       <div className="pt-4 pb-2">
@@ -72,7 +101,11 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
           {product.title}
         </h3>
 
-        <div className="flex items-center justify-between mt-2">
+        {conditionStyle && (
+          <ConditionDot color={conditionStyle.color} label={conditionStyle.label} />
+        )}
+
+        <div className="flex items-center justify-between mt-1.5">
           <ProductPrice
             price={product.price}
             isSold={isSold}
@@ -89,6 +122,8 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
     </Link>
   )
 }
+
+/* ── Image ──────────────────────────────────────────────────── */
 
 function ProductImage({ url, alt, icon, hasError, onError }) {
   if (url && !hasError) {
@@ -110,10 +145,12 @@ function ProductImage({ url, alt, icon, hasError, onError }) {
   )
 }
 
+/* ── Badges (top-left) ──────────────────────────────────────── */
+
 function SoldBadge() {
   return (
     <div
-      className="absolute top-3 left-3 px-3 py-1 font-body text-[10px] tracking-[0.2em] uppercase"
+      className="absolute top-3 left-3 px-3 py-1 font-body text-[10px] tracking-[0.2em] uppercase z-10"
       style={{
         backgroundColor: COLORS.badgeBg,
         color: COLORS.gold,
@@ -126,21 +163,23 @@ function SoldBadge() {
   )
 }
 
-function CategoryBadge({ name }) {
+function NewBadge() {
   return (
     <div
-      className="absolute bottom-3 left-3 px-2.5 py-1 font-body text-[10px] tracking-[0.15em] uppercase transition-all duration-300 opacity-0 group-hover:opacity-100"
+      className="absolute top-3 left-3 px-3 py-1 font-body text-[10px] tracking-[0.2em] uppercase z-10"
       style={{
-        backgroundColor: COLORS.categoryBg,
-        color: COLORS.brown,
+        background: 'linear-gradient(135deg, rgba(176, 141, 87, 0.85), rgba(201, 169, 110, 0.85))',
+        color: '#0C0A08',
         backdropFilter: 'blur(4px)',
         borderRadius: '1px',
       }}
     >
-      {name}
+      Новинка
     </div>
   )
 }
+
+/* ── Badges (top-right) ─────────────────────────────────────── */
 
 function ProductBadges({ isPromoted, isBestseller, isPopular }) {
   const badges = []
@@ -208,6 +247,103 @@ function PopularBadge() {
     >
       <TrendingUp size={8} />
       Популярное
+    </div>
+  )
+}
+
+/* ── Bottom-of-image elements ───────────────────────────────── */
+
+function CategoryBadge({ name }) {
+  return (
+    <div
+      className="absolute bottom-3 left-3 px-2.5 py-1 font-body text-[10px] tracking-[0.15em] uppercase transition-all duration-300 opacity-0 group-hover:opacity-100"
+      style={{
+        backgroundColor: COLORS.categoryBg,
+        color: COLORS.brown,
+        backdropFilter: 'blur(4px)',
+        borderRadius: '1px',
+      }}
+    >
+      {name}
+    </div>
+  )
+}
+
+function KeyDetailTag({ text }) {
+  return (
+    <div
+      className="absolute bottom-3 left-3 px-2.5 py-1 font-body text-[10px] tracking-[0.15em] uppercase z-10"
+      style={{
+        backgroundColor: 'rgba(12, 10, 8, 0.75)',
+        color: '#C9A96E',
+        backdropFilter: 'blur(4px)',
+        borderRadius: '1px',
+      }}
+    >
+      {text}
+    </div>
+  )
+}
+
+function ImageCountIndicator({ count }) {
+  const dots = Math.min(count, 5)
+  return (
+    <div className="absolute bottom-3 right-3 flex items-center gap-1 z-10">
+      {Array.from({ length: dots }, (_, i) => (
+        <div
+          key={i}
+          className="w-1 h-1 rounded-full"
+          style={{ backgroundColor: i === 0 ? 'rgba(176, 141, 87, 0.8)' : 'rgba(176, 141, 87, 0.4)' }}
+        />
+      ))}
+      {count > 5 && (
+        <span className="font-body text-[8px]" style={{ color: 'rgba(176, 141, 87, 0.5)' }}>
+          +{count - 5}
+        </span>
+      )}
+    </div>
+  )
+}
+
+/* ── Hover specs overlay ────────────────────────────────────── */
+
+function HoverSpecs({ product }) {
+  const specs = []
+
+  if (product.category === 'jewelry') {
+    if (product.details?.material) specs.push(product.details.material)
+    if (product.details?.stones) specs.push(product.details.stones)
+    if (product.details?.weight_grams) specs.push(`${product.details.weight_grams} г`)
+  } else if (product.category === 'ceramics') {
+    if (product.details?.material) specs.push(product.details.material)
+    if (product.details?.manufacturer) specs.push(product.details.manufacturer)
+    if (product.details?.set_pieces) specs.push(`${product.details.set_pieces} пр.`)
+  }
+
+  if (specs.length === 0) return null
+
+  return (
+    <div
+      className="absolute bottom-0 left-0 right-0 px-3 py-2.5 flex items-center gap-2 transition-all duration-500 opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 z-10"
+      style={{ background: 'linear-gradient(to top, rgba(12,10,8,0.7), transparent)' }}
+    >
+      <Sparkles size={10} style={{ color: 'rgba(201, 169, 110, 0.7)', flexShrink: 0 }} />
+      {specs.map((spec, i) => (
+        <span key={i} className="font-body text-[10px] tracking-wide" style={{ color: 'rgba(240, 230, 214, 0.8)' }}>
+          {spec}{i < specs.length - 1 && <span style={{ color: 'rgba(176, 141, 87, 0.4)', margin: '0 2px' }}> · </span>}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+/* ── Text area sub-components ───────────────────────────────── */
+
+function ConditionDot({ color, label }) {
+  return (
+    <div className="flex items-center gap-1.5 mt-1.5">
+      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+      <span className="font-body text-[10px] tracking-wide" style={{ color }}>{label}</span>
     </div>
   )
 }

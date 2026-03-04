@@ -173,6 +173,172 @@ function TestimonialCard({ testimonial }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Vintage frame decorator                                            */
+/* ------------------------------------------------------------------ */
+
+function VintageFrame({ children }) {
+  return (
+    <div className="relative">
+      <div className="absolute -inset-3 pointer-events-none z-0">
+        <div className="absolute top-0 left-0 w-6 h-6" style={{ borderTop: '2px solid rgba(176, 141, 87, 0.2)', borderLeft: '2px solid rgba(176, 141, 87, 0.2)' }} />
+        <div className="absolute top-0 right-0 w-6 h-6" style={{ borderTop: '2px solid rgba(176, 141, 87, 0.2)', borderRight: '2px solid rgba(176, 141, 87, 0.2)' }} />
+        <div className="absolute bottom-0 left-0 w-6 h-6" style={{ borderBottom: '2px solid rgba(176, 141, 87, 0.2)', borderLeft: '2px solid rgba(176, 141, 87, 0.2)' }} />
+        <div className="absolute bottom-0 right-0 w-6 h-6" style={{ borderBottom: '2px solid rgba(176, 141, 87, 0.2)', borderRight: '2px solid rgba(176, 141, 87, 0.2)' }} />
+      </div>
+      <div className="relative z-10">{children}</div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Editor's Pick                                                      */
+/* ------------------------------------------------------------------ */
+
+function EditorsPickCard({ product }) {
+  if (!product) return null
+  const category = categories.find(c => c.id === product.category)
+  const imageUrl = product.image_url || product.images?.[0]?.url
+
+  return (
+    <VintageFrame>
+      <div
+        className="grid grid-cols-1 lg:grid-cols-2 gap-0 overflow-hidden"
+        style={{ borderRadius: '2px', border: '1px solid rgba(176, 141, 87, 0.15)' }}
+      >
+        <Link
+          to={`/product/${product.id}`}
+          className="group relative aspect-[3/4] lg:aspect-auto overflow-hidden"
+          style={{ backgroundColor: '#E0D4C0', minHeight: '360px' }}
+        >
+          {imageUrl ? (
+            <img src={imageUrl} alt={product.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-6xl opacity-20">{category?.icon || '\uD83C\uDFFA'}</span>
+            </div>
+          )}
+          <div className="absolute inset-4 pointer-events-none">
+            <div className="absolute top-0 left-0 w-8 h-8" style={{ borderTop: '1px solid rgba(176, 141, 87, 0.3)', borderLeft: '1px solid rgba(176, 141, 87, 0.3)' }} />
+            <div className="absolute bottom-0 right-0 w-8 h-8" style={{ borderBottom: '1px solid rgba(176, 141, 87, 0.3)', borderRight: '1px solid rgba(176, 141, 87, 0.3)' }} />
+          </div>
+        </Link>
+
+        <div className="p-8 lg:p-12 flex flex-col justify-center" style={{ backgroundColor: 'rgba(255, 255, 255, 0.5)' }}>
+          <span className="font-body text-[10px] tracking-[0.5em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.6)' }}>
+            Выбор редакции
+          </span>
+          <h3 className="font-display text-3xl lg:text-4xl italic mt-3 leading-tight" style={{ color: '#0C0A08' }}>
+            {product.title}
+          </h3>
+
+          {product.era && (
+            <p className="font-body text-sm mt-2" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>
+              {product.era}
+            </p>
+          )}
+
+          <div className="w-10 h-px my-6" style={{ backgroundColor: 'rgba(176, 141, 87, 0.3)' }} />
+
+          {product.description && (
+            <p className="font-body text-sm leading-relaxed" style={{ color: 'rgba(44, 36, 32, 0.5)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+              {product.description}
+            </p>
+          )}
+
+          {product.details && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {product.details.material && (
+                <span className="font-body text-[10px] tracking-wider uppercase px-2.5 py-1" style={{ backgroundColor: 'rgba(176, 141, 87, 0.08)', color: '#B08D57', borderRadius: '1px' }}>
+                  {product.details.material}
+                </span>
+              )}
+              {product.details.hallmark && (
+                <span className="font-body text-[10px] tracking-wider uppercase px-2.5 py-1" style={{ backgroundColor: 'rgba(176, 141, 87, 0.08)', color: '#B08D57', borderRadius: '1px' }}>
+                  {product.details.hallmark}
+                </span>
+              )}
+              {product.details.manufacturer && (
+                <span className="font-body text-[10px] tracking-wider uppercase px-2.5 py-1" style={{ backgroundColor: 'rgba(176, 141, 87, 0.08)', color: '#B08D57', borderRadius: '1px' }}>
+                  {product.details.manufacturer}
+                </span>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center gap-6 mt-8">
+            {product.price > 0 && (
+              <span className="font-display text-2xl" style={{ color: '#B08D57' }}>
+                {product.price}&euro;
+              </span>
+            )}
+            <Link
+              to={`/product/${product.id}`}
+              className="btn-primary text-sm py-2.5 px-6 group"
+            >
+              Подробнее
+              <ArrowRight size={14} className="ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </VintageFrame>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Category row (horizontal scroll)                                   */
+/* ------------------------------------------------------------------ */
+
+function CategoryRow({ title, subtitle, products: rowProducts, link, bestsellerIds, popularIds }) {
+  if (rowProducts.length === 0) return null
+
+  return (
+    <div className="mb-14">
+      <div className="flex items-end justify-between mb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-8 h-px" style={{ backgroundColor: '#B08D57' }} />
+          <div>
+            <span className="font-body text-[10px] tracking-[0.4em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.5)' }}>
+              {subtitle}
+            </span>
+            <h3 className="font-display text-2xl italic" style={{ color: '#0C0A08' }}>
+              {title}
+            </h3>
+          </div>
+        </div>
+        <Link to={link} className="hidden md:inline-flex items-center gap-2 font-body text-xs tracking-[0.15em] uppercase transition-all group" style={{ color: '#B08D57' }}>
+          Смотреть все <ArrowRight size={12} className="transition-transform group-hover:translate-x-1" />
+        </Link>
+      </div>
+
+      <div className="overflow-x-auto pb-4 -mx-2 px-2" style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex gap-5" style={{ width: 'max-content' }}>
+          {rowProducts.map((product, i) => (
+            <div
+              key={product.id}
+              className="animate-slide-up"
+              style={{ width: '260px', flexShrink: 0, scrollSnapAlign: 'start', animationDelay: `${i * 60}ms` }}
+            >
+              <ProductCard
+                product={product}
+                isBestseller={bestsellerIds?.has(product.id)}
+                isPopular={popularIds?.has(product.id)}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="text-center mt-4 md:hidden">
+        <Link to={link} className="font-body text-xs tracking-[0.15em] uppercase" style={{ color: '#B08D57' }}>
+          Смотреть все <ArrowRight size={12} className="inline ml-1" />
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -182,6 +348,8 @@ export default function Home() {
   const [products, setProducts] = useState([])
   const [categoryCounts, setCategoryCounts] = useState({})
   const [productsLoading, setProductsLoading] = useState(true)
+  const [jewelryProducts, setJewelryProducts] = useState([])
+  const [ceramicsProducts, setCeramicsProducts] = useState([])
 
   const [activeSlide, setActiveSlide] = useState(0)
   const [slidePaused, setSlidePaused] = useState(false)
@@ -197,14 +365,18 @@ export default function Home() {
   useEffect(() => {
     ;(async () => {
       try {
-        const [prodResult, countResult] = await Promise.all([
-          getProducts({}),
+        const [prodResult, countResult, jwResult, crResult] = await Promise.all([
+          getProducts({ limit: 16 }),
           getCategoryCounts(),
+          getProducts({ category: 'jewelry', limit: 8 }),
+          getProducts({ category: 'ceramics', limit: 8 }),
         ])
         setProducts(
-          (prodResult.data || []).filter((p) => p.status !== 'sold').slice(0, 8),
+          (prodResult.data || []).filter((p) => p.status !== 'sold'),
         )
         setCategoryCounts(countResult.data || {})
+        setJewelryProducts((jwResult.data || []).filter((p) => p.status !== 'sold'))
+        setCeramicsProducts((crResult.data || []).filter((p) => p.status !== 'sold'))
       } catch (e) {
         console.error('Home load error:', e)
       }
@@ -282,6 +454,24 @@ export default function Home() {
     )
     return { bestsellerIds: bIds, popularIds: pIds }
   }, [products])
+
+  const editorsPick = useMemo(() => {
+    const promoted = products.filter(p => p.is_promoted)
+    if (promoted.length > 0) {
+      return promoted.sort((a, b) => (b.views || 0) - (a.views || 0))[0]
+    }
+    return [...products].sort((a, b) => (b.views || 0) - (a.views || 0))[0] || null
+  }, [products])
+
+  const gridProducts = useMemo(() => {
+    const catIds = new Set([
+      ...jewelryProducts.map(p => p.id),
+      ...ceramicsProducts.map(p => p.id),
+    ])
+    return products.filter(p =>
+      p.id !== editorsPick?.id && !catIds.has(p.id)
+    )
+  }, [products, editorsPick, jewelryProducts, ceramicsProducts])
 
   /* ---------- Render ---------- */
 
@@ -460,66 +650,93 @@ export default function Home() {
         </button>
       </section>
 
-      {/* ═══════════════ FEATURED PRODUCTS ═══════════════ */}
-      <section id="products" className="py-24 relative overflow-hidden" style={{ backgroundColor: '#F7F2EB' }}>
-        {/* Vintage dot overlay */}
+      {/* ═══════════════ EDITOR'S PICK ═══════════════ */}
+      <section id="products" className="pt-24 pb-12 relative overflow-hidden" style={{ backgroundColor: '#F7F2EB' }}>
         <div className="absolute inset-0 opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #B08D57 0.5px, transparent 0)', backgroundSize: '32px 32px' }} />
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="flex items-end justify-between mb-12">
-            <div>
-              <span
-                className="font-body text-[10px] tracking-[0.5em] uppercase"
-                style={{ color: 'rgba(176, 141, 87, 0.6)' }}
-              >
-                Каталог
-              </span>
-              <h2
-                className="font-display text-4xl md:text-5xl italic mt-3"
-                style={{ color: '#0C0A08' }}
-              >
-                Новые поступления
-              </h2>
-            </div>
-            <Link
-              to="/catalog"
-              className="hidden md:inline-flex items-center gap-2 font-body text-sm tracking-[0.1em] uppercase transition-all duration-300 group"
-              style={{ color: '#B08D57' }}
-            >
-              Все товары
-              <ArrowRight
-                size={14}
-                className="transition-transform duration-300 group-hover:translate-x-1"
-              />
-            </Link>
-          </div>
-
           {productsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="animate-pulse">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-0" style={{ borderRadius: '2px', border: '1px solid rgba(44, 36, 32, 0.06)' }}>
+                <div className="aspect-[3/4] lg:aspect-auto" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)', minHeight: '360px' }} />
+                <div className="p-12 space-y-4" style={{ backgroundColor: 'rgba(44, 36, 32, 0.03)' }}>
+                  <div className="h-3 w-24 rounded" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }} />
+                  <div className="h-8 w-3/4 rounded" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }} />
+                  <div className="h-4 w-1/2 rounded" style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)' }} />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <EditorsPickCard product={editorsPick} />
+          )}
+        </div>
+      </section>
+
+      {/* ═══════════════ CATEGORY ROWS ═══════════════ */}
+      <section className="py-12 relative overflow-hidden" style={{ backgroundColor: '#F7F2EB' }}>
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          {productsLoading ? (
+            <div className="grid grid-cols-4 gap-5">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} className="animate-pulse">
-                  <div
-                    className="aspect-[4/5]"
-                    style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)', borderRadius: '2px' }}
-                  />
-                  <div className="p-4 space-y-2">
-                    <div
-                      className="h-4 w-3/4 rounded"
-                      style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }}
-                    />
-                    <div
-                      className="h-3 w-1/4 rounded"
-                      style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)' }}
-                    />
+                  <div className="aspect-[4/5]" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)', borderRadius: '2px' }} />
+                  <div className="pt-4 space-y-2">
+                    <div className="h-4 w-3/4 rounded" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }} />
+                    <div className="h-3 w-1/4 rounded" style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)' }} />
                   </div>
                 </div>
               ))}
             </div>
-          ) : products.length > 0 ? (
+          ) : (
+            <>
+              <CategoryRow
+                title="Ювелирная коллекция"
+                subtitle="Украшения"
+                products={jewelryProducts}
+                link="/catalog/jewelry"
+                bestsellerIds={bestsellerIds}
+                popularIds={popularIds}
+              />
+              <CategoryRow
+                title="Фарфор и посуда"
+                subtitle="Керамика"
+                products={ceramicsProducts}
+                link="/catalog/ceramics"
+                bestsellerIds={bestsellerIds}
+                popularIds={popularIds}
+              />
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* ═══════════════ STAGGERED GRID ═══════════════ */}
+      {!productsLoading && gridProducts.length > 0 && (
+        <section className="pb-24 relative overflow-hidden" style={{ backgroundColor: '#F7F2EB' }}>
+          <div className="max-w-7xl mx-auto px-6 relative z-10">
+            <div className="flex items-end justify-between mb-10">
+              <div>
+                <span className="font-body text-[10px] tracking-[0.5em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.6)' }}>
+                  Каталог
+                </span>
+                <h2 className="font-display text-4xl md:text-5xl italic mt-3" style={{ color: '#0C0A08' }}>
+                  Ещё находки
+                </h2>
+              </div>
+              <Link
+                to="/catalog"
+                className="hidden md:inline-flex items-center gap-2 font-body text-sm tracking-[0.1em] uppercase transition-all duration-300 group"
+                style={{ color: '#B08D57' }}
+              >
+                Все товары
+                <ArrowRight size={14} className="transition-transform duration-300 group-hover:translate-x-1" />
+              </Link>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {products.map((product, i) => (
+              {gridProducts.map((product, i) => (
                 <div
                   key={product.id}
-                  className="animate-slide-up"
+                  className={`animate-slide-up ${i === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}
                   style={{ animationDelay: `${i * 80}ms` }}
                 >
                   <ProductCard
@@ -530,21 +747,15 @@ export default function Home() {
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="text-center py-16">
-              <p className="font-display text-xl italic" style={{ color: 'rgba(12, 10, 8, 0.25)' }}>
-                Коллекция скоро появится
-              </p>
-            </div>
-          )}
 
-          <div className="text-center mt-12 md:hidden">
-            <Link to="/catalog" className="btn-secondary">
-              Все товары <ArrowRight size={14} className="ml-2" />
-            </Link>
+            <div className="text-center mt-12 md:hidden">
+              <Link to="/catalog" className="btn-secondary">
+                Все товары <ArrowRight size={14} className="ml-2" />
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════ CURATED COLLECTIONS ═══════════════ */}
       <section id="collections" className="py-24" style={{ backgroundColor: '#0C0A08' }}>
