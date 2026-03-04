@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Edit, Trash2, Eye, Search, Package } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, Search, Package, X } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getProducts, deleteProduct } from '../../lib/api'
 import { categories } from '../../data/demoProducts'
@@ -10,22 +10,38 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('')
+  const debounceRef = useRef(null)
 
-  const load = async () => {
+  const load = useCallback(async (searchVal, filterVal) => {
     setLoading(true)
     const { data } = await getProducts({
-      category: filter || undefined,
-      search: search || undefined,
+      category: filterVal || undefined,
+      search: searchVal || undefined,
     })
     setProducts(data || [])
     setLoading(false)
+  }, [])
+
+  // Debounced search — 300ms after last keystroke
+  const handleSearchChange = (e) => {
+    const val = e.target.value
+    setSearch(val)
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => load(val, filter), 300)
   }
 
-  useEffect(() => { load() }, [filter])
+  const clearSearch = () => {
+    setSearch('')
+    clearTimeout(debounceRef.current)
+    load('', filter)
+  }
+
+  useEffect(() => { load(search, filter) }, [filter]) // eslint-disable-line
 
   const handleSearch = (e) => {
     e.preventDefault()
-    load()
+    clearTimeout(debounceRef.current)
+    load(search, filter)
   }
 
   const handleDelete = async (id, title) => {
@@ -61,9 +77,9 @@ export default function AdminProducts() {
           <input
             type="text"
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={handleSearchChange}
             placeholder="Поиск товаров..."
-            className="w-full pl-10 pr-4 py-2.5 font-body text-sm transition-all"
+            className="w-full pl-10 pr-10 py-2.5 font-body text-sm transition-all"
             style={{
               backgroundColor: 'rgba(240, 230, 214, 0.05)',
               border: '1px solid rgba(240, 230, 214, 0.08)',
@@ -71,6 +87,13 @@ export default function AdminProducts() {
               color: '#F0E6D6',
             }}
           />
+          {search && (
+            <button type="button" onClick={clearSearch}
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+              style={{ color: 'rgba(240, 230, 214, 0.3)' }}>
+              <X size={14} />
+            </button>
+          )}
         </form>
         <select
           value={filter}
@@ -135,12 +158,19 @@ export default function AdminProducts() {
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <img
-                          src={product.image_url}
-                          alt={product.title}
-                          className="w-12 h-12 object-cover"
-                          style={{ borderRadius: '2px', backgroundColor: 'rgba(240, 230, 214, 0.05)' }}
-                        />
+                        {product.image_url ? (
+                          <img
+                            src={product.image_url}
+                            alt={product.title}
+                            className="w-12 h-12 object-cover shrink-0"
+                            style={{ borderRadius: '2px', backgroundColor: 'rgba(240, 230, 214, 0.05)' }}
+                            onError={e => { e.target.style.display='none'; e.target.nextSibling.style.display='flex' }}
+                          />
+                        ) : null}
+                        <div className="w-12 h-12 shrink-0 items-center justify-center text-2xl"
+                          style={{ display: product.image_url ? 'none' : 'flex', backgroundColor: 'rgba(240, 230, 214, 0.05)', borderRadius: '2px' }}>
+                          🏺
+                        </div>
                         <div>
                           <p className="font-body text-sm font-medium line-clamp-1" style={{ color: 'rgba(240, 230, 214, 0.8)' }}>{product.title}</p>
                           {product.brand && (

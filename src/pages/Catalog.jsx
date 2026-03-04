@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { X, SlidersHorizontal, ChevronDown } from 'lucide-react'
 import ProductCard from '../components/public/ProductCard'
@@ -43,7 +43,15 @@ export default function Catalog() {
     setVisibleCount(ITEMS_PER_PAGE)
   }, [paramCategory])
 
+  // AbortController ref — cancels stale requests on rapid filter changes
+  const abortRef = useRef(null)
+
   useEffect(() => {
+    // Cancel any previous in-flight request
+    if (abortRef.current) abortRef.current.abort()
+    abortRef.current = new AbortController()
+    const { signal } = abortRef.current
+
     async function load() {
       setLoading(true)
       try {
@@ -51,14 +59,18 @@ export default function Catalog() {
           category: activeCategory || undefined,
           search: searchQuery || undefined,
         })
-        setAllProducts(data || [])
+        if (!signal.aborted) setAllProducts(data || [])
       } catch (e) {
-        console.error('Catalog load error:', e)
-        setAllProducts([])
+        if (!signal.aborted) {
+          console.error('Catalog load error:', e)
+          setAllProducts([])
+        }
       }
-      setLoading(false)
+      if (!signal.aborted) setLoading(false)
     }
     load()
+
+    return () => { if (abortRef.current) abortRef.current.abort() }
   }, [activeCategory, searchQuery])
 
   useEffect(() => {
@@ -68,7 +80,9 @@ export default function Catalog() {
       filtered = filtered.filter(p => p.condition === activeCondition)
     }
     if (activeEra) {
-      filtered = filtered.filter(p => p.era && p.era.toLowerCase().includes(activeEra.replace(/s$/,"").replace(/0s-/,"-")))
+      // Match era by extracting the decade number (e.g. "1970s" → "197", "1960s" → "196")
+      const eraDecade = activeEra.replace(/s$/, '')
+      filtered = filtered.filter(p => p.era && p.era.toLowerCase().includes(eraDecade.toLowerCase()))
     }
     const priceRange = PRICE_RANGES.find(r => r.id === activePriceRange)
     if (priceRange && priceRange.id !== 'all') {
@@ -106,9 +120,11 @@ export default function Catalog() {
   const currentSort = sortOptions.find(s => s.id === sortBy)
 
   const clearAllFilters = () => {
-    setActiveCondition("")
-    setActiveEra(""); setActivePriceRange('all')
+    setActiveCondition('')
+    setActiveEra('')
+    setActivePriceRange('all')
     setSortBy('newest')
+    setVisibleCount(ITEMS_PER_PAGE) // Bug fix: reset pagination on filter clear
   }
 
   return (

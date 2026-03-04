@@ -8,6 +8,7 @@ import FavoriteButton from '../components/public/FavoriteButton'
 import CompareButton from '../components/public/CompareButton'
 import PriceInsight from '../components/public/PriceInsight'
 import SimilarProducts from '../components/public/SimilarProducts'
+import ProductReviews from '../components/public/ProductReviews'
 
 import { siteConfig } from '../lib/siteConfig'
 
@@ -27,34 +28,35 @@ export default function ProductPage() {
   const [shopData, setShopData] = useState(null)
 
   useEffect(() => {
+    let mounted = true // prevent state updates after unmount
+
     async function load() {
-      setLoading(true)
+      if (mounted) setLoading(true)
       try {
         const { data, error } = await getProduct(id)
+        if (!mounted) return
         if (error || !data) {
           navigate('/catalog', { replace: true })
           return
         }
         setProduct(data)
 
-        try {
-          const avg = await getCategoryAvgPrice(data.category)
-          setAvgPrice(avg)
-        } catch (e) { /* optional */ }
-
-        if (data.shop_id) {
-          try {
-            const { data: shop } = await getShop(data.shop_id)
-            setShopData(shop)
-          } catch (e) { /* optional */ }
-        }
+        // Load secondary data in parallel — both optional
+        const [avg, shopRes] = await Promise.allSettled([
+          getCategoryAvgPrice(data.category),
+          data.shop_id ? getShop(data.shop_id) : Promise.resolve(null),
+        ])
+        if (!mounted) return
+        if (avg.status === 'fulfilled') setAvgPrice(avg.value)
+        if (shopRes.status === 'fulfilled' && shopRes.value?.data) setShopData(shopRes.value.data)
       } catch (e) {
-        navigate('/catalog', { replace: true })
+        if (mounted) navigate('/catalog', { replace: true })
       }
-      setLoading(false)
+      if (mounted) setLoading(false)
     }
     load()
     window.scrollTo(0, 0)
+    return () => { mounted = false }
   }, [id, navigate])
 
   if (loading) {
@@ -297,6 +299,9 @@ export default function ProductPage() {
 
         {/* Similar Products (not for shops) */}
         {!isShop && <SimilarProducts currentProduct={product} />}
+
+        {/* Reviews */}
+        {!isShop && <ProductReviews productId={product.id} />}
       </div>
     </div>
   )

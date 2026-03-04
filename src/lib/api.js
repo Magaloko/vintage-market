@@ -5,6 +5,18 @@ import { demoProducts } from '../data/demoProducts'
 let localProducts = [...demoProducts]
 let nextId = 100
 
+// Simple TTL cache — avoids redundant API calls for rarely-changing data
+const cache = new Map()
+function cachedFetch(key, ttlMs, fetchFn) {
+  const hit = cache.get(key)
+  if (hit && Date.now() - hit.ts < ttlMs) return Promise.resolve(hit.value)
+  return fetchFn().then(result => {
+    cache.set(key, { ts: Date.now(), value: result })
+    return result
+  })
+}
+export function invalidateCache(key) { cache.delete(key) }
+
 function generateId() {
   return String(++nextId)
 }
@@ -412,7 +424,11 @@ export async function createShopReview({ shop_id, name, rating, comment }) {
 
 // ---- Category Counts API ----
 
-export async function getCategoryCounts() {
+export function getCategoryCounts() {
+  return cachedFetch('categoryCounts', 5 * 60 * 1000, _getCategoryCounts)
+}
+
+async function _getCategoryCounts() {
   if (!isSupabaseConfigured) {
     const counts = {}
     localProducts.forEach(p => {
@@ -525,7 +541,11 @@ export async function deleteInquiry(id) {
 
 // ---- Statistics API ----
 
-export async function getCategoryAvgPrice(categoryId) {
+export function getCategoryAvgPrice(categoryId) {
+  return cachedFetch(`avgPrice:${categoryId}`, 10 * 60 * 1000, () => _getCategoryAvgPrice(categoryId))
+}
+
+async function _getCategoryAvgPrice(categoryId) {
   if (!isSupabaseConfigured) {
     const catProducts = localProducts.filter(p => p.category === categoryId && p.price)
     if (catProducts.length === 0) return 0
@@ -683,5 +703,46 @@ export async function getStats() {
   } catch (e) {
     console.error('getStats exception:', e)
     return { data: null, error: { message: e.message } }
+  }
+}
+
+// ---- Product Reviews API ----
+
+let localProductReviews = []
+
+export async function getProductReviews(productId) {
+  if (!isSupabaseConfigured) {
+    return { data: localProductReviews.filter(r => r.product_id === productId), error: null }
+  }
+  try {
+    const { data, error } = await supabase
+      .from('product_reviews')
+      .select('*')
+      .eq('product_id', productId)
+      .order('created_at', { ascending: false })
+    return { data: data || [], error: error?.message || null }
+  } catch (e) {
+    return { data: [], error: e.message }
+  }
+}
+
+export async function createProductReview({ product_id, name, rating, comment }) {
+  const review = {
+    product_id,
+    name: name.trim(),
+    rating: Math.max(1, Math.min(5, Number(rating))),
+    comment: comment.trim(),
+    created_at: new Date().toISOString(),
+  }
+  if (!isSupabaseConfigured) {
+    review.id = 'pr' + Date.now()
+    localProductReviews.unshift(review)
+    return { data: review, error: null }
+  }
+  try {
+    const { data, error } = await supabase.from('product_reviews').insert([review]).select().single()
+    return { data, error: error?.message || null }
+  } catch (e) {
+    return { data: null, error: e.message }
   }
 }

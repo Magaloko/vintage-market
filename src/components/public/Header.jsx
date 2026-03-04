@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Search, Heart, Menu, X } from 'lucide-react'
 import { useFavorites } from '../../lib/FavoritesContext'
@@ -8,6 +8,7 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
+  const searchInputRef = useRef(null)
   const { favorites } = useFavorites()
   const location = useLocation()
   const navigate = useNavigate()
@@ -22,6 +23,14 @@ export default function Header() {
     setMobileOpen(false)
     setSearchOpen(false)
   }, [location.pathname])
+
+  // Bug fix: autoFocus doesn't work after first mount — use ref to focus manually
+  useEffect(() => {
+    if (searchOpen) {
+      const timer = setTimeout(() => searchInputRef.current?.focus(), 50)
+      return () => clearTimeout(timer)
+    }
+  }, [searchOpen])
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -154,11 +163,11 @@ export default function Header() {
           <div className="max-w-7xl mx-auto px-6 py-4">
             <form onSubmit={handleSearch} className="relative max-w-lg mx-auto">
               <input
+                ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Поиск по коллекции..."
-                autoFocus={searchOpen}
                 className="w-full py-2 pl-0 pr-10 bg-transparent font-display text-lg italic border-0 focus:outline-none"
                 style={{
                   color: '#F0E6D6',

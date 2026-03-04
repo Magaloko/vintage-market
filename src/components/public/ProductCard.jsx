@@ -1,13 +1,15 @@
+import { memo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { categories, conditions } from '../../data/demoProducts'
+import { categories } from '../../data/demoProducts'
 import FavoriteButton from './FavoriteButton'
 import CompareButton from './CompareButton'
 
-export default function ProductCard({ product, showCompare = false }) {
+function ProductCard({ product, showCompare = false }) {
   const category = categories.find(c => c.id === product.category)
   const imageUrl = product.image_url || product.images?.[0]?.url
   const isSold = product.status === 'sold'
   const isShop = category?.group === 'shops'
+  const [imgError, setImgError] = useState(false)
 
   return (
     <Link
@@ -17,12 +19,13 @@ export default function ProductCard({ product, showCompare = false }) {
     >
       {/* Image */}
       <div className="relative aspect-[4/5] overflow-hidden" style={{ backgroundColor: '#E0D4C0', borderRadius: '2px' }}>
-        {imageUrl ? (
+        {imageUrl && !imgError ? (
           <img
             src={imageUrl}
             alt={product.title}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             loading="lazy"
+            onError={() => setImgError(true)}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
@@ -87,3 +90,5 @@ export default function ProductCard({ product, showCompare = false }) {
     </Link>
   )
 }
+
+export default memo(ProductCard)
