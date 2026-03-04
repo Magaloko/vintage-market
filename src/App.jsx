@@ -35,6 +35,7 @@ const SellerLayout = lazy(() => import('./components/seller/SellerLayout'))
 import { AuthProvider, useAuth } from './lib/AuthContext'
 import { FavoritesProvider } from './lib/FavoritesContext'
 import { CompareProvider } from './lib/CompareContext'
+import { ThemeProvider } from './lib/ThemeContext'
 import CompareBar from './components/public/CompareBar'
 
 function PageLoader() {
@@ -90,6 +91,7 @@ const TOAST_OPTIONS = {
 export default function App() {
   return (
     <ErrorBoundary>
+      <ThemeProvider>
       <AuthProvider>
         <FavoritesProvider>
           <CompareProvider>
@@ -137,6 +139,7 @@ export default function App() {
           </CompareProvider>
         </FavoritesProvider>
       </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   )
 }

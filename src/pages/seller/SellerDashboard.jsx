@@ -144,6 +144,22 @@ export default function SellerDashboard() {
           subtitle={shop ? `/${shop.slug}` : 'Настроить'}
         />
       </div>
+
+      {/* Floating action button */}
+      <Link
+        to="/seller/products/new"
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 z-40"
+        style={{
+          background: 'linear-gradient(135deg, #B08D57, #C9A96E)',
+          color: '#0C0A08',
+          boxShadow: '0 4px 20px rgba(176, 141, 87, 0.4)',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = '0 6px 28px rgba(176, 141, 87, 0.5)' }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(176, 141, 87, 0.4)' }}
+        title="Добавить товар"
+      >
+        <Plus size={24} />
+      </Link>
     </div>
   )
 }

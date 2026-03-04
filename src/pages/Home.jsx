@@ -113,6 +113,65 @@ const SELLER_STEPS = [
   { num: '03', text: 'Получайте запросы от покупателей напрямую' },
 ]
 
+const TESTIMONIALS = [
+  { id: 't1', name: 'Мария К.', instagram: 'maria_vintage', rating: 5, quote: 'Нашла уникальное платье 70-х годов. Качество невероятное, как будто вчера пошито!', productId: '1' },
+  { id: 't2', name: 'Thomas W.', instagram: 'thomas_antik', rating: 5, quote: 'Die Art-Deco-Lampe ist ein absolutes Schmuckstück. Hervorragender Zustand und faire Preise.', productId: '3' },
+  { id: 't3', name: 'Анна П.', instagram: 'anna_retro', rating: 4, quote: 'Прекрасная коллекция винтажной посуды. Meissen фарфор в отличном состоянии!', productId: '5' },
+  { id: 't4', name: 'Sophie L.', instagram: 'sophie_collect', rating: 5, quote: 'Die Vintage-Schallplatten sind in erstaunlich gutem Zustand. Toller Service!', productId: '10' },
+  { id: 't5', name: 'Дмитрий В.', instagram: 'dmitry_design', rating: 5, quote: 'Антикварная мебель высочайшего качества. Буфет стал центром нашей гостиной.', productId: '7' },
+]
+
+/* ------------------------------------------------------------------ */
+/*  Sub-components                                                     */
+/* ------------------------------------------------------------------ */
+
+function TestimonialCard({ testimonial }) {
+  return (
+    <div
+      className="p-6 transition-all duration-500"
+      style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+        border: '1px solid rgba(176, 141, 87, 0.1)',
+        borderRadius: '2px',
+      }}
+    >
+      <div className="flex items-center gap-1 mb-3">
+        {[1,2,3,4,5].map(s => (
+          <Star key={s} size={14} fill={s <= testimonial.rating ? '#B08D57' : 'none'} stroke={s <= testimonial.rating ? '#B08D57' : 'rgba(44,36,32,0.2)'} />
+        ))}
+      </div>
+      <p className="font-body text-sm leading-relaxed mb-4" style={{ color: 'rgba(44, 36, 32, 0.65)' }}>
+        &ldquo;{testimonial.quote}&rdquo;
+      </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-body text-sm font-medium" style={{ color: '#2C2420' }}>{testimonial.name}</p>
+          {testimonial.instagram && (
+            <a
+              href={`https://instagram.com/${testimonial.instagram}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-body text-xs transition-colors"
+              style={{ color: '#B08D57' }}
+            >
+              @{testimonial.instagram}
+            </a>
+          )}
+        </div>
+        {testimonial.productId && (
+          <Link
+            to={`/product/${testimonial.productId}`}
+            className="font-body text-[10px] tracking-wider uppercase px-2 py-1 transition-all duration-300"
+            style={{ color: 'rgba(44, 36, 32, 0.35)', border: '1px solid rgba(44, 36, 32, 0.1)', borderRadius: '2px' }}
+          >
+            Товар →
+          </Link>
+        )}
+      </div>
+    </div>
+  )
+}
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
@@ -1016,6 +1075,31 @@ export default function Home() {
                 style={{ border: '1px solid rgba(176, 141, 87, 0.08)', borderRadius: '2px' }}
               />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="py-20 px-6" style={{ backgroundColor: '#F7F2EB' }}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <p className="font-body text-[11px] tracking-[0.3em] uppercase mb-3" style={{ color: '#B08D57' }}>
+              Отзывы клиентов
+            </p>
+            <h2 className="font-display text-3xl md:text-4xl" style={{ color: '#0C0A08' }}>
+              Что говорят наши покупатели
+            </h2>
+            <div className="w-16 h-px mx-auto mt-4" style={{ backgroundColor: '#B08D57' }} />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {TESTIMONIALS.slice(0, 3).map(t => (
+              <TestimonialCard key={t.id} testimonial={t} />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 max-w-4xl mx-auto">
+            {TESTIMONIALS.slice(3).map(t => (
+              <TestimonialCard key={t.id} testimonial={t} />
+            ))}
           </div>
         </div>
       </section>

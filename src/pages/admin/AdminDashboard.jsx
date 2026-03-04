@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import {
   Package, ShoppingCart, Eye, TrendingUp, Tag,
-  DollarSign, Heart, BarChart3, MessageSquare,
+  DollarSign, Heart, BarChart3, MessageSquare, Plus,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -185,13 +186,18 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Page heading */}
-      <div>
-        <h1 className="font-sans text-xl font-semibold" style={{ color: colors.cream }}>
-          Панель управления
-        </h1>
-        <p className="font-sans text-sm mt-1" style={{ color: alpha.cream40 }}>
-          Полная аналитика вашего маркетплейса
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-sans text-xl font-semibold" style={{ color: colors.cream }}>
+            Панель управления
+          </h1>
+          <p className="font-sans text-sm mt-1" style={{ color: alpha.cream40 }}>
+            Полная аналитика вашего маркетплейса
+          </p>
+        </div>
+        <Link to="/admin/products/new" className="btn-primary text-sm py-2 px-4">
+          <Plus size={14} className="mr-2" /> Добавить товар
+        </Link>
       </div>
 
       {/* Stat cards */}
@@ -270,6 +276,22 @@ export default function AdminDashboard() {
           emptyText="Пока нет данных"
         />
       </div>
+
+      {/* Floating action button */}
+      <Link
+        to="/admin/products/new"
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 z-40"
+        style={{
+          background: 'linear-gradient(135deg, #B08D57, #C9A96E)',
+          color: '#0C0A08',
+          boxShadow: '0 4px 20px rgba(176, 141, 87, 0.4)',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = '0 6px 28px rgba(176, 141, 87, 0.5)' }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(176, 141, 87, 0.4)' }}
+        title="Добавить товар"
+      >
+        <Plus size={24} />
+      </Link>
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Star, User, ChevronDown, ChevronUp, Send } from 'lucide-react'
+import { Star, User, ChevronDown, ChevronUp, Send, Instagram, Camera, X as XIcon, ExternalLink } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getProductReviews, createProductReview } from '../../lib/api'
 
@@ -28,7 +28,7 @@ const COLORS = {
   errorText: 'rgba(176, 60, 60, 0.8)',
 }
 
-const INITIAL_FORM = { name: '', rating: 0, comment: '' }
+const INITIAL_FORM = { name: '', rating: 0, comment: '', instagram_handle: '', screenshot_url: '' }
 
 // -- StarRating --
 
@@ -99,6 +99,25 @@ function ReviewCard({ review }) {
         >
           {review.comment}
         </p>
+      )}
+
+      {review.screenshot_url && (
+        <a href={review.screenshot_url} target="_blank" rel="noopener noreferrer" className="inline-block mt-3" style={{ paddingLeft: '48px' }}>
+          <img src={review.screenshot_url} alt="Скриншот" className="w-20 h-20 object-cover" style={{ borderRadius: '2px' }} />
+        </a>
+      )}
+
+      {review.instagram_handle && (
+        <a
+          href={`https://instagram.com/${review.instagram_handle}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 font-body text-xs transition-colors mt-2"
+          style={{ color: '#B08D57', paddingLeft: '48px' }}
+        >
+          <Instagram size={12} />
+          @{review.instagram_handle}
+        </a>
       )}
     </div>
   )
@@ -199,6 +218,42 @@ function ReviewForm({ onSubmit, submitting }) {
           className="w-full px-4 py-3 font-body text-sm resize-none transition-all"
           style={inputStyle(false)}
         />
+
+        <div className="flex items-center gap-2">
+          <Instagram size={16} style={{ color: COLORS.brownDim, shrink: 0 }} />
+          <input
+            type="text"
+            placeholder="Instagram (необязательно)"
+            value={form.instagram_handle}
+            onChange={(e) => updateField('instagram_handle', e.target.value)}
+            className="flex-1 px-4 py-2.5 font-body text-sm transition-all"
+            style={inputStyle(false)}
+          />
+        </div>
+
+        <div>
+          <div className="flex items-center gap-2">
+            <Camera size={16} style={{ color: COLORS.brownDim, flexShrink: 0 }} />
+            <input
+              type="url"
+              placeholder="Ссылка на скриншот (необязательно)"
+              value={form.screenshot_url}
+              onChange={(e) => updateField('screenshot_url', e.target.value)}
+              className="flex-1 px-4 py-2.5 font-body text-sm transition-all"
+              style={inputStyle(false)}
+            />
+          </div>
+          {form.screenshot_url && (
+            <div className="mt-2 ml-6 relative inline-block">
+              <img src={form.screenshot_url} alt="Preview" className="w-16 h-16 object-cover" style={{ borderRadius: '2px' }} onError={(e) => e.target.style.display = 'none'} />
+              <button type="button" onClick={() => updateField('screenshot_url', '')}
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: '#0C0A08', color: '#F0E6D6' }}>
+                <XIcon size={10} />
+              </button>
+            </div>
+          )}
+        </div>
 
         <button
           type="submit"

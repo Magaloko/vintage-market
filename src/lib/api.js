@@ -24,7 +24,7 @@ export function invalidateCache(key) {
 // Demo Mode State
 // =============================================================================
 
-let localProducts = [...demoProducts]
+let localProducts = demoProducts.map(p => ({ ...p, is_promoted: p.is_promoted ?? false }))
 let localInquiries = []
 let localReviews = [
   { id: 'r1', shop_id: 'demo-shop-001', name: 'Мария К.', rating: 5, comment: 'Прекрасный магазин! Нашла уникальное платье 70-х.', created_at: '2025-02-10T14:00:00Z' },
@@ -32,6 +32,7 @@ let localReviews = [
   { id: 'r3', shop_id: 'demo-shop-001', name: 'Анна П.', rating: 5, comment: 'Рекомендую! Очень вежливые и знающие продавцы.', created_at: '2025-03-20T16:30:00Z' },
 ]
 let localProductReviews = []
+let localPriceHistory = []
 
 let nextId = 100
 let inquiryId = 100
@@ -216,6 +217,7 @@ export async function createProduct(product) {
   if (!isSupabaseConfigured) {
     const newProduct = { ...product, id: generateId(), views: 0, created_at: now() }
     localProducts.unshift(newProduct)
+    if (newProduct.price) logPriceChange(newProduct.id, newProduct.price)
     return { data: newProduct, error: null }
   }
 
@@ -234,7 +236,9 @@ export async function updateProduct(id, updates) {
   if (!isSupabaseConfigured) {
     const idx = localProducts.findIndex(p => p.id === id)
     if (idx === -1) return { data: null, error: { message: 'Not found' } }
+    const oldPrice = localProducts[idx].price
     localProducts[idx] = { ...localProducts[idx], ...updates }
+    if (updates.price && updates.price !== oldPrice) logPriceChange(id, updates.price)
     return { data: localProducts[idx], error: null }
   }
 
@@ -787,12 +791,14 @@ export async function getProductReviews(productId) {
   }
 }
 
-export async function createProductReview({ product_id, name, rating, comment }) {
+export async function createProductReview({ product_id, name, rating, comment, screenshot_url, instagram_handle }) {
   const review = {
     product_id,
     name: name.trim(),
     rating: Math.max(1, Math.min(5, Number(rating))),
     comment: comment.trim(),
+    screenshot_url: screenshot_url || null,
+    instagram_handle: instagram_handle ? instagram_handle.trim().replace(/^@/, '') : null,
     created_at: now(),
   }
 
@@ -807,5 +813,49 @@ export async function createProductReview({ product_id, name, rating, comment })
     return { data, error: error?.message || null }
   } catch (e) {
     return { data: null, error: e.message }
+  }
+}
+
+// =============================================================================
+// Price History API
+// =============================================================================
+
+function logPriceChange(productId, price) {
+  if (!isSupabaseConfigured) {
+    localPriceHistory.push({
+      id: 'ph' + Date.now() + Math.random().toString(36).slice(2, 6),
+      product_id: productId,
+      price: Number(price),
+      changed_at: now(),
+    })
+    return
+  }
+
+  // Fire-and-forget for Supabase
+  supabase.from('price_history').insert([{
+    product_id: productId,
+    price: Number(price),
+    changed_at: now(),
+  }]).then(() => {}).catch(() => {})
+}
+
+export async function getPriceHistory(productId) {
+  if (!isSupabaseConfigured) {
+    return {
+      data: localPriceHistory
+        .filter(h => h.product_id === productId)
+        .sort((a, b) => new Date(a.changed_at) - new Date(b.changed_at)),
+      error: null,
+    }
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('price_history').select('*')
+      .eq('product_id', productId)
+      .order('changed_at', { ascending: true })
+    return { data: data || [], error: error?.message || null }
+  } catch (e) {
+    return { data: [], error: e.message }
   }
 }

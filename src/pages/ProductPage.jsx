@@ -23,6 +23,7 @@ import ImageGallery from '../components/public/ImageGallery'
 import FavoriteButton from '../components/public/FavoriteButton'
 import CompareButton from '../components/public/CompareButton'
 import PriceInsight from '../components/public/PriceInsight'
+import PriceHistoryChart from '../components/public/PriceHistoryChart'
 import SimilarProducts from '../components/public/SimilarProducts'
 import ProductReviews from '../components/public/ProductReviews'
 import { siteConfig } from '../lib/siteConfig'
@@ -312,6 +313,9 @@ export default function ProductPage() {
             {avgPrice && product.status !== 'sold' && !isRealEstate && !isShop && (
               <PriceInsight price={product.price} avgPrice={avgPrice} />
             )}
+
+            {/* Price history chart */}
+            {!isShop && <PriceHistoryChart productId={product.id} />}
 
             {/* Divider */}
             <div className="w-12 h-px" style={{ backgroundColor: '#B08D57' }} />

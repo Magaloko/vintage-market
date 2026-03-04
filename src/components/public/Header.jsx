@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Search, Heart, Menu, X } from 'lucide-react'
+import { Search, Heart, Menu, X, Sun, Moon } from 'lucide-react'
 import { useFavorites } from '../../lib/FavoritesContext'
+import { useTheme } from '../../lib/ThemeContext'
 
 const NAV_LINKS = [
   { to: '/catalog', label: 'Каталог' },
@@ -36,6 +37,7 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const searchInputRef = useRef(null)
   const { favorites } = useFavorites()
+  const { isDark, toggleTheme } = useTheme()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -89,6 +91,8 @@ export default function Header() {
               favoritesCount={favorites.length}
               mobileOpen={mobileOpen}
               onMobileToggle={() => setMobileOpen(!mobileOpen)}
+              isDark={isDark}
+              onThemeToggle={toggleTheme}
             />
           </div>
         </div>
@@ -156,11 +160,20 @@ function DesktopNav({ links, pathname, isTransparent }) {
   )
 }
 
-function HeaderActions({ isTransparent, searchOpen, onSearchToggle, favoritesCount, mobileOpen, onMobileToggle }) {
+function HeaderActions({ isTransparent, searchOpen, onSearchToggle, favoritesCount, mobileOpen, onMobileToggle, isDark, onThemeToggle }) {
   const iconColor = isTransparent ? COLORS.creamFaded : COLORS.creamDim
 
   return (
     <div className="flex items-center gap-3">
+      <button
+        onClick={onThemeToggle}
+        className="w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300"
+        style={{ color: iconColor }}
+        title={isDark ? 'Светлый режим' : 'Тёмный режим'}
+      >
+        {isDark ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
+
       <button
         onClick={onSearchToggle}
         className="w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300"
