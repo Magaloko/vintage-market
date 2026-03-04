@@ -304,12 +304,92 @@ export default function Home() {
 
         {/* Scroll-down arrow */}
         <button
-          onClick={() => scrollTo('collections')}
+          onClick={() => scrollTo('products')}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-float"
           style={{ color: 'rgba(176, 141, 87, 0.4)' }}
         >
           <ChevronDown size={24} />
         </button>
+      </section>
+
+      {/* ═══════════════ FEATURED PRODUCTS ═══════════════ */}
+      <section id="products" className="py-24" style={{ backgroundColor: '#F7F2EB' }}>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <span
+                className="font-body text-[10px] tracking-[0.5em] uppercase"
+                style={{ color: 'rgba(176, 141, 87, 0.6)' }}
+              >
+                Каталог
+              </span>
+              <h2
+                className="font-display text-4xl md:text-5xl italic mt-3"
+                style={{ color: '#0C0A08' }}
+              >
+                Новые поступления
+              </h2>
+            </div>
+            <Link
+              to="/catalog"
+              className="hidden md:inline-flex items-center gap-2 font-body text-sm tracking-[0.1em] uppercase transition-all duration-300 group"
+              style={{ color: '#B08D57' }}
+            >
+              Все товары
+              <ArrowRight
+                size={14}
+                className="transition-transform duration-300 group-hover:translate-x-1"
+              />
+            </Link>
+          </div>
+
+          {productsLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div
+                    className="aspect-[4/5]"
+                    style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)', borderRadius: '2px' }}
+                  />
+                  <div className="p-4 space-y-2">
+                    <div
+                      className="h-4 w-3/4 rounded"
+                      style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }}
+                    />
+                    <div
+                      className="h-3 w-1/4 rounded"
+                      style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)' }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : products.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {products.map((product, i) => (
+                <div
+                  key={product.id}
+                  className="animate-slide-up"
+                  style={{ animationDelay: `${i * 80}ms` }}
+                >
+                  <ProductCard product={product} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+              <p className="font-display text-xl italic" style={{ color: 'rgba(12, 10, 8, 0.25)' }}>
+                Коллекция скоро появится
+              </p>
+            </div>
+          )}
+
+          <div className="text-center mt-12 md:hidden">
+            <Link to="/catalog" className="btn-secondary">
+              Все товары <ArrowRight size={14} className="ml-2" />
+            </Link>
+          </div>
+        </div>
       </section>
 
       {/* ═══════════════ CURATED COLLECTIONS ═══════════════ */}
