@@ -196,6 +196,7 @@ function VintageFrame({ children }) {
 /* ------------------------------------------------------------------ */
 
 function EditorsPickCard({ product }) {
+  const { formatPrice } = useCurrency()
   if (!product) return null
   const category = categories.find(c => c.id === product.category)
   const imageUrl = product.image_url || product.images?.[0]?.url
