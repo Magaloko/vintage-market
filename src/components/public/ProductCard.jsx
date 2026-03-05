@@ -39,6 +39,30 @@ function getKeyDetail(product) {
   return null
 }
 
+function GoldDivider() {
+  return (
+    <div className="flex items-center" style={{ padding: '5px 12px', backgroundColor: '#F7F2EB' }}>
+      <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(176, 141, 87, 0.25)' }} />
+      <span className="mx-2" style={{ fontSize: '7px', color: 'rgba(176, 141, 87, 0.45)', lineHeight: 1 }}>◆</span>
+      <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(176, 141, 87, 0.25)' }} />
+    </div>
+  )
+}
+
+const CORNER_STYLE = { position: 'absolute', width: 14, height: 14, pointerEvents: 'none', zIndex: 20 }
+
+function GoldCorners() {
+  const gold = 'rgba(176, 141, 87, 0.55)'
+  return (
+    <>
+      <div style={{ ...CORNER_STYLE, top: 0, left: 0, borderTop: `1.5px solid ${gold}`, borderLeft: `1.5px solid ${gold}` }} />
+      <div style={{ ...CORNER_STYLE, top: 0, right: 0, borderTop: `1.5px solid ${gold}`, borderRight: `1.5px solid ${gold}` }} />
+      <div style={{ ...CORNER_STYLE, bottom: 0, left: 0, borderBottom: `1.5px solid ${gold}`, borderLeft: `1.5px solid ${gold}` }} />
+      <div style={{ ...CORNER_STYLE, bottom: 0, right: 0, borderBottom: `1.5px solid ${gold}`, borderRight: `1.5px solid ${gold}` }} />
+    </>
+  )
+}
+
 function ProductCard({ product, showCompare = false, isBestseller = false, isPopular = false }) {
   const [imgError, setImgError] = useState(false)
 
@@ -55,12 +79,28 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
   return (
     <Link
       to={`/product/${product.id}`}
-      className="group block transition-all duration-500"
-      style={{ borderRadius: '2px' }}
+      className="group block relative"
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.45)'
+        e.currentTarget.style.boxShadow = '0 4px 20px rgba(176, 141, 87, 0.12), 0 2px 8px rgba(44, 36, 32, 0.06)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.18)'
+        e.currentTarget.style.boxShadow = '0 2px 12px rgba(44, 36, 32, 0.06)'
+      }}
+      style={{
+        border: '1px solid rgba(176, 141, 87, 0.18)',
+        borderRadius: '2px',
+        backgroundColor: '#F7F2EB',
+        boxShadow: '0 2px 12px rgba(44, 36, 32, 0.06)',
+        transition: 'box-shadow 0.4s ease, border-color 0.4s ease',
+      }}
     >
+      <GoldCorners />
+
       <div
         className="relative aspect-[4/5] overflow-hidden"
-        style={{ backgroundColor: COLORS.imageBg, borderRadius: '2px' }}
+        style={{ backgroundColor: COLORS.imageBg, margin: '4px 4px 0 4px', borderRadius: '1px' }}
       >
         <ProductImage
           url={imageUrl}
@@ -93,19 +133,25 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
         <HoverSpecs product={product} />
       </div>
 
-      <div className="pt-4 pb-2">
+      <GoldDivider />
+
+      <div className="px-3 pb-3" style={{ backgroundColor: '#F7F2EB' }}>
         <h3
-          className="font-display text-lg leading-snug transition-colors duration-300"
+          className="font-display text-lg leading-snug italic"
           style={{ color: COLORS.dark }}
         >
           {product.title}
         </h3>
 
+        <div className="w-full h-px my-2" style={{ backgroundColor: 'rgba(176, 141, 87, 0.12)' }} />
+
         {conditionStyle && (
           <ConditionDot color={conditionStyle.color} label={conditionStyle.label} />
         )}
 
-        <div className="flex items-center justify-between mt-1.5">
+        <div className="flex items-center justify-between mt-2 pt-2"
+          style={{ borderTop: '1px dashed rgba(176, 141, 87, 0.2)' }}
+        >
           <ProductPrice
             price={product.price}
             isSold={isSold}

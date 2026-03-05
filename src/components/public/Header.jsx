@@ -111,6 +111,7 @@ export default function Header() {
           links={NAV_LINKS}
           pathname={location.pathname}
           favoritesCount={favorites.length}
+          onClose={() => setMobileOpen(false)}
         />
       )}
     </>
@@ -246,34 +247,139 @@ function SearchDrawer({ open, query, onQueryChange, onSubmit, inputRef }) {
   )
 }
 
-function MobileOverlay({ links, pathname, favoritesCount }) {
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI']
+
+function MobileOverlay({ links, pathname, favoritesCount, onClose }) {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 10)
+    return () => clearTimeout(t)
+  }, [])
+
   return (
-    <div
-      className="fixed inset-0 z-40 md:hidden animate-fade-in"
-      style={{ backgroundColor: COLORS.overlay }}
-    >
-      <div className="flex flex-col items-center justify-center h-full gap-8">
-        {links.map(({ to, label }, i) => (
+    <div className="fixed inset-0 z-40 md:hidden" onClick={onClose}>
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 transition-opacity duration-500"
+        style={{
+          backgroundColor: 'rgba(12, 10, 8, 0.6)',
+          backdropFilter: 'blur(4px)',
+          opacity: visible ? 1 : 0,
+        }}
+      />
+
+      {/* Side Panel */}
+      <div
+        className="absolute top-0 right-0 h-full flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: '75vw',
+          maxWidth: 320,
+          backgroundColor: 'rgba(12, 10, 8, 0.97)',
+          borderLeft: `3px solid ${COLORS.gold}`,
+          transform: visible ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.45s cubic-bezier(0.32, 0.72, 0, 1)',
+        }}
+      >
+        {/* Close button */}
+        <div className="flex justify-end px-5 pt-6">
+          <button onClick={onClose} style={{ color: COLORS.creamDim }}>
+            <X size={22} />
+          </button>
+        </div>
+
+        {/* Navigation links */}
+        <nav className="flex-1 flex flex-col justify-center px-8 gap-7">
+          {links.map(({ to, label }, i) => {
+            const isActive = pathname.startsWith(to)
+            return (
+              <Link
+                key={to}
+                to={to}
+                className="flex items-baseline gap-4 group"
+                style={{
+                  opacity: visible ? 1 : 0,
+                  transform: visible ? 'translateX(0)' : 'translateX(24px)',
+                  transition: `opacity 0.4s ease ${i * 80 + 200}ms, transform 0.4s ease ${i * 80 + 200}ms`,
+                }}
+              >
+                <span
+                  className="font-display text-[11px] tracking-[0.2em]"
+                  style={{ color: isActive ? COLORS.gold : 'rgba(176, 141, 87, 0.35)', minWidth: 28 }}
+                >
+                  {ROMAN[i]}
+                </span>
+                <span
+                  className="font-display text-2xl italic tracking-[0.08em]"
+                  style={{ color: isActive ? COLORS.cream : COLORS.creamHalf }}
+                >
+                  {label}
+                </span>
+                {isActive && (
+                  <div
+                    className="flex-1 h-px ml-2"
+                    style={{ backgroundColor: 'rgba(176, 141, 87, 0.25)', marginTop: 2 }}
+                  />
+                )}
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Bottom section */}
+        <div className="px-8 pb-10">
+          {/* Gold divider */}
+          <div className="flex items-center mb-6">
+            <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(176, 141, 87, 0.2)' }} />
+            <span className="mx-3" style={{ fontSize: '8px', color: 'rgba(176, 141, 87, 0.4)' }}>◆</span>
+            <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(176, 141, 87, 0.2)' }} />
+          </div>
+
           <Link
-            key={to}
-            to={to}
-            className="font-display text-3xl italic tracking-[0.15em] animate-slide-up"
+            to="/favorites"
+            className="flex items-center gap-2 mb-8"
             style={{
-              color: pathname.startsWith(to) ? COLORS.gold : COLORS.creamHalf,
-              animationDelay: `${i * 80}ms`,
+              color: COLORS.goldFaded,
+              opacity: visible ? 1 : 0,
+              transition: 'opacity 0.4s ease 550ms',
             }}
           >
-            {label}
+            <Heart size={14} />
+            <span className="font-body text-[12px] tracking-[0.2em] uppercase">
+              Избранное
+            </span>
+            {favoritesCount > 0 && (
+              <span
+                className="ml-1 w-5 h-5 flex items-center justify-center rounded-full font-body text-[9px] font-semibold"
+                style={{ backgroundColor: 'rgba(176, 141, 87, 0.2)', color: COLORS.gold }}
+              >
+                {favoritesCount}
+              </span>
+            )}
           </Link>
-        ))}
-        <div className="w-12 h-px mt-4" style={{ backgroundColor: COLORS.goldBorderLight }} />
-        <Link
-          to="/favorites"
-          className="font-body text-sm tracking-[0.2em] uppercase animate-slide-up"
-          style={{ color: COLORS.goldFaded, animationDelay: '300ms' }}
-        >
-          Избранное ({favoritesCount})
-        </Link>
+
+          {/* Branding */}
+          <div
+            style={{
+              opacity: visible ? 1 : 0,
+              transition: 'opacity 0.4s ease 650ms',
+            }}
+          >
+            <span
+              className="font-display text-[13px] tracking-[0.3em] uppercase block"
+              style={{ color: 'rgba(176, 141, 87, 0.3)' }}
+            >
+              Galerie
+            </span>
+            <span
+              className="font-display text-[10px] italic tracking-[0.2em]"
+              style={{ color: 'rgba(176, 141, 87, 0.2)' }}
+            >
+              du Temps
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   )
