@@ -36,6 +36,7 @@ import { AuthProvider, useAuth } from './lib/AuthContext'
 import { FavoritesProvider } from './lib/FavoritesContext'
 import { CompareProvider } from './lib/CompareContext'
 import { ThemeProvider } from './lib/ThemeContext'
+import { CurrencyProvider } from './lib/CurrencyContext'
 import CompareBar from './components/public/CompareBar'
 
 function PageLoader() {
@@ -92,6 +93,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider>
+      <CurrencyProvider>
       <AuthProvider>
         <FavoritesProvider>
           <CompareProvider>
@@ -139,6 +141,7 @@ export default function App() {
           </CompareProvider>
         </FavoritesProvider>
       </AuthProvider>
+      </CurrencyProvider>
       </ThemeProvider>
     </ErrorBoundary>
   )

@@ -15,6 +15,7 @@ import {
 import { getProducts, getCategoryCounts } from '../lib/api'
 import { categoryGroups, categories } from '../data/demoProducts'
 import ProductCard from '../components/public/ProductCard'
+import { useCurrency } from '../lib/CurrencyContext'
 
 const POPULAR_THRESHOLD = 100
 
@@ -268,7 +269,7 @@ function EditorsPickCard({ product }) {
           <div className="flex items-center gap-6 mt-8">
             {product.price > 0 && (
               <span className="font-display text-2xl" style={{ color: '#B08D57' }}>
-                {product.price}&euro;
+                {formatPrice(product.price)}
               </span>
             )}
             <Link
@@ -344,6 +345,7 @@ function CategoryRow({ title, subtitle, products: rowProducts, link, bestsellerI
 
 export default function Home() {
   const navigate = useNavigate()
+  const { formatPrice } = useCurrency()
 
   const [products, setProducts] = useState([])
   const [categoryCounts, setCategoryCounts] = useState({})
@@ -564,7 +566,7 @@ export default function Home() {
                         <img src={p.image_url || p.images?.[0]?.url} alt={p.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                       </div>
                       <p className="font-display text-sm italic mt-3 truncate" style={{ color: '#F0E6D6' }}>{p.title}</p>
-                      <p className="font-body text-xs mt-1" style={{ color: '#B08D57' }}>{p.price}&euro;</p>
+                      <p className="font-body text-xs mt-1" style={{ color: '#B08D57' }}>{formatPrice(p.price)}</p>
                     </Link>
                   ))}
                 </div>
@@ -593,7 +595,7 @@ export default function Home() {
                         <img src={p.image_url || p.images?.[0]?.url} alt={p.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
                       </div>
                       <p className="font-display text-sm italic mt-3 truncate" style={{ color: '#F0E6D6' }}>{p.title}</p>
-                      <p className="font-body text-xs mt-1" style={{ color: '#B08D57' }}>{p.price}&euro;</p>
+                      <p className="font-body text-xs mt-1" style={{ color: '#B08D57' }}>{formatPrice(p.price)}</p>
                     </Link>
                   ))}
                 </div>

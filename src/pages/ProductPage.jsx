@@ -30,6 +30,7 @@ import PriceHistoryChart from '../components/public/PriceHistoryChart'
 import SimilarProducts from '../components/public/SimilarProducts'
 import ProductReviews from '../components/public/ProductReviews'
 import { siteConfig } from '../lib/siteConfig'
+import { useCurrency } from '../lib/CurrencyContext'
 
 /* ------------------------------------------------------------------ */
 /*  Field icon mapping                                                 */
@@ -231,6 +232,7 @@ function AuthenticitySection({ product }) {
 export default function ProductPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { formatPrice } = useCurrency()
 
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -476,8 +478,8 @@ export default function ProductPage() {
                   }}
                 >
                   {isRealEstate && product.details?.rent_or_buy === 'Аренда'
-                    ? `${product.price}\u20ac / мес.`
-                    : `${product.price}\u20ac`}
+                    ? `${formatPrice(product.price)} / мес.`
+                    : formatPrice(product.price)}
                 </span>
                 {product.status === 'sold' && (
                   <span
@@ -575,7 +577,7 @@ export default function ProductPage() {
                 {/* WhatsApp */}
                 {siteConfig.whatsapp && (
                   <a
-                    href={`https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(siteConfig.messageTemplates.whatsapp(product))}`}
+                    href={`https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(siteConfig.messageTemplates.whatsapp(product, formatPrice))}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-3 w-full py-3.5 font-body text-sm tracking-[0.1em] uppercase transition-all duration-300"

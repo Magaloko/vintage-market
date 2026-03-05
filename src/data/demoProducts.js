@@ -273,6 +273,7 @@ export const demoProducts = [
     },
     status: 'active',
     views: 142,
+    avgRating: 4.2,
     created_at: '2025-01-15T10:00:00Z',
   },
 
@@ -302,6 +303,7 @@ export const demoProducts = [
     },
     status: 'active',
     views: 89,
+    avgRating: 4.7,
     created_at: '2025-01-20T14:30:00Z',
   },
 
@@ -328,6 +330,7 @@ export const demoProducts = [
     },
     status: 'active',
     views: 203,
+    avgRating: 3.8,
     is_promoted: true,
     created_at: '2025-02-01T09:15:00Z',
   },
@@ -355,6 +358,7 @@ export const demoProducts = [
     },
     status: 'active',
     views: 315,
+    avgRating: 4.9,
     created_at: '2025-02-10T11:00:00Z',
   },
 
@@ -381,6 +385,7 @@ export const demoProducts = [
     },
     status: 'active',
     views: 178,
+    avgRating: 4.5,
     is_promoted: true,
     created_at: '2025-02-15T16:45:00Z',
   },
@@ -409,6 +414,7 @@ export const demoProducts = [
     },
     status: 'active',
     views: 67,
+    avgRating: 3.5,
     created_at: '2025-03-01T08:30:00Z',
   },
 
@@ -436,6 +442,7 @@ export const demoProducts = [
     },
     status: 'sold',
     views: 234,
+    avgRating: 4.8,
     created_at: '2025-01-05T12:00:00Z',
   },
 
@@ -461,6 +468,7 @@ export const demoProducts = [
     },
     status: 'active',
     views: 156,
+    avgRating: 4.1,
     created_at: '2025-03-05T10:20:00Z',
   },
 
@@ -488,6 +496,7 @@ export const demoProducts = [
     },
     status: 'active',
     views: 88,
+    avgRating: 0,
     created_at: '2025-03-10T14:00:00Z',
   },
 
@@ -517,6 +526,7 @@ export const demoProducts = [
     },
     status: 'active',
     views: 267,
+    avgRating: 4.6,
     is_promoted: true,
     created_at: '2025-03-12T09:45:00Z',
   },
@@ -550,6 +560,7 @@ export const demoProducts = [
     },
     status: 'active',
     views: 412,
+    avgRating: 4.3,
     created_at: '2025-03-15T08:00:00Z',
   },
 
@@ -581,6 +592,7 @@ export const demoProducts = [
     },
     status: 'active',
     views: 89,
+    avgRating: 4.0,
     created_at: '2025-03-18T10:00:00Z',
   },
 ]

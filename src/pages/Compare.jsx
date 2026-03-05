@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft, X } from 'lucide-react'
 import { useCompare } from '../lib/CompareContext'
+import { useCurrency } from '../lib/CurrencyContext'
 import { categories, conditions, categoryFields } from '../data/demoProducts'
 
 /* ------------------------------------------------------------------ */
@@ -10,12 +11,12 @@ import { categories, conditions, categoryFields } from '../data/demoProducts'
 const getCategoryName = (id) => categories.find((c) => c.id === id)?.name || id || '\u2014'
 const getConditionName = (id) => conditions.find((c) => c.id === id)?.name || id || '\u2014'
 
-function buildBaseRows(minPrice) {
+function buildBaseRows(minPrice, formatPrice) {
   return [
     {
       label: 'Цена',
       key: 'price',
-      format: (v) => (v ? `${v}\u20ac` : '\u2014'),
+      format: (v) => (v && formatPrice ? formatPrice(v) : v ? `${v}€` : '\u2014'),
       highlight: 'min',
     },
     { label: 'Категория', key: 'category', format: getCategoryName },
@@ -65,6 +66,7 @@ function buildDetailRows(items) {
 
 export default function Compare() {
   const { compareItems, removeFromCompare, clearCompare } = useCompare()
+  const { formatPrice } = useCurrency()
 
   /* ---------- Not enough items ---------- */
 
@@ -109,7 +111,7 @@ export default function Compare() {
 
   const prices = compareItems.map((p) => p.price || 0)
   const minPrice = Math.min(...prices)
-  const baseRows = buildBaseRows(minPrice)
+  const baseRows = buildBaseRows(minPrice, formatPrice)
   const detailRows = buildDetailRows(compareItems)
 
   return (

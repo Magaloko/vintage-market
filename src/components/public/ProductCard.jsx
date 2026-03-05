@@ -2,6 +2,7 @@ import { memo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Star, TrendingUp, Flame, Sparkles } from 'lucide-react'
 import { categories, conditions } from '../../data/demoProducts'
+import { useCurrency } from '../../lib/CurrencyContext'
 import FavoriteButton from './FavoriteButton'
 import CompareButton from './CompareButton'
 
@@ -39,6 +40,13 @@ function getKeyDetail(product) {
   return null
 }
 
+function getMaterialTag(product) {
+  const material = product.details?.material
+  const origin = product.details?.manufacturer || product.details?.origin
+  if (material && origin) return `${material} · ${origin}`
+  return material || origin || null
+}
+
 function GoldDivider() {
   return (
     <div className="flex items-center" style={{ padding: '5px 12px', backgroundColor: '#F7F2EB' }}>
@@ -65,6 +73,7 @@ function GoldCorners() {
 
 function ProductCard({ product, showCompare = false, isBestseller = false, isPopular = false }) {
   const [imgError, setImgError] = useState(false)
+  const { formatPrice } = useCurrency()
 
   const category = categories.find((c) => c.id === product.category)
   const imageUrl = product.image_url || product.images?.[0]?.url
@@ -143,11 +152,51 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
           {product.title}
         </h3>
 
+        {product.description && (
+          <p
+            className="font-body text-[11px] leading-relaxed mt-1"
+            style={{
+              color: 'rgba(44, 36, 32, 0.45)',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}
+          >
+            {product.description}
+          </p>
+        )}
+
         <div className="w-full h-px my-2" style={{ backgroundColor: 'rgba(176, 141, 87, 0.12)' }} />
 
-        {conditionStyle && (
-          <ConditionDot color={conditionStyle.color} label={conditionStyle.label} />
+        {getMaterialTag(product) && (
+          <div className="mb-1.5">
+            <span
+              className="font-body text-[9px] tracking-[0.15em] uppercase px-2 py-0.5 inline-block"
+              style={{
+                backgroundColor: 'rgba(176, 141, 87, 0.06)',
+                color: 'rgba(176, 141, 87, 0.7)',
+                borderRadius: '1px',
+              }}
+            >
+              {getMaterialTag(product)}
+            </span>
+          </div>
         )}
+
+        <div className="flex items-center justify-between">
+          {conditionStyle && (
+            <ConditionDot color={conditionStyle.color} label={conditionStyle.label} />
+          )}
+          {product.avgRating > 0 && (
+            <div className="flex items-center gap-1">
+              <Star size={10} fill="#B08D57" stroke="none" />
+              <span className="font-body text-[10px]" style={{ color: COLORS.goldFaded }}>
+                {product.avgRating.toFixed(1)}
+              </span>
+            </div>
+          )}
+        </div>
 
         <div className="flex items-center justify-between mt-2 pt-2"
           style={{ borderTop: '1px dashed rgba(176, 141, 87, 0.2)' }}
@@ -157,6 +206,7 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
             isSold={isSold}
             isShop={isShop}
             isRental={isRental}
+            formatPrice={formatPrice}
           />
           {product.era && (
             <span className="font-body text-[11px]" style={{ color: COLORS.brownFaded }}>
@@ -394,14 +444,14 @@ function ConditionDot({ color, label }) {
   )
 }
 
-function ProductPrice({ price, isSold, isShop, isRental }) {
+function ProductPrice({ price, isSold, isShop, isRental, formatPrice }) {
   if (price > 0) {
     return (
       <span
         className={`font-body text-sm tracking-wide ${isSold ? 'line-through' : ''}`}
         style={{ color: isSold ? COLORS.brownFaded : COLORS.gold }}
       >
-        {price}&euro;{isRental && ' / мес.'}
+        {formatPrice ? formatPrice(price) : `${price}€`}{isRental && ' / мес.'}
       </span>
     )
   }

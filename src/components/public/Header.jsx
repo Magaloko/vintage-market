@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Search, Heart, Menu, X, Sun, Moon } from 'lucide-react'
+import { Search, Heart, Menu, X, Sun, Moon, ChevronDown } from 'lucide-react'
 import { useFavorites } from '../../lib/FavoritesContext'
 import { useTheme } from '../../lib/ThemeContext'
+import { useCurrency } from '../../lib/CurrencyContext'
 
 const NAV_LINKS = [
   { to: '/catalog', label: 'Каталог' },
@@ -38,6 +39,7 @@ export default function Header() {
   const searchInputRef = useRef(null)
   const { favorites } = useFavorites()
   const { isDark, toggleTheme } = useTheme()
+  const { currency, setCurrency, currencies } = useCurrency()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -93,6 +95,9 @@ export default function Header() {
               onMobileToggle={() => setMobileOpen(!mobileOpen)}
               isDark={isDark}
               onThemeToggle={toggleTheme}
+              currency={currency}
+              setCurrency={setCurrency}
+              currencies={currencies}
             />
           </div>
         </div>
@@ -112,6 +117,9 @@ export default function Header() {
           pathname={location.pathname}
           favoritesCount={favorites.length}
           onClose={() => setMobileOpen(false)}
+          currency={currency}
+          setCurrency={setCurrency}
+          currencies={currencies}
         />
       )}
     </>
@@ -161,8 +169,17 @@ function DesktopNav({ links, pathname, isTransparent }) {
   )
 }
 
-function HeaderActions({ isTransparent, searchOpen, onSearchToggle, favoritesCount, mobileOpen, onMobileToggle, isDark, onThemeToggle }) {
+function HeaderActions({ isTransparent, searchOpen, onSearchToggle, favoritesCount, mobileOpen, onMobileToggle, isDark, onThemeToggle, currency, setCurrency, currencies }) {
   const iconColor = isTransparent ? COLORS.creamFaded : COLORS.creamDim
+  const [currOpen, setCurrOpen] = useState(false)
+  const currRef = useRef(null)
+
+  useEffect(() => {
+    if (!currOpen) return
+    const close = (e) => { if (!currRef.current?.contains(e.target)) setCurrOpen(false) }
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [currOpen])
 
   return (
     <div className="flex items-center gap-3">
@@ -201,6 +218,48 @@ function HeaderActions({ isTransparent, searchOpen, onSearchToggle, favoritesCou
           </span>
         )}
       </Link>
+
+      {/* Currency selector (desktop) */}
+      <div ref={currRef} className="relative hidden md:block">
+        <button
+          onClick={() => setCurrOpen(!currOpen)}
+          className="h-10 px-2 flex items-center gap-1 rounded-full transition-all duration-300"
+          style={{
+            color: iconColor,
+            backgroundColor: currOpen ? COLORS.goldSubtle : 'transparent',
+          }}
+        >
+          <span className="font-body text-[11px] tracking-wider font-medium">{currency}</span>
+          <ChevronDown size={12} style={{ transform: currOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+        </button>
+
+        {currOpen && (
+          <div
+            className="absolute top-full right-0 mt-2 py-1 min-w-[110px]"
+            style={{
+              backgroundColor: 'rgba(12, 10, 8, 0.95)',
+              border: `1px solid ${COLORS.goldSubtle}`,
+              borderRadius: '2px',
+              backdropFilter: 'blur(12px)',
+            }}
+          >
+            {currencies.map((c) => (
+              <button
+                key={c.code}
+                onClick={() => { setCurrency(c.code); setCurrOpen(false) }}
+                className="w-full px-3 py-1.5 flex items-center gap-2 text-left transition-colors duration-200"
+                style={{
+                  color: c.code === currency ? COLORS.gold : COLORS.creamDim,
+                  backgroundColor: c.code === currency ? COLORS.goldSubtle : 'transparent',
+                }}
+              >
+                <span className="font-body text-[13px]">{c.symbol}</span>
+                <span className="font-body text-[11px] tracking-wider">{c.code}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <button
         onClick={onMobileToggle}
@@ -249,7 +308,7 @@ function SearchDrawer({ open, query, onQueryChange, onSubmit, inputRef }) {
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI']
 
-function MobileOverlay({ links, pathname, favoritesCount, onClose }) {
+function MobileOverlay({ links, pathname, favoritesCount, onClose, currency, setCurrency, currencies }) {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -359,11 +418,44 @@ function MobileOverlay({ links, pathname, favoritesCount, onClose }) {
             )}
           </Link>
 
+          {/* Currency selector */}
+          <div
+            className="mb-6"
+            style={{
+              opacity: visible ? 1 : 0,
+              transition: 'opacity 0.4s ease 600ms',
+            }}
+          >
+            <span
+              className="font-body text-[9px] tracking-[0.2em] uppercase block mb-2"
+              style={{ color: 'rgba(176, 141, 87, 0.35)' }}
+            >
+              Валюта
+            </span>
+            <div className="flex gap-2">
+              {currencies.map((c) => (
+                <button
+                  key={c.code}
+                  onClick={() => setCurrency(c.code)}
+                  className="px-2.5 py-1 font-body text-[11px] tracking-[0.1em] transition-colors duration-200"
+                  style={{
+                    color: c.code === currency ? COLORS.gold : 'rgba(176, 141, 87, 0.35)',
+                    backgroundColor: c.code === currency ? 'rgba(176, 141, 87, 0.15)' : 'transparent',
+                    borderRadius: '1px',
+                    border: c.code === currency ? '1px solid rgba(176, 141, 87, 0.25)' : '1px solid transparent',
+                  }}
+                >
+                  {c.symbol} {c.code}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Branding */}
           <div
             style={{
               opacity: visible ? 1 : 0,
-              transition: 'opacity 0.4s ease 650ms',
+              transition: 'opacity 0.4s ease 700ms',
             }}
           >
             <span

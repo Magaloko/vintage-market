@@ -1,4 +1,5 @@
 import { TrendingDown, TrendingUp, Minus } from 'lucide-react'
+import { useCurrency } from '../../lib/CurrencyContext'
 
 const THRESHOLDS = { low: -15, high: 15 }
 
@@ -33,6 +34,7 @@ function getVariant(diff) {
 }
 
 export default function PriceInsight({ price, avgPrice, compact = false }) {
+  const { formatPrice } = useCurrency()
   if (!price || !avgPrice || avgPrice === 0) return null
 
   const diff = ((price - avgPrice) / avgPrice * 100).toFixed(0)
@@ -60,7 +62,7 @@ export default function PriceInsight({ price, avgPrice, compact = false }) {
       <div>
         <p className={`font-body text-sm font-medium ${color}`}>{variant.label(diffAbs)}</p>
         <p className="font-body text-xs" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>
-          Средняя по категории: {avgPrice}&euro;
+          Средняя по категории: {formatPrice(avgPrice)}
         </p>
       </div>
     </div>

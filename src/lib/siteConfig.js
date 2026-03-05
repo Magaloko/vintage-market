@@ -15,9 +15,9 @@ export const siteConfig = {
   facebook: null,
 
   messageTemplates: {
-    whatsapp: (product) =>
-      `Здравствуйте! Меня интересует "${product.title}" (${product.price}€). Можно узнать подробности?`,
-    telegram: (product) =>
-      `Здравствуйте! Интересует "${product.title}" (${product.price}€)`,
+    whatsapp: (product, formatPrice) =>
+      `Здравствуйте! Меня интересует "${product.title}" (${formatPrice ? formatPrice(product.price) : product.price + '€'}). Можно узнать подробности?`,
+    telegram: (product, formatPrice) =>
+      `Здравствуйте! Интересует "${product.title}" (${formatPrice ? formatPrice(product.price) : product.price + '€'})`,
   },
 }
