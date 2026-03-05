@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   AlertTriangle,
   MessageSquare,
+  Calculator,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 
@@ -18,6 +19,7 @@ const SIDEBAR_LINKS = [
   { to: '/admin/products', icon: Package, label: 'Товары' },
   { to: '/admin/products/new', icon: Plus, label: 'Добавить товар' },
   { to: '/admin/inquiries', icon: MessageSquare, label: 'Запросы' },
+  { to: '/admin/calculator', icon: Calculator, label: 'Калькулятор' },
 ]
 
 const COLORS = {

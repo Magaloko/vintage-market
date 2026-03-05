@@ -20,6 +20,7 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const AdminProducts = lazy(() => import('./pages/admin/AdminProducts'))
 const AdminProductForm = lazy(() => import('./pages/admin/AdminProductForm'))
 const AdminInquiries = lazy(() => import('./pages/admin/AdminInquiries'))
+const AdminCalculator = lazy(() => import('./pages/admin/AdminCalculator'))
 
 const SellerRegister = lazy(() => import('./pages/seller/SellerRegister'))
 const SellerDashboard = lazy(() => import('./pages/seller/SellerDashboard'))
@@ -27,6 +28,7 @@ const SellerProducts = lazy(() => import('./pages/seller/SellerProducts'))
 const SellerProductForm = lazy(() => import('./pages/seller/SellerProductForm'))
 const SellerInquiries = lazy(() => import('./pages/seller/SellerInquiries'))
 const SellerProfile = lazy(() => import('./pages/seller/SellerProfile'))
+const SellerCalculator = lazy(() => import('./pages/seller/SellerCalculator'))
 
 import PublicLayout from './components/public/PublicLayout'
 import AdminLayout from './components/admin/AdminLayout'
@@ -122,6 +124,7 @@ export default function App() {
                   <Route path="products/new" element={<AdminProductForm />} />
                   <Route path="products/edit/:id" element={<AdminProductForm />} />
                   <Route path="inquiries" element={<AdminInquiries />} />
+                  <Route path="calculator" element={<AdminCalculator />} />
                 </Route>
 
                 <Route path="/seller" element={<SellerRoute><SellerLayout /></SellerRoute>}>
@@ -130,6 +133,7 @@ export default function App() {
                   <Route path="products/new" element={<SellerProductForm />} />
                   <Route path="products/edit/:id" element={<SellerProductForm />} />
                   <Route path="inquiries" element={<SellerInquiries />} />
+                  <Route path="calculator" element={<SellerCalculator />} />
                   <Route path="profile" element={<SellerProfile />} />
                 </Route>
 

@@ -9,6 +9,7 @@ import {
   X,
   MessageSquare,
   Store,
+  Calculator,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 
@@ -17,6 +18,7 @@ const NAV_LINKS = [
   { to: '/seller/products', icon: Package, label: 'Мои товары' },
   { to: '/seller/products/new', icon: Plus, label: 'Добавить товар' },
   { to: '/seller/inquiries', icon: MessageSquare, label: 'Запросы' },
+  { to: '/seller/calculator', icon: Calculator, label: 'Калькулятор' },
   { to: '/seller/profile', icon: Store, label: 'Мой магазин' },
 ]
 

@@ -212,3 +212,24 @@
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Chat widget */
+.chat-panel-enter {
+  animation: chatSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes chatSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.chat-typing-dot {
+  animation: typingBounce 1.4s ease-in-out infinite;
+}
+.chat-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.chat-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
