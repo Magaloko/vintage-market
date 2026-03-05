@@ -194,7 +194,7 @@ export default function ChatWidget() {
   const [isLoading, setIsLoading] = useState(false)
   const [hasError, setHasError] = useState(false)
   const messagesEndRef = useRef(null)
-  const { items: compareItems } = useCompare()
+  const { compareItems } = useCompare()
   const hasCompareBar = compareItems.length > 0
 
   // Restore messages from sessionStorage
