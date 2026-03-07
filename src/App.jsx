@@ -15,6 +15,11 @@ const Compare = lazy(() => import('./pages/Compare'))
 const ShopPage = lazy(() => import('./pages/ShopPage'))
 const ShopsList = lazy(() => import('./pages/ShopsList'))
 
+// Legal
+const Impressum = lazy(() => import('./pages/legal/Impressum'))
+const Privacy = lazy(() => import('./pages/legal/Privacy'))
+const Terms = lazy(() => import('./pages/legal/Terms'))
+
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const AdminProducts = lazy(() => import('./pages/admin/AdminProducts'))
@@ -113,6 +118,10 @@ export default function App() {
                   <Route path="/compare" element={<Compare />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
+                  {/* Legal */}
+                  <Route path="/impressum" element={<Impressum />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/terms" element={<Terms />} />
                 </Route>
 
                 <Route path="/admin/login" element={<AdminLogin />} />

@@ -63,16 +63,35 @@ export default function Footer() {
           <CategoriesColumn categories={activeCats} />
         </div>
 
+        {/* Legal Links */}
         <div
-          className="mt-20 pt-8 flex flex-col md:flex-row justify-between items-center gap-4"
+          className="mt-20 pt-8 flex flex-col gap-4"
           style={{ borderTop: `1px solid ${COLORS.goldSubtle}` }}
         >
-          <p className="font-body text-[11px] tracking-wide" style={{ color: COLORS.creamDim }}>
-            &copy; {new Date().getFullYear()} Galerie du Temps. Wien, Austria.
-          </p>
-          <p className="font-display text-sm italic" style={{ color: COLORS.goldDivider }}>
-            Le temps embellit toute chose
-          </p>
+          <div className="flex flex-wrap justify-center gap-6">
+            {[
+              { to: '/privacy', label: 'Конфиденциальность' },
+              { to: '/impressum', label: 'Правовая информация' },
+              { to: '/terms', label: 'Условия' },
+            ].map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                className="font-body text-[11px] tracking-wide transition-colors duration-300"
+                {...useHoverStyle(COLORS.gold, COLORS.creamDim)}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="font-body text-[11px] tracking-wide" style={{ color: COLORS.creamDim }}>
+              &copy; {new Date().getFullYear()} Galerie du Temps. Казахстан.
+            </p>
+            <p className="font-display text-sm italic" style={{ color: COLORS.goldDivider }}>
+              Le temps embellit toute chose
+            </p>
+          </div>
         </div>
       </div>
     </footer>

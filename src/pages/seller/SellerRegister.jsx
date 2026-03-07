@@ -100,6 +100,7 @@ export default function SellerRegister() {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState(INITIAL_FORM)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }))
 
@@ -251,11 +252,31 @@ export default function SellerRegister() {
                 />
               </div>
 
+              {/* Terms Agreement */}
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-0.5 accent-gdt-bronze"
+                />
+                <span className="font-body text-xs leading-relaxed" style={{ color: TEXT_FAINT }}>
+                  Я соглашаюсь с{' '}
+                  <Link to="/terms" target="_blank" className="underline" style={{ color: GOLD }}>
+                    Пользовательским соглашением
+                  </Link>{' '}
+                  и{' '}
+                  <Link to="/privacy" target="_blank" className="underline" style={{ color: GOLD }}>
+                    Политикой конфиденциальности
+                  </Link>
+                </span>
+              </label>
+
               <div className="flex gap-3">
                 <button type="button" onClick={() => setStep(1)} className="btn-secondary flex-1 justify-center">
                   Назад
                 </button>
-                <button type="submit" disabled={loading} className="btn-primary flex-1 justify-center disabled:opacity-50">
+                <button type="submit" disabled={loading || !agreedToTerms} className="btn-primary flex-1 justify-center disabled:opacity-50">
                   {loading ? 'Создание...' : 'Создать магазин'}
                 </button>
               </div>

@@ -1,14 +1,14 @@
 export const siteConfig = {
   name: 'Galerie du Temps',
   tagline: 'Le temps embellit toute chose',
-  city: 'Вена, Австрия',
-  address: 'Wien, Österreich',
+  city: 'Казахстан',
+  address: 'Республика Казахстан',
 
   email: 'info@galerie-du-temps.com',
-  phone: '+43 123 456 789',
-  phoneClean: '+43123456789',
+  phone: '+7 XXX XXX XXXX',
+  phoneClean: '+7XXXXXXXXXX',
 
-  whatsapp: '436601234567',
+  whatsapp: '7XXXXXXXXXX',
   telegram: 'galeriedutemps',
 
   instagram: 'https://instagram.com/galeriedutemps',
