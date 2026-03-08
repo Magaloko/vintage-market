@@ -4,31 +4,35 @@ import { MessageSquare, Trash2, CheckCircle, Clock, ExternalLink, Mail, Phone } 
 import toast from 'react-hot-toast'
 import { getInquiries, updateInquiryStatus, deleteInquiry } from '../../lib/api'
 
-/* ── Theme tokens ────────────────────────────────────────────── */
+/* ── Theme tokens (light) ────────────────────────────────────── */
 const colors = {
-  cream: '#F0E6D6',
+  ink:   '#2C2420',
   gold:  '#B08D57',
 }
 
 const alpha = {
-  cream03: 'rgba(240, 230, 214, 0.03)',
-  cream05: 'rgba(240, 230, 214, 0.05)',
-  cream06: 'rgba(240, 230, 214, 0.06)',
-  cream10: 'rgba(240, 230, 214, 0.1)',
-  cream20: 'rgba(240, 230, 214, 0.2)',
-  cream30: 'rgba(240, 230, 214, 0.3)',
-  gold10:  'rgba(176, 141, 87, 0.1)',
-  gold15:  'rgba(176, 141, 87, 0.15)',
-  gold20:  'rgba(176, 141, 87, 0.2)',
-  gold60:  'rgba(176, 141, 87, 0.6)',
-  red60:   'rgba(181, 115, 106, 0.6)',
+  ink03: 'rgba(44, 36, 32, 0.03)',
+  ink05: 'rgba(44, 36, 32, 0.05)',
+  ink08: 'rgba(44, 36, 32, 0.08)',
+  ink10: 'rgba(44, 36, 32, 0.1)',
+  ink15: 'rgba(44, 36, 32, 0.15)',
+  ink20: 'rgba(44, 36, 32, 0.2)',
+  ink30: 'rgba(44, 36, 32, 0.3)',
+  ink40: 'rgba(44, 36, 32, 0.4)',
+  ink60: 'rgba(44, 36, 32, 0.6)',
+  gold10: 'rgba(176, 141, 87, 0.1)',
+  gold12: 'rgba(176, 141, 87, 0.12)',
+  gold15: 'rgba(176, 141, 87, 0.15)',
+  gold20: 'rgba(176, 141, 87, 0.2)',
+  gold60: 'rgba(176, 141, 87, 0.6)',
+  red60: 'rgba(181, 115, 106, 0.7)',
 }
 
 const STATUS_CONFIG = {
-  new:     { label: 'Новая',     color: '#B08D57',                    bg: alpha.gold15 },
-  read:    { label: 'Прочитано', color: 'rgba(240, 230, 214, 0.4)',   bg: alpha.cream05 },
-  replied: { label: 'Ответили',  color: '#7A8B6F',                    bg: 'rgba(122, 139, 111, 0.15)' },
-  closed:  { label: 'Закрыто',   color: alpha.cream20,                bg: alpha.cream03 },
+  new:     { label: 'Новая',     color: '#B08D57',                  bg: alpha.gold15 },
+  read:    { label: 'Прочитано', color: alpha.ink40,                 bg: alpha.ink05 },
+  replied: { label: 'Ответили',  color: '#5A6B3C',                  bg: 'rgba(122, 139, 111, 0.12)' },
+  closed:  { label: 'Закрыто',   color: alpha.ink20,                bg: alpha.ink03 },
 }
 
 const FILTER_TABS = [
@@ -56,10 +60,10 @@ function InquiriesSkeleton() {
         <div
           key={i}
           className="animate-pulse p-4"
-          style={{ backgroundColor: alpha.cream03, borderRadius: '2px' }}
+          style={{ backgroundColor: alpha.ink03, borderRadius: '2px' }}
         >
-          <div className="h-4 w-1/3 rounded" style={{ backgroundColor: alpha.cream06 }} />
-          <div className="h-3 w-2/3 rounded mt-3" style={{ backgroundColor: 'rgba(240, 230, 214, 0.04)' }} />
+          <div className="h-4 w-1/3 rounded" style={{ backgroundColor: alpha.ink08 }} />
+          <div className="h-3 w-2/3 rounded mt-3" style={{ backgroundColor: alpha.ink05 }} />
         </div>
       ))}
     </div>
@@ -70,8 +74,8 @@ function InquiriesSkeleton() {
 function EmptyState() {
   return (
     <div className="text-center py-16">
-      <MessageSquare size={40} className="mx-auto mb-4" style={{ color: alpha.cream10 }} />
-      <p className="font-display text-lg italic" style={{ color: alpha.cream20 }}>
+      <MessageSquare size={40} className="mx-auto mb-4" style={{ color: alpha.ink10 }} />
+      <p className="font-display text-lg italic" style={{ color: alpha.ink20 }}>
         Нет запросов
       </p>
     </div>
@@ -106,7 +110,7 @@ function HoverLink({ href, to, children }) {
 /* ── Expanded inquiry details ────────────────────────────────── */
 function InquiryDetails({ inq, onStatusChange, onDelete }) {
   return (
-    <div className="px-4 pb-4 pt-2" style={{ borderTop: `1px solid ${alpha.cream05}` }}>
+    <div className="px-4 pb-4 pt-2" style={{ borderTop: `1px solid ${alpha.ink05}` }}>
       {/* Contact info */}
       <div className="flex flex-wrap gap-4 mb-4">
         <HoverLink href={`mailto:${inq.email}`}>
@@ -127,10 +131,10 @@ function InquiryDetails({ inq, onStatusChange, onDelete }) {
       </div>
 
       {/* Full message */}
-      <div className="p-3 mb-4" style={{ backgroundColor: alpha.cream03, borderRadius: '2px' }}>
+      <div className="p-3 mb-4" style={{ backgroundColor: 'rgba(247, 242, 235, 0.8)', borderRadius: '2px' }}>
         <p
           className="font-body text-sm leading-relaxed whitespace-pre-wrap"
-          style={{ color: 'rgba(240, 230, 214, 0.6)' }}
+          style={{ color: alpha.ink60 }}
         >
           {inq.message}
         </p>
@@ -142,7 +146,7 @@ function InquiryDetails({ inq, onStatusChange, onDelete }) {
           <button
             onClick={() => onStatusChange(inq.id, 'replied')}
             className="flex items-center gap-1.5 px-3 py-1.5 font-body text-xs transition-all"
-            style={{ backgroundColor: 'rgba(122, 139, 111, 0.15)', color: '#7A8B6F', borderRadius: '2px' }}
+            style={{ backgroundColor: 'rgba(122, 139, 111, 0.12)', color: '#5A6B3C', borderRadius: '2px' }}
           >
             <CheckCircle size={12} /> Ответили
           </button>
@@ -152,7 +156,7 @@ function InquiryDetails({ inq, onStatusChange, onDelete }) {
           <button
             onClick={() => onStatusChange(inq.id, 'closed')}
             className="flex items-center gap-1.5 px-3 py-1.5 font-body text-xs transition-all"
-            style={{ backgroundColor: alpha.cream05, color: alpha.cream30, borderRadius: '2px' }}
+            style={{ backgroundColor: alpha.ink05, color: alpha.ink30, borderRadius: '2px' }}
           >
             <Clock size={12} /> Закрыть
           </button>
@@ -177,8 +181,8 @@ function InquiryRow({ inq, isExpanded, onToggle, onStatusChange, onDelete }) {
   const status = STATUS_CONFIG[inq.status] || STATUS_CONFIG.new
 
   const rowStyle = {
-    backgroundColor: inq.status === 'new' ? 'rgba(176, 141, 87, 0.05)' : 'rgba(240, 230, 214, 0.02)',
-    border: `1px solid ${inq.status === 'new' ? alpha.gold15 : alpha.cream05}`,
+    backgroundColor: inq.status === 'new' ? 'rgba(176, 141, 87, 0.05)' : 'rgba(255, 255, 255, 0.7)',
+    border: `1px solid ${inq.status === 'new' ? alpha.gold15 : alpha.gold12}`,
     borderRadius: '2px',
   }
 
@@ -190,7 +194,7 @@ function InquiryRow({ inq, isExpanded, onToggle, onStatusChange, onDelete }) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className="font-body text-sm font-medium truncate" style={{ color: colors.cream }}>
+            <span className="font-body text-sm font-medium truncate" style={{ color: colors.ink }}>
               {inq.name}
             </span>
             {inq.product_title && (
@@ -202,12 +206,12 @@ function InquiryRow({ inq, isExpanded, onToggle, onStatusChange, onDelete }) {
               </span>
             )}
           </div>
-          <p className="font-body text-xs truncate mt-1" style={{ color: alpha.cream30 }}>
+          <p className="font-body text-xs truncate mt-1" style={{ color: alpha.ink30 }}>
             {inq.message}
           </p>
         </div>
 
-        <span className="font-body text-[10px] flex-shrink-0" style={{ color: alpha.cream20 }}>
+        <span className="font-body text-[10px] flex-shrink-0" style={{ color: alpha.ink20 }}>
           {formatDate(inq.created_at)}
         </span>
 
@@ -290,7 +294,7 @@ export default function AdminInquiries() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="font-display text-2xl italic" style={{ color: colors.cream }}>
+          <h1 className="font-display text-2xl italic" style={{ color: colors.ink }}>
             Запросы
             {newCount > 0 && (
               <span
@@ -307,7 +311,7 @@ export default function AdminInquiries() {
       {/* Filter tabs */}
       <div
         className="flex gap-1 mb-6 p-1"
-        style={{ backgroundColor: alpha.cream03, borderRadius: '2px' }}
+        style={{ backgroundColor: alpha.ink03, borderRadius: '2px' }}
       >
         {tabLabels.map((tab) => (
           <button
@@ -316,7 +320,7 @@ export default function AdminInquiries() {
             className="px-4 py-2 font-body text-xs transition-all"
             style={{
               backgroundColor: filter === tab.id ? alpha.gold15 : 'transparent',
-              color: filter === tab.id ? colors.gold : alpha.cream30,
+              color: filter === tab.id ? colors.gold : alpha.ink30,
               borderRadius: '2px',
             }}
           >

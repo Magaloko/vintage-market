@@ -162,28 +162,29 @@
   /* Admin sidebar */
   .admin-sidebar-link {
     @apply flex items-center gap-3 px-4 py-3 text-sm font-body transition-all duration-200;
-    color: rgba(240, 230, 214, 0.5);
+    color: rgba(44, 36, 32, 0.5);
     border-radius: 2px;
   }
   .admin-sidebar-link:hover {
-    background-color: rgba(176, 141, 87, 0.1);
-    color: #F0E6D6;
+    background-color: rgba(176, 141, 87, 0.08);
+    color: #2C2420;
   }
   .admin-sidebar-link.active {
-    background-color: rgba(176, 141, 87, 0.15);
+    background-color: rgba(176, 141, 87, 0.12);
     color: #B08D57;
   }
 
   /* Stat cards */
   .stat-card {
     @apply p-6 transition-all duration-300;
-    background-color: #1A1410;
-    border: 1px solid rgba(176, 141, 87, 0.08);
+    background-color: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(176, 141, 87, 0.1);
     border-radius: 2px;
+    backdrop-filter: blur(4px);
   }
   .stat-card:hover {
-    border-color: rgba(176, 141, 87, 0.2);
-    box-shadow: 0 0 30px rgba(176, 141, 87, 0.05);
+    border-color: rgba(176, 141, 87, 0.25);
+    box-shadow: 0 4px 20px rgba(176, 141, 87, 0.08);
   }
 }
 

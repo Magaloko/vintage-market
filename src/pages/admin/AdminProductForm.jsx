@@ -357,45 +357,7 @@ export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Image Upload */}
-        <Section icon={null} title={null}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display text-base italic" style={{ color: '#2C2420' }}>
-              Изображения
-            </h3>
-            <span className="font-body text-xs" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>
-              {images.length} фото
-              {images.length > 0 && ' \u2022 первое = главное'}
-            </span>
-          </div>
-          <ImageUploader images={images} onChange={setImages} productId={isEditing ? id : undefined} />
-        </Section>
-
-        {/* Category Selection — Dropdown */}
-        <Section icon={Tag} title="Категория">
-          <FormSelect
-            label="Категория товара"
-            required
-            value={form.category}
-            onChange={(e) => handleCategoryChange(e.target.value)}
-          >
-            {categoryGroups.map((group) => {
-              const groupCats = getActiveCategoryList().filter((c) => c.group === group.id)
-              if (groupCats.length === 0) return null
-              return (
-                <optgroup key={group.id} label={`${group.icon} ${group.name}`}>
-                  {groupCats.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.icon} {cat.name}
-                    </option>
-                  ))}
-                </optgroup>
-              )
-            })}
-          </FormSelect>
-        </Section>
-
-        {/* Basic Info */}
+        {/* 1. Name + Description */}
         <Section icon={Info} title="Основная информация">
           <div className="space-y-5">
             <FormInput
@@ -423,78 +385,138 @@ export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
               placeholder="Подробное описание товара..."
             />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormInput
-                type="number"
-                name="price"
-                label={
-                  isShop
-                    ? 'Цена (оставьте 0)'
-                    : currentCategory?.group === 'realestate'
-                      ? 'Цена (\u20ac / мес. или покупка)'
-                      : 'Цена (\u20ac)'
-                }
-                required={!isShop}
-                value={form.price}
-                onChange={handleChange}
-                min="0"
-                step="1"
-                placeholder="0"
-              />
-              {isVintage && (
-                <div>
-                  <Label>Бренд / Марка</Label>
-                  <select
-                    value={knownBrands.some(b => b.name === form.brand) ? form.brand : (form.brand ? '__custom__' : '')}
-                    onChange={(e) => {
-                      const val = e.target.value
-                      if (val === '__custom__') {
-                        setForm(prev => ({ ...prev, brand: prev.brand && !knownBrands.some(b => b.name === prev.brand) ? prev.brand : '' }))
-                      } else {
-                        setForm(prev => ({ ...prev, brand: val }))
-                      }
-                    }}
-                    className="w-full px-4 py-3 font-body text-sm rounded transition-all duration-300 focus:outline-none appearance-none cursor-pointer"
-                    style={{
-                      backgroundColor: 'rgba(247, 242, 235, 0.8)',
-                      border: '1px solid rgba(176, 141, 87, 0.15)',
-                      color: '#2C2420',
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23B08D57' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right 12px center',
-                      paddingRight: '36px',
-                    }}
-                  >
-                    <option value="">— Без бренда —</option>
-                    {knownBrands
-                      .filter(b => b.categories.includes(form.category))
-                      .map(b => (
-                        <option key={b.id} value={b.name}>{b.name}</option>
-                      ))
-                    }
-                    <option value="__custom__">Другой бренд...</option>
-                  </select>
-                  {(form.brand && !knownBrands.some(b => b.name === form.brand)) && (
-                    <input
-                      type="text"
-                      value={form.brand}
-                      onChange={(e) => setForm(prev => ({ ...prev, brand: e.target.value }))}
-                      placeholder="Введите название бренда"
-                      className="w-full px-4 py-2.5 font-body text-sm rounded mt-2 transition-all duration-300 focus:outline-none"
-                      style={{
-                        backgroundColor: 'rgba(247, 242, 235, 0.8)',
-                        border: '1px solid rgba(176, 141, 87, 0.15)',
-                        color: '#2C2420',
-                      }}
-                    />
-                  )}
-                </div>
-              )}
-            </div>
+            <FormInput
+              type="number"
+              name="price"
+              label={
+                isShop
+                  ? 'Цена (оставьте 0)'
+                  : currentCategory?.group === 'realestate'
+                    ? 'Цена (\u20ac / мес. или покупка)'
+                    : 'Цена (\u20ac)'
+              }
+              required={!isShop}
+              value={form.price}
+              onChange={handleChange}
+              min="0"
+              step="1"
+              placeholder="0"
+            />
           </div>
         </Section>
 
-        {/* Special Attributes */}
+        {/* 2. Images */}
+        <Section icon={null} title={null}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display text-base italic" style={{ color: '#2C2420' }}>
+              Изображения
+            </h3>
+            <span className="font-body text-xs" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>
+              {images.length} фото
+              {images.length > 0 && ' \u2022 первое = главное'}
+            </span>
+          </div>
+          <ImageUploader images={images} onChange={setImages} productId={isEditing ? id : undefined} />
+        </Section>
+
+        {/* 3. Category Selection */}
+        <Section icon={Tag} title="Категория">
+          <FormSelect
+            label="Категория товара"
+            required
+            value={form.category}
+            onChange={(e) => handleCategoryChange(e.target.value)}
+          >
+            {categoryGroups.map((group) => {
+              const groupCats = getActiveCategoryList().filter((c) => c.group === group.id)
+              if (groupCats.length === 0) return null
+              return (
+                <optgroup key={group.id} label={`${group.icon} ${group.name}`}>
+                  {groupCats.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.icon} {cat.name}
+                    </option>
+                  ))}
+                </optgroup>
+              )
+            })}
+          </FormSelect>
+        </Section>
+
+        {/* 4. Category-Specific Parameters (right after category) */}
+        {currentCatFields.length > 0 && (
+          <Section icon={Settings2} title={`${currentCategory?.icon} Параметры: ${currentCategory?.name}`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {currentCatFields.map((field) => (
+                <div
+                  key={field.key}
+                  className={field.type === 'textarea' ? 'sm:col-span-2' : ''}
+                >
+                  <DetailField
+                    field={field}
+                    value={details[field.key] || ''}
+                    onChange={handleDetailChange}
+                  />
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* 5. Brand (vintage only) */}
+        {isVintage && (
+          <Section icon={Tag} title="Бренд / Марка">
+            <div>
+              <Label>Бренд</Label>
+              <select
+                value={knownBrands.some(b => b.name === form.brand) ? form.brand : (form.brand ? '__custom__' : '')}
+                onChange={(e) => {
+                  const val = e.target.value
+                  if (val === '__custom__') {
+                    setForm(prev => ({ ...prev, brand: prev.brand && !knownBrands.some(b => b.name === prev.brand) ? prev.brand : '' }))
+                  } else {
+                    setForm(prev => ({ ...prev, brand: val }))
+                  }
+                }}
+                className="w-full px-4 py-3 font-body text-sm rounded transition-all duration-300 focus:outline-none appearance-none cursor-pointer"
+                style={{
+                  backgroundColor: 'rgba(247, 242, 235, 0.8)',
+                  border: '1px solid rgba(176, 141, 87, 0.15)',
+                  color: '#2C2420',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23B08D57' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                  paddingRight: '36px',
+                }}
+              >
+                <option value="">— Без бренда —</option>
+                {knownBrands
+                  .filter(b => b.categories.includes(form.category))
+                  .map(b => (
+                    <option key={b.id} value={b.name}>{b.name}</option>
+                  ))
+                }
+                <option value="__custom__">Другой бренд...</option>
+              </select>
+              {(form.brand && !knownBrands.some(b => b.name === form.brand)) && (
+                <input
+                  type="text"
+                  value={form.brand}
+                  onChange={(e) => setForm(prev => ({ ...prev, brand: e.target.value }))}
+                  placeholder="Введите название бренда"
+                  className="w-full px-4 py-2.5 font-body text-sm rounded mt-2 transition-all duration-300 focus:outline-none"
+                  style={{
+                    backgroundColor: 'rgba(247, 242, 235, 0.8)',
+                    border: '1px solid rgba(176, 141, 87, 0.15)',
+                    color: '#2C2420',
+                  }}
+                />
+              )}
+            </div>
+          </Section>
+        )}
+
+        {/* 6. Special Attributes (vintage only) */}
         {isVintage && (
           <Section icon={Award} title="Особые характеристики">
             <p className="font-body text-xs mb-4" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>
@@ -581,26 +603,6 @@ export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
                 <option value="active">В наличии</option>
                 <option value="sold">Продано</option>
               </FormSelect>
-            </div>
-          </Section>
-        )}
-
-        {/* Dynamic Category-Specific Fields */}
-        {currentCatFields.length > 0 && (
-          <Section icon={Settings2} title={`${currentCategory?.icon} Параметры: ${currentCategory?.name}`}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {currentCatFields.map((field) => (
-                <div
-                  key={field.key}
-                  className={field.type === 'textarea' ? 'sm:col-span-2' : ''}
-                >
-                  <DetailField
-                    field={field}
-                    value={details[field.key] || ''}
-                    onChange={handleDetailChange}
-                  />
-                </div>
-              ))}
             </div>
           </Section>
         )}

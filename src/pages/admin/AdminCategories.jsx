@@ -45,8 +45,8 @@ export default function AdminCategories() {
             <Layers size={20} style={{ color: '#B08D57' }} />
           </div>
           <div>
-            <h1 className="font-display text-2xl italic text-white">Категории</h1>
-            <p className="font-body text-sm mt-0.5" style={{ color: 'rgba(240, 230, 214, 0.5)' }}>
+            <h1 className="font-display text-2xl italic" style={{ color: '#2C2420' }}>Категории</h1>
+            <p className="font-body text-sm mt-0.5" style={{ color: 'rgba(44, 36, 32, 0.5)' }}>
               {activeCount} из {totalCount} активных
             </p>
           </div>
@@ -61,7 +61,7 @@ export default function AdminCategories() {
               color: '#B08D57',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(176, 141, 87, 0.1)'
+              e.currentTarget.style.backgroundColor = 'rgba(176, 141, 87, 0.08)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent'
@@ -73,11 +73,11 @@ export default function AdminCategories() {
             onClick={disableAll}
             className="px-4 py-2 font-body text-xs rounded transition-all duration-300"
             style={{
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: 'rgba(240, 230, 214, 0.5)',
+              border: '1px solid rgba(44, 36, 32, 0.1)',
+              color: 'rgba(44, 36, 32, 0.5)',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'
+              e.currentTarget.style.backgroundColor = 'rgba(44, 36, 32, 0.03)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent'
@@ -99,23 +99,23 @@ export default function AdminCategories() {
               key={group.id}
               className="rounded-lg p-5"
               style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid rgba(255, 255, 255, 0.06)',
+                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                border: '1px solid rgba(176, 141, 87, 0.1)',
               }}
             >
               {/* Group header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{group.icon}</span>
-                  <h2 className="font-display text-base italic text-white">
+                  <h2 className="font-display text-base italic" style={{ color: '#2C2420' }}>
                     {group.name}
                   </h2>
                 </div>
                 <span
                   className="font-body text-xs px-2 py-0.5 rounded-full"
                   style={{
-                    backgroundColor: activeInGroup > 0 ? 'rgba(176, 141, 87, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                    color: activeInGroup > 0 ? '#B08D57' : 'rgba(240, 230, 214, 0.3)',
+                    backgroundColor: activeInGroup > 0 ? 'rgba(176, 141, 87, 0.12)' : 'rgba(44, 36, 32, 0.05)',
+                    color: activeInGroup > 0 ? '#B08D57' : 'rgba(44, 36, 32, 0.3)',
                   }}
                 >
                   {activeInGroup} / {groupCats.length}
@@ -133,20 +133,20 @@ export default function AdminCategories() {
                       className="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 text-left group"
                       style={{
                         backgroundColor: active
-                          ? 'rgba(176, 141, 87, 0.1)'
-                          : 'rgba(255, 255, 255, 0.02)',
-                        border: `1px solid ${active ? 'rgba(176, 141, 87, 0.3)' : 'rgba(255, 255, 255, 0.06)'}`,
+                          ? 'rgba(176, 141, 87, 0.08)'
+                          : 'rgba(247, 242, 235, 0.6)',
+                        border: `1px solid ${active ? 'rgba(176, 141, 87, 0.25)' : 'rgba(176, 141, 87, 0.08)'}`,
                       }}
                       onMouseEnter={(e) => {
                         if (!active) {
-                          e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.2)'
-                          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.04)'
+                          e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.15)'
+                          e.currentTarget.style.backgroundColor = 'rgba(247, 242, 235, 0.9)'
                         }
                       }}
                       onMouseLeave={(e) => {
                         if (!active) {
-                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.06)'
-                          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.02)'
+                          e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.08)'
+                          e.currentTarget.style.backgroundColor = 'rgba(247, 242, 235, 0.6)'
                         }
                       }}
                     >
@@ -155,7 +155,7 @@ export default function AdminCategories() {
                         className="w-5 h-5 rounded flex items-center justify-center shrink-0 transition-all duration-300"
                         style={{
                           backgroundColor: active ? '#B08D57' : 'transparent',
-                          border: `1.5px solid ${active ? '#B08D57' : 'rgba(255, 255, 255, 0.15)'}`,
+                          border: `1.5px solid ${active ? '#B08D57' : 'rgba(44, 36, 32, 0.15)'}`,
                         }}
                       >
                         {active && <Check size={12} className="text-white" />}
@@ -166,7 +166,7 @@ export default function AdminCategories() {
                       <span
                         className="font-body text-sm transition-colors duration-300"
                         style={{
-                          color: active ? '#F0E6D6' : 'rgba(240, 230, 214, 0.4)',
+                          color: active ? '#2C2420' : 'rgba(44, 36, 32, 0.45)',
                         }}
                       >
                         {cat.name}
@@ -175,7 +175,7 @@ export default function AdminCategories() {
                       {/* Status label */}
                       <span
                         className="ml-auto font-body text-[10px] uppercase tracking-wider"
-                        style={{ color: active ? '#B08D57' : 'rgba(240, 230, 214, 0.2)' }}
+                        style={{ color: active ? '#B08D57' : 'rgba(44, 36, 32, 0.2)' }}
                       >
                         {active ? 'Вкл' : 'Выкл'}
                       </span>
@@ -191,7 +191,7 @@ export default function AdminCategories() {
       {/* Hint */}
       <p
         className="mt-6 font-body text-xs text-center"
-        style={{ color: 'rgba(240, 230, 214, 0.3)' }}
+        style={{ color: 'rgba(44, 36, 32, 0.35)' }}
       >
         Активные категории отображаются при добавлении товара и в каталоге
       </p>

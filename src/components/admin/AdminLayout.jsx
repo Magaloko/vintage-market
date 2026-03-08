@@ -25,22 +25,23 @@ const SIDEBAR_LINKS = [
 ]
 
 const COLORS = {
-  pageBg: '#0C0A08',
+  pageBg: '#F7F2EB',
+  sidebarBg: '#FFFFFF',
+  headerBg: 'rgba(255, 255, 255, 0.92)',
   gold: '#B08D57',
-  goldMuted: 'rgba(176, 141, 87, 0.4)',
-  goldSubtle: 'rgba(176, 141, 87, 0.5)',
-  goldBadgeBg: 'rgba(176, 141, 87, 0.1)',
+  goldMuted: 'rgba(176, 141, 87, 0.5)',
+  goldSubtle: 'rgba(176, 141, 87, 0.6)',
+  goldBadgeBg: 'rgba(176, 141, 87, 0.08)',
   goldBadgeBorder: 'rgba(176, 141, 87, 0.2)',
-  goldBadgeText: '#C9A96E',
-  goldLogoBg: 'rgba(176, 141, 87, 0.15)',
-  goldLogoBorder: 'rgba(176, 141, 87, 0.3)',
-  textLight: 'rgba(240, 230, 214, 0.7)',
-  textMuted: 'rgba(240, 230, 214, 0.5)',
-  textDim: 'rgba(240, 230, 214, 0.4)',
-  textFaint: 'rgba(240, 230, 214, 0.3)',
-  divider: 'rgba(240, 230, 214, 0.06)',
-  headerBg: 'rgba(14, 26, 43, 0.95)',
-  overlayBg: 'rgba(10, 18, 32, 0.7)',
+  goldBadgeText: '#9B7E4A',
+  goldLogoBg: 'rgba(176, 141, 87, 0.1)',
+  goldLogoBorder: 'rgba(176, 141, 87, 0.25)',
+  textDark: '#2C2420',
+  textMuted: 'rgba(44, 36, 32, 0.5)',
+  textDim: 'rgba(44, 36, 32, 0.4)',
+  textFaint: 'rgba(44, 36, 32, 0.35)',
+  divider: 'rgba(176, 141, 87, 0.1)',
+  overlayBg: 'rgba(44, 36, 32, 0.3)',
 }
 
 function DemoBadge() {
@@ -158,7 +159,10 @@ export default function AdminLayout() {
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0 lg:static
         `}
-        style={{ backgroundColor: COLORS.pageBg }}
+        style={{
+          backgroundColor: COLORS.sidebarBg,
+          borderRight: `1px solid ${COLORS.divider}`,
+        }}
       >
         <div className="flex flex-col h-full">
           <SidebarHeader onClose={closeSidebar} />
@@ -183,7 +187,7 @@ export default function AdminLayout() {
           className="sticky top-0 z-30 px-6 py-4"
           style={{
             backgroundColor: COLORS.headerBg,
-            backdropFilter: 'blur(8px)',
+            backdropFilter: 'blur(12px)',
             borderBottom: `1px solid ${COLORS.divider}`,
           }}
         >
@@ -195,7 +199,7 @@ export default function AdminLayout() {
             >
               <Menu size={20} />
             </button>
-            <h2 className="font-sans text-sm font-medium" style={{ color: COLORS.textLight }}>
+            <h2 className="font-sans text-sm font-medium" style={{ color: COLORS.textDark }}>
               Панель управления
             </h2>
           </div>
