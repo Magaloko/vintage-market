@@ -28,6 +28,7 @@ const AdminProductForm = lazy(() => import('./pages/admin/AdminProductForm'))
 const AdminInquiries = lazy(() => import('./pages/admin/AdminInquiries'))
 const AdminCalculator = lazy(() => import('./pages/admin/AdminCalculator'))
 const AdminCategories = lazy(() => import('./pages/admin/AdminCategories'))
+const AdminBulkImport = lazy(() => import('./pages/admin/AdminBulkImport'))
 
 const SellerRegister = lazy(() => import('./pages/seller/SellerRegister'))
 const SellerDashboard = lazy(() => import('./pages/seller/SellerDashboard'))
@@ -133,6 +134,7 @@ export default function App() {
                   <Route path="products" element={<AdminProducts />} />
                   <Route path="products/new" element={<AdminProductForm />} />
                   <Route path="products/edit/:id" element={<AdminProductForm />} />
+                  <Route path="products/bulk" element={<AdminBulkImport />} />
                   <Route path="inquiries" element={<AdminInquiries />} />
                   <Route path="calculator" element={<AdminCalculator />} />
                   <Route path="categories" element={<AdminCategories />} />

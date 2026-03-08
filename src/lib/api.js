@@ -232,6 +232,48 @@ export async function createProduct(product) {
   })
 }
 
+export async function bulkCreateProducts(products) {
+  const results = { created: 0, errors: [] }
+
+  if (!isSupabaseConfigured) {
+    for (let i = 0; i < products.length; i++) {
+      try {
+        const p = { ...products[i], id: generateId(), views: 0, created_at: now() }
+        localProducts.unshift(p)
+        if (p.price) logPriceChange(p.id, p.price)
+        results.created++
+      } catch (e) {
+        results.errors.push({ index: i, message: e.message })
+      }
+    }
+    return { data: results, error: null }
+  }
+
+  return safeQuery(async () => {
+    // Try batch insert first
+    const cleaned = products.map(({ images, ...rest }) => rest)
+    const { data, error } = await supabase.from('products').insert(cleaned).select()
+
+    if (!error && data) {
+      results.created = data.length
+      data.forEach(p => { if (p.price) logPriceChange(p.id, p.price) })
+      return { data: results, error: null }
+    }
+
+    // Batch failed → fallback to individual inserts for error reporting
+    for (let i = 0; i < cleaned.length; i++) {
+      const { data: d, error: e } = await supabase.from('products').insert([cleaned[i]]).select().single()
+      if (e) {
+        results.errors.push({ index: i, message: e.message })
+      } else {
+        results.created++
+        if (d.price) logPriceChange(d.id, d.price)
+      }
+    }
+    return { data: results, error: null }
+  })
+}
+
 export async function updateProduct(id, updates) {
   if (!isSupabaseConfigured) {
     const idx = localProducts.findIndex(p => p.id === id)
