@@ -4,9 +4,11 @@ import { Search, Heart, Menu, X, Sun, Moon, ChevronDown } from 'lucide-react'
 import { useFavorites } from '../../lib/FavoritesContext'
 import { useTheme } from '../../lib/ThemeContext'
 import { useCurrency } from '../../lib/CurrencyContext'
+import { getCategoryCounts } from '../../lib/api'
+import { categories as allCategories } from '../../data/demoProducts'
 
 const NAV_LINKS = [
-  { to: '/catalog', label: 'Каталог' },
+  { to: '/catalog', label: 'Каталог', hasDropdown: true },
   { to: '/about', label: 'О нас' },
   { to: '/contact', label: 'Контакт' },
 ]
@@ -35,6 +37,7 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [activeCategories, setActiveCategories] = useState([])
   const searchInputRef = useRef(null)
   const { favorites } = useFavorites()
   const { isDark, toggleTheme } = useTheme()
@@ -49,6 +52,17 @@ export default function Header() {
     const onScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Load categories that have at least one product
+  useEffect(() => {
+    getCategoryCounts().then(({ data }) => {
+      if (!data) return
+      const cats = allCategories
+        .filter((c) => (data[c.id] || 0) > 0)
+        .map((c) => ({ ...c, count: data[c.id] }))
+      setActiveCategories(cats)
+    })
   }, [])
 
   useEffect(() => {
@@ -84,7 +98,7 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-20">
             <Logo isTransparent={isTransparent} />
-            <DesktopNav links={NAV_LINKS} pathname={location.pathname} isTransparent={isTransparent} />
+            <DesktopNav links={NAV_LINKS} pathname={location.pathname} isTransparent={isTransparent} categories={activeCategories} />
             <HeaderActions
               isTransparent={isTransparent}
               searchOpen={searchOpen}
@@ -119,6 +133,7 @@ export default function Header() {
           currency={currency}
           setCurrency={setCurrency}
           currencies={currencies}
+          categories={activeCategories}
         />
       )}
     </>
@@ -144,11 +159,23 @@ function Logo({ isTransparent }) {
   )
 }
 
-function DesktopNav({ links, pathname, isTransparent }) {
+function DesktopNav({ links, pathname, isTransparent, categories }) {
   return (
     <nav className="hidden md:flex items-center gap-10">
-      {links.map(({ to, label }) => {
+      {links.map(({ to, label, hasDropdown }) => {
         const isActive = pathname.startsWith(to)
+        if (hasDropdown && categories.length > 0) {
+          return (
+            <CatalogDropdown
+              key={to}
+              to={to}
+              label={label}
+              isActive={isActive}
+              isTransparent={isTransparent}
+              categories={categories}
+            />
+          )
+        }
         return (
           <Link
             key={to}
@@ -165,6 +192,108 @@ function DesktopNav({ links, pathname, isTransparent }) {
         )
       })}
     </nav>
+  )
+}
+
+function CatalogDropdown({ to, label, isActive, isTransparent, categories }) {
+  const [open, setOpen] = useState(false)
+  const timeoutRef = useRef(null)
+  const dropRef = useRef(null)
+
+  const handleEnter = () => {
+    clearTimeout(timeoutRef.current)
+    setOpen(true)
+  }
+  const handleLeave = () => {
+    timeoutRef.current = setTimeout(() => setOpen(false), 200)
+  }
+
+  useEffect(() => () => clearTimeout(timeoutRef.current), [])
+
+  return (
+    <div
+      ref={dropRef}
+      className="relative"
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
+      <Link
+        to={to}
+        className="relative font-body text-[13px] tracking-[0.15em] uppercase transition-all duration-500 flex items-center gap-1.5"
+        style={{ color: getNavColor(isActive, isTransparent) }}
+      >
+        {label}
+        <ChevronDown
+          size={11}
+          style={{
+            transform: open ? 'rotate(180deg)' : 'none',
+            transition: 'transform 0.25s ease',
+            opacity: 0.6,
+          }}
+        />
+        <span
+          className="absolute -bottom-1 left-0 h-px transition-all duration-500"
+          style={{ width: isActive ? '100%' : '0%', backgroundColor: COLORS.gold }}
+        />
+      </Link>
+
+      {/* Dropdown panel */}
+      <div
+        className="absolute top-full left-1/2 pt-3"
+        style={{
+          transform: 'translateX(-50%)',
+          opacity: open ? 1 : 0,
+          pointerEvents: open ? 'auto' : 'none',
+          transition: 'opacity 0.25s ease',
+        }}
+      >
+        <div
+          className="py-2 min-w-[220px]"
+          style={{
+            backgroundColor: 'rgba(12, 10, 8, 0.96)',
+            border: `1px solid ${COLORS.goldSubtle}`,
+            borderRadius: '2px',
+            backdropFilter: 'blur(16px)',
+            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
+          }}
+        >
+          {/* "Все товары" link */}
+          <Link
+            to="/catalog"
+            className="block px-5 py-2 font-body text-[12px] tracking-[0.12em] uppercase transition-colors duration-200"
+            style={{ color: COLORS.creamDim }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = COLORS.gold; e.currentTarget.style.backgroundColor = COLORS.goldSubtle }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = COLORS.creamDim; e.currentTarget.style.backgroundColor = 'transparent' }}
+          >
+            Все товары
+          </Link>
+
+          {/* Divider */}
+          <div className="mx-4 my-1" style={{ height: '1px', backgroundColor: COLORS.goldBorder }} />
+
+          {/* Category links */}
+          {categories.map((cat) => (
+            <Link
+              key={cat.id}
+              to={`/catalog/${cat.id}`}
+              className="flex items-center gap-3 px-5 py-2 transition-colors duration-200"
+              style={{ color: COLORS.creamDim }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = COLORS.gold; e.currentTarget.style.backgroundColor = COLORS.goldSubtle }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = COLORS.creamDim; e.currentTarget.style.backgroundColor = 'transparent' }}
+            >
+              <span className="text-sm">{cat.icon}</span>
+              <span className="font-body text-[12px] tracking-[0.08em]">{cat.name}</span>
+              <span
+                className="ml-auto font-body text-[10px]"
+                style={{ color: 'rgba(176, 141, 87, 0.35)' }}
+              >
+                {cat.count}
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -307,8 +436,9 @@ function SearchDrawer({ open, query, onQueryChange, onSubmit, inputRef }) {
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI']
 
-function MobileOverlay({ links, pathname, favoritesCount, onClose, currency, setCurrency, currencies }) {
+function MobileOverlay({ links, pathname, favoritesCount, onClose, currency, setCurrency, currencies, categories }) {
   const [visible, setVisible] = useState(false)
+  const [catOpen, setCatOpen] = useState(false)
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 10)
@@ -329,7 +459,7 @@ function MobileOverlay({ links, pathname, favoritesCount, onClose, currency, set
 
       {/* Side Panel */}
       <div
-        className="absolute top-0 right-0 h-full flex flex-col"
+        className="absolute top-0 right-0 h-full flex flex-col overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
         style={{
           width: '75vw',
@@ -349,38 +479,77 @@ function MobileOverlay({ links, pathname, favoritesCount, onClose, currency, set
 
         {/* Navigation links */}
         <nav className="flex-1 flex flex-col justify-center px-8 gap-7">
-          {links.map(({ to, label }, i) => {
+          {links.map(({ to, label, hasDropdown }, i) => {
             const isActive = pathname.startsWith(to)
             return (
-              <Link
-                key={to}
-                to={to}
-                className="flex items-baseline gap-4 group"
-                style={{
-                  opacity: visible ? 1 : 0,
-                  transform: visible ? 'translateX(0)' : 'translateX(24px)',
-                  transition: `opacity 0.4s ease ${i * 80 + 200}ms, transform 0.4s ease ${i * 80 + 200}ms`,
-                }}
-              >
-                <span
-                  className="font-display text-[11px] tracking-[0.2em]"
-                  style={{ color: isActive ? COLORS.gold : 'rgba(176, 141, 87, 0.35)', minWidth: 28 }}
+              <div key={to}>
+                <div
+                  className="flex items-baseline gap-4 group"
+                  style={{
+                    opacity: visible ? 1 : 0,
+                    transform: visible ? 'translateX(0)' : 'translateX(24px)',
+                    transition: `opacity 0.4s ease ${i * 80 + 200}ms, transform 0.4s ease ${i * 80 + 200}ms`,
+                  }}
                 >
-                  {ROMAN[i]}
-                </span>
-                <span
-                  className="font-display text-2xl italic tracking-[0.08em]"
-                  style={{ color: isActive ? COLORS.cream : COLORS.creamHalf }}
-                >
-                  {label}
-                </span>
-                {isActive && (
+                  <span
+                    className="font-display text-[11px] tracking-[0.2em]"
+                    style={{ color: isActive ? COLORS.gold : 'rgba(176, 141, 87, 0.35)', minWidth: 28 }}
+                  >
+                    {ROMAN[i]}
+                  </span>
+                  <Link
+                    to={to}
+                    className="font-display text-2xl italic tracking-[0.08em]"
+                    style={{ color: isActive ? COLORS.cream : COLORS.creamHalf }}
+                  >
+                    {label}
+                  </Link>
+                  {hasDropdown && categories.length > 0 && (
+                    <button
+                      onClick={() => setCatOpen(!catOpen)}
+                      className="ml-1"
+                      style={{ color: 'rgba(176, 141, 87, 0.5)' }}
+                    >
+                      <ChevronDown
+                        size={16}
+                        style={{
+                          transform: catOpen ? 'rotate(180deg)' : 'none',
+                          transition: 'transform 0.25s ease',
+                        }}
+                      />
+                    </button>
+                  )}
+                  {isActive && !hasDropdown && (
+                    <div
+                      className="flex-1 h-px ml-2"
+                      style={{ backgroundColor: 'rgba(176, 141, 87, 0.25)', marginTop: 2 }}
+                    />
+                  )}
+                </div>
+
+                {/* Category sub-links */}
+                {hasDropdown && catOpen && categories.length > 0 && (
                   <div
-                    className="flex-1 h-px ml-2"
-                    style={{ backgroundColor: 'rgba(176, 141, 87, 0.25)', marginTop: 2 }}
-                  />
+                    className="ml-12 mt-3 space-y-1"
+                    style={{
+                      opacity: visible ? 1 : 0,
+                      transition: 'opacity 0.3s ease',
+                    }}
+                  >
+                    {categories.map((cat) => (
+                      <Link
+                        key={cat.id}
+                        to={`/catalog/${cat.id}`}
+                        className="flex items-center gap-2 py-1.5"
+                        style={{ color: COLORS.creamDim }}
+                      >
+                        <span className="text-sm">{cat.icon}</span>
+                        <span className="font-body text-[13px] tracking-[0.05em]">{cat.name}</span>
+                      </Link>
+                    ))}
+                  </div>
                 )}
-              </Link>
+              </div>
             )
           })}
         </nav>
