@@ -341,6 +341,90 @@ function CategoryRow({ title, subtitle, products: rowProducts, link, bestsellerI
 }
 
 /* ------------------------------------------------------------------ */
+/*  Product slider with arrows                                         */
+/* ------------------------------------------------------------------ */
+
+function ProductSlider({ products, bestsellerIds, popularIds }) {
+  const [scrollRef, setScrollRef] = useState(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(true)
+
+  const checkScroll = () => {
+    if (!scrollRef) return
+    setCanScrollLeft(scrollRef.scrollLeft > 10)
+    setCanScrollRight(scrollRef.scrollLeft < scrollRef.scrollWidth - scrollRef.clientWidth - 10)
+  }
+
+  useEffect(() => {
+    checkScroll()
+  }, [scrollRef])
+
+  const scroll = (dir) => {
+    if (!scrollRef) return
+    const amount = 280
+    scrollRef.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' })
+    setTimeout(checkScroll, 350)
+  }
+
+  return (
+    <div className="relative group/slider">
+      {/* Left arrow */}
+      {canScrollLeft && (
+        <button
+          onClick={() => scroll('left')}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover/slider:opacity-100"
+          style={{
+            backgroundColor: 'rgba(247, 242, 235, 0.95)',
+            boxShadow: '0 2px 12px rgba(44, 36, 32, 0.15)',
+            border: '1px solid rgba(176, 141, 87, 0.2)',
+          }}
+        >
+          <ChevronLeft size={18} style={{ color: '#B08D57' }} />
+        </button>
+      )}
+
+      {/* Right arrow */}
+      {canScrollRight && (
+        <button
+          onClick={() => scroll('right')}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 opacity-0 group-hover/slider:opacity-100"
+          style={{
+            backgroundColor: 'rgba(247, 242, 235, 0.95)',
+            boxShadow: '0 2px 12px rgba(44, 36, 32, 0.15)',
+            border: '1px solid rgba(176, 141, 87, 0.2)',
+          }}
+        >
+          <ChevronRight size={18} style={{ color: '#B08D57' }} />
+        </button>
+      )}
+
+      <div
+        ref={setScrollRef}
+        onScroll={checkScroll}
+        className="overflow-x-auto pb-4 -mx-2 px-2"
+        style={{ scrollSnapType: 'x mandatory', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+      >
+        <div className="flex gap-5" style={{ width: 'max-content' }}>
+          {products.map((product, i) => (
+            <div
+              key={product.id}
+              className="animate-slide-up"
+              style={{ width: '260px', flexShrink: 0, scrollSnapAlign: 'start', animationDelay: `${i * 60}ms` }}
+            >
+              <ProductCard
+                product={product}
+                isBestseller={bestsellerIds?.has(product.id)}
+                isPopular={popularIds?.has(product.id)}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -735,21 +819,33 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {gridProducts.map((product, i) => (
-                <div
-                  key={product.id}
-                  className={`animate-slide-up ${i === 0 ? 'md:col-span-2 md:row-span-2' : ''}`}
-                  style={{ animationDelay: `${i * 80}ms` }}
-                >
-                  <ProductCard
-                    product={product}
-                    isBestseller={bestsellerIds.has(product.id)}
-                    isPopular={popularIds.has(product.id)}
-                  />
-                </div>
-              ))}
-            </div>
+            {/* Top row: 2 featured products */}
+            {gridProducts.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                {gridProducts.slice(0, 2).map((product, i) => (
+                  <div
+                    key={product.id}
+                    className="animate-slide-up"
+                    style={{ animationDelay: `${i * 80}ms` }}
+                  >
+                    <ProductCard
+                      product={product}
+                      isBestseller={bestsellerIds.has(product.id)}
+                      isPopular={popularIds.has(product.id)}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Bottom: horizontal slider of remaining products */}
+            {gridProducts.length > 2 && (
+              <ProductSlider
+                products={gridProducts.slice(2)}
+                bestsellerIds={bestsellerIds}
+                popularIds={popularIds}
+              />
+            )}
 
             <div className="text-center mt-12 md:hidden">
               <Link to="/catalog" className="btn-secondary">

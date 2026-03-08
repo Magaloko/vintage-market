@@ -1,4 +1,4 @@
-import { memo, useState } from 'react'
+import { memo, useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Star, TrendingUp, Flame, Sparkles } from 'lucide-react'
 import { categories, conditions } from '../../data/demoProducts'
@@ -73,11 +73,16 @@ function GoldCorners() {
 
 function ProductCard({ product, showCompare = false, isBestseller = false, isPopular = false }) {
   const [imgError, setImgError] = useState(false)
+  const [activeImageIdx, setActiveImageIdx] = useState(0)
+  const [isHovered, setIsHovered] = useState(false)
   const { formatPrice } = useCurrency()
 
   const category = categories.find((c) => c.id === product.category)
-  const imageUrl = product.image_url || product.images?.[0]?.url
-  const imageCount = product.images?.length || (imageUrl ? 1 : 0)
+  const allImages = product.images?.length > 0
+    ? product.images.map(img => img.url || img)
+    : (product.image_url ? [product.image_url] : [])
+  const imageUrl = allImages[activeImageIdx] || allImages[0]
+  const imageCount = allImages.length
   const isSold = product.status === 'sold'
   const isShop = category?.group === 'shops'
   const isRental = category?.group === 'realestate' && product.details?.rent_or_buy === 'Аренда'
@@ -85,18 +90,34 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
   const keyDetail = getKeyDetail(product)
   const conditionStyle = CONDITION_STYLES[product.condition]
 
+  // Image cycling on hover
+  useEffect(() => {
+    if (!isHovered || imageCount <= 1) return
+    const interval = setInterval(() => {
+      setActiveImageIdx(prev => (prev + 1) % imageCount)
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [isHovered, imageCount])
+
+  const handleMouseEnter = useCallback((e) => {
+    setIsHovered(true)
+    e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.45)'
+    e.currentTarget.style.boxShadow = '0 4px 20px rgba(176, 141, 87, 0.12), 0 2px 8px rgba(44, 36, 32, 0.06)'
+  }, [])
+
+  const handleMouseLeave = useCallback((e) => {
+    setIsHovered(false)
+    setActiveImageIdx(0)
+    e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.18)'
+    e.currentTarget.style.boxShadow = '0 2px 12px rgba(44, 36, 32, 0.06)'
+  }, [])
+
   return (
     <Link
       to={`/product/${product.id}`}
-      className="group block relative"
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.45)'
-        e.currentTarget.style.boxShadow = '0 4px 20px rgba(176, 141, 87, 0.12), 0 2px 8px rgba(44, 36, 32, 0.06)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.18)'
-        e.currentTarget.style.boxShadow = '0 2px 12px rgba(44, 36, 32, 0.06)'
-      }}
+      className="group block relative h-full flex flex-col"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       style={{
         border: '1px solid rgba(176, 141, 87, 0.18)',
         borderRadius: '2px',
@@ -137,14 +158,14 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
 
         {keyDetail ? <KeyDetailTag text={keyDetail} /> : category && <CategoryBadge name={category.name} />}
 
-        {imageCount > 1 && <ImageCountIndicator count={imageCount} />}
+        {imageCount > 1 && <ImageCountIndicator count={imageCount} activeIdx={activeImageIdx} />}
 
         <HoverSpecs product={product} />
       </div>
 
       <GoldDivider />
 
-      <div className="px-3 pb-3" style={{ backgroundColor: '#F7F2EB' }}>
+      <div className="px-3 pb-3 flex-1 flex flex-col" style={{ backgroundColor: '#F7F2EB' }}>
         <h3
           className="font-display text-lg leading-snug italic"
           style={{ color: COLORS.dark }}
@@ -198,6 +219,7 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
           )}
         </div>
 
+        <div className="flex-1" />
         <div className="flex items-center justify-between mt-2 pt-2"
           style={{ borderTop: '1px dashed rgba(176, 141, 87, 0.2)' }}
         >
@@ -381,15 +403,19 @@ function KeyDetailTag({ text }) {
   )
 }
 
-function ImageCountIndicator({ count }) {
+function ImageCountIndicator({ count, activeIdx = 0 }) {
   const dots = Math.min(count, 5)
   return (
     <div className="absolute bottom-3 right-3 flex items-center gap-1 z-10">
       {Array.from({ length: dots }, (_, i) => (
         <div
           key={i}
-          className="w-1 h-1 rounded-full"
-          style={{ backgroundColor: i === 0 ? 'rgba(176, 141, 87, 0.8)' : 'rgba(176, 141, 87, 0.4)' }}
+          className="rounded-full transition-all duration-300"
+          style={{
+            width: i === activeIdx % dots ? 6 : 4,
+            height: i === activeIdx % dots ? 6 : 4,
+            backgroundColor: i === activeIdx % dots ? 'rgba(176, 141, 87, 0.9)' : 'rgba(176, 141, 87, 0.35)',
+          }}
         />
       ))}
       {count > 5 && (

@@ -4,6 +4,7 @@ import { Save, ArrowLeft, Sparkles, Tag, Info, Settings2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getProduct, createProduct, updateProduct } from '../../lib/api'
 import { categories, conditions, categoryFields, categoryGroups } from '../../data/demoProducts'
+import { getActiveCategoryList } from '../../lib/categorySettings'
 import ImageUploader from '../../components/admin/ImageUploader'
 
 /* ── Empty form ────────────────────────────────────────────────── */
@@ -156,43 +157,6 @@ function FormSelect({ label, required, children, ...props }) {
         {children}
       </select>
     </div>
-  )
-}
-
-/* ── Category button ───────────────────────────────────────────── */
-function CategoryButton({ cat, isActive, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="px-3.5 py-2 font-body text-xs transition-all duration-300 rounded"
-      style={{
-        backgroundColor: isActive ? '#B08D57' : 'rgba(247, 242, 235, 0.8)',
-        color: isActive ? '#FFFFFF' : 'rgba(44, 36, 32, 0.6)',
-        border: `1px solid ${isActive ? '#B08D57' : 'rgba(176, 141, 87, 0.15)'}`,
-        transform: isActive ? 'scale(1.02)' : 'scale(1)',
-        boxShadow: isActive ? '0 2px 12px rgba(176, 141, 87, 0.3)' : 'none',
-        fontWeight: isActive ? '600' : '400',
-      }}
-      onMouseEnter={(e) => {
-        if (!isActive) {
-          e.target.style.borderColor = 'rgba(176, 141, 87, 0.4)'
-          e.target.style.backgroundColor = 'rgba(176, 141, 87, 0.08)'
-          e.target.style.color = '#B08D57'
-          e.target.style.transform = 'scale(1.02)'
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isActive) {
-          e.target.style.borderColor = 'rgba(176, 141, 87, 0.15)'
-          e.target.style.backgroundColor = 'rgba(247, 242, 235, 0.8)'
-          e.target.style.color = 'rgba(44, 36, 32, 0.6)'
-          e.target.style.transform = 'scale(1)'
-        }
-      }}
-    >
-      {cat.icon} {cat.name}
-    </button>
   )
 }
 
@@ -404,33 +368,28 @@ export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
           <ImageUploader images={images} onChange={setImages} productId={isEditing ? id : undefined} />
         </Section>
 
-        {/* Category Selection */}
+        {/* Category Selection — Dropdown */}
         <Section icon={Tag} title="Категория">
-          <div className="space-y-4">
+          <FormSelect
+            label="Категория товара"
+            required
+            value={form.category}
+            onChange={(e) => handleCategoryChange(e.target.value)}
+          >
             {categoryGroups.map((group) => {
-              const groupCats = categories.filter((c) => c.group === group.id)
+              const groupCats = getActiveCategoryList().filter((c) => c.group === group.id)
+              if (groupCats.length === 0) return null
               return (
-                <div key={group.id}>
-                  <p
-                    className="font-body text-[10px] tracking-widest uppercase mb-2 font-medium"
-                    style={{ color: 'rgba(44, 36, 32, 0.35)' }}
-                  >
-                    {group.icon} {group.name}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {groupCats.map((cat) => (
-                      <CategoryButton
-                        key={cat.id}
-                        cat={cat}
-                        isActive={form.category === cat.id}
-                        onClick={() => handleCategoryChange(cat.id)}
-                      />
-                    ))}
-                  </div>
-                </div>
+                <optgroup key={group.id} label={`${group.icon} ${group.name}`}>
+                  {groupCats.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.icon} {cat.name}
+                    </option>
+                  ))}
+                </optgroup>
               )
             })}
-          </div>
+          </FormSelect>
         </Section>
 
         {/* Basic Info */}

@@ -19,12 +19,14 @@ export const categories = [
   { id: 'accessories',  name: 'Аксессуары',        icon: '👜', group: 'vintage' },
   { id: 'furniture',    name: 'Мебель',            icon: '🪑', group: 'vintage' },
   { id: 'collectibles', name: 'Коллекционное',     icon: '🏺', group: 'vintage' },
-  { id: 'jewelry',      name: 'Украшения',         icon: '💎', group: 'vintage' },
+  { id: 'jewelry',          name: 'Ювелирные украшения', icon: '💎', group: 'vintage' },
+  { id: 'costume_jewelry',  name: 'Бижутерия',           icon: '📿', group: 'vintage' },
   { id: 'art',          name: 'Искусство',         icon: '🎨', group: 'vintage' },
   { id: 'books',        name: 'Книги',             icon: '📚', group: 'vintage' },
   { id: 'vinyl',        name: 'Винил и музыка',    icon: '🎵', group: 'vintage' },
   { id: 'electronics',  name: 'Электроника',       icon: '📻', group: 'vintage' },
-  { id: 'ceramics',     name: 'Посуда и керамика', icon: '🍶', group: 'vintage' },
+  { id: 'ceramics',     name: 'Посуда',            icon: '🍶', group: 'vintage' },
+  { id: 'cutlery',      name: 'Столовые приборы',  icon: '🍴', group: 'vintage' },
 
   // --- Real Estate ---
   { id: 'apartment',  name: 'Квартира',  icon: '🏠', group: 'realestate' },
@@ -83,6 +85,21 @@ export const categoryFields = {
     { key: 'hallmark',     label: 'Проба',  type: 'text',   placeholder: '585, 925...' },
     { key: 'stones',       label: 'Камни',  type: 'text',   placeholder: 'Аметист, бриллиант...' },
     { key: 'weight_grams', label: 'Вес',    type: 'number', unit: 'г' },
+  ],
+
+  costume_jewelry: [
+    { key: 'jewelry_type', label: 'Тип',      type: 'select', options: ['Кольцо', 'Серьги', 'Ожерелье', 'Браслет', 'Брошь', 'Комплект', 'Другое'] },
+    { key: 'material',     label: 'Материал', type: 'select', options: ['Бижутерный сплав', 'Позолота', 'Посеребрение', 'Пластик', 'Стекло', 'Другое'] },
+    { key: 'stones',       label: 'Камни / вставки', type: 'text', placeholder: 'Стразы, кристаллы, эмаль...' },
+    { key: 'color',        label: 'Цвет',     type: 'text' },
+  ],
+
+  cutlery: [
+    { key: 'cutlery_type',  label: 'Тип',              type: 'select', options: ['Набор', 'Ложки', 'Вилки', 'Ножи', 'Сервировочные', 'Подстаканник', 'Другое'] },
+    { key: 'material',      label: 'Материал',         type: 'select', options: ['Серебро', 'Мельхиор', 'Нержавеющая сталь', 'Позолота', 'Другое'] },
+    { key: 'hallmark',      label: 'Проба / клеймо',   type: 'text',   placeholder: '875, 925, МНЦ...' },
+    { key: 'set_pieces',    label: 'Кол-во предметов', type: 'number' },
+    { key: 'manufacturer',  label: 'Производитель',   type: 'text',   placeholder: 'ЗиШ, Кольчугино...' },
   ],
 
   art: [
