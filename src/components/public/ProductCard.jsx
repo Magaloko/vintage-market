@@ -321,8 +321,8 @@ function SoldBadge() {
     <div
       className="absolute top-3 left-3 px-3 py-1 font-body text-[10px] tracking-[0.2em] uppercase z-10"
       style={{
-        backgroundColor: COLORS.badgeBg,
-        color: COLORS.gold,
+        backgroundColor: 'rgba(12, 10, 8, 0.8)',
+        color: '#B08D57',
         backdropFilter: 'blur(4px)',
         borderRadius: '1px',
       }}
