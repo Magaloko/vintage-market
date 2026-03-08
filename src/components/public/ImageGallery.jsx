@@ -41,31 +41,82 @@ export default function ImageGallery({ images = [], title = '' }) {
   const isLast = activeIndex === images.length - 1
 
   return (
-    <>
-      <div className="relative group">
-        <MainImage
-          src={getImageSrc(current)}
-          alt={getImageAlt(current, `${title} — фото ${activeIndex + 1}`)}
-          onZoom={() => setLightboxOpen(true)}
-        />
-
+    <div>
+      {/* Gallery: vertical thumbnails + main image */}
+      <div className={hasMultiple ? 'flex gap-3' : ''}>
+        {/* Vertical thumbnail strip (left side) */}
         {hasMultiple && (
-          <>
-            <NavButton direction="prev" onClick={goPrev} disabled={isFirst} />
-            <NavButton direction="next" onClick={goNext} disabled={isLast} />
-            <ImageCounter current={activeIndex + 1} total={images.length} />
-          </>
+          <div className="hidden sm:flex flex-col gap-2 shrink-0">
+            {images.map((img, idx) => {
+              const isActive = idx === activeIndex
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setActiveIndex(idx)}
+                  className="w-16 h-16 lg:w-[72px] lg:h-[72px] overflow-hidden rounded transition-all duration-200"
+                  style={{
+                    border: isActive ? '2px solid #B08D57' : '2px solid transparent',
+                    opacity: isActive ? 1 : 0.5,
+                  }}
+                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.opacity = '0.8' }}
+                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.opacity = '0.5' }}
+                >
+                  <img
+                    src={getImageSrc(img)}
+                    alt={getImageAlt(img, `Миниатюра ${idx + 1}`)}
+                    className="w-full h-full object-cover"
+                  />
+                </button>
+              )
+            })}
+          </div>
         )}
+
+        {/* Main image */}
+        <div className="relative group flex-1 min-w-0">
+          <MainImage
+            src={getImageSrc(current)}
+            alt={getImageAlt(current, `${title} — фото ${activeIndex + 1}`)}
+            onZoom={() => setLightboxOpen(true)}
+          />
+
+          {hasMultiple && (
+            <>
+              <NavButton direction="prev" onClick={goPrev} disabled={isFirst} />
+              <NavButton direction="next" onClick={goNext} disabled={isLast} />
+              <ImageCounter current={activeIndex + 1} total={images.length} />
+            </>
+          )}
+        </div>
       </div>
 
+      {/* Horizontal thumbnail strip (mobile only) */}
       {hasMultiple && (
-        <ThumbnailStrip
-          images={images}
-          activeIndex={activeIndex}
-          onSelect={setActiveIndex}
-        />
+        <div className="flex sm:hidden gap-2 mt-3 overflow-x-auto pb-2">
+          {images.map((img, idx) => {
+            const isActive = idx === activeIndex
+            return (
+              <button
+                key={idx}
+                onClick={() => setActiveIndex(idx)}
+                className="flex-shrink-0 w-16 h-16 overflow-hidden rounded transition-all"
+                style={{
+                  border: isActive ? '2px solid #B08D57' : '2px solid transparent',
+                  opacity: isActive ? 1 : 0.5,
+                }}
+              >
+                <img
+                  src={getImageSrc(img)}
+                  alt={getImageAlt(img, `Миниатюра ${idx + 1}`)}
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            )
+          })}
+        </div>
       )}
 
+      {/* Lightbox */}
       {lightboxOpen && (
         <Lightbox
           images={images}
@@ -79,15 +130,15 @@ export default function ImageGallery({ images = [], title = '' }) {
           isLast={isLast}
         />
       )}
-    </>
+    </div>
   )
 }
 
 function MainImage({ src, alt, onZoom }) {
   return (
     <div
-      className="aspect-square overflow-hidden cursor-zoom-in"
-      style={{ backgroundColor: GALLERY_BG }}
+      className="aspect-[4/5] overflow-hidden cursor-zoom-in relative"
+      style={{ backgroundColor: GALLERY_BG, borderRadius: '2px' }}
       onClick={onZoom}
     >
       <img
@@ -129,32 +180,6 @@ function ImageCounter({ current, total }) {
       style={{ backgroundColor: COUNTER_BG }}
     >
       {current} / {total}
-    </div>
-  )
-}
-
-function ThumbnailStrip({ images, activeIndex, onSelect }) {
-  return (
-    <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
-      {images.map((img, idx) => {
-        const isActive = idx === activeIndex
-        return (
-          <button
-            key={idx}
-            onClick={() => onSelect(idx)}
-            className={`flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 overflow-hidden rounded transition-all ${
-              isActive ? 'ring-2 ring-offset-1 opacity-100' : 'opacity-50 hover:opacity-80'
-            }`}
-            style={isActive ? { '--tw-ring-color': '#0C0A08' } : undefined}
-          >
-            <img
-              src={getImageSrc(img)}
-              alt={getImageAlt(img, `Миниатюра ${idx + 1}`)}
-              className="w-full h-full object-cover"
-            />
-          </button>
-        )
-      })}
     </div>
   )
 }
