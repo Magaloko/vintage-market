@@ -9,9 +9,9 @@ export const siteConfig = {
   phoneClean: '+7XXXXXXXXXX',
 
   whatsapp: '7XXXXXXXXXX',
-  telegram: 'galeriedutemps',
+  telegram: 'magobelgatto_bot',
 
-  instagram: 'https://instagram.com/galeriedutemps',
+  instagram: 'https://www.instagram.com/galeriedutemps_/',
   facebook: null,
 
   messageTemplates: {
