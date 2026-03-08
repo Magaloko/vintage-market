@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS products (
   brand TEXT,
   image_url TEXT,
   status TEXT NOT NULL DEFAULT 'active',
+  special_attributes JSONB DEFAULT '[]'::jsonb,
   views INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );

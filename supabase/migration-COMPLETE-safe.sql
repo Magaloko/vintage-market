@@ -14,6 +14,9 @@
 ALTER TABLE products ADD COLUMN IF NOT EXISTS details JSONB DEFAULT '{}'::jsonb;
 CREATE INDEX IF NOT EXISTS idx_products_details ON products USING GIN (details);
 
+-- Add special_attributes column (v6)
+ALTER TABLE products ADD COLUMN IF NOT EXISTS special_attributes JSONB DEFAULT '[]'::jsonb;
+
 -- Add shop_id column (v5)
 DO $$ BEGIN
   ALTER TABLE products ADD COLUMN shop_id UUID;
