@@ -3,19 +3,60 @@ import { Link } from 'react-router-dom'
 import { Star, TrendingUp, Flame, Sparkles } from 'lucide-react'
 import { categories, conditions, specialAttributes } from '../../data/demoProducts'
 import { useCurrency } from '../../lib/CurrencyContext'
+import { useTheme } from '../../lib/ThemeContext'
 import FavoriteButton from './FavoriteButton'
 import CompareButton from './CompareButton'
 
-const COLORS = {
-  dark: '#0C0A08',
+const LIGHT = {
+  cardBg: '#F7F2EB',
+  text: '#0C0A08',
+  textFaded: 'rgba(44, 36, 32, 0.55)',
+  textDim: 'rgba(44, 36, 32, 0.3)',
   gold: '#B08D57',
   goldFaded: 'rgba(176, 141, 87, 0.6)',
-  brown: '#2C2420',
-  brownFaded: 'rgba(44, 36, 32, 0.3)',
   imageBg: '#E0D4C0',
+  border: 'rgba(176, 141, 87, 0.18)',
+  borderHover: 'rgba(176, 141, 87, 0.45)',
+  shadow: '0 2px 12px rgba(44, 36, 32, 0.06)',
+  shadowHover: '0 4px 20px rgba(176, 141, 87, 0.12), 0 2px 8px rgba(44, 36, 32, 0.06)',
+  dividerBg: '#F7F2EB',
+  dividerLine: 'rgba(176, 141, 87, 0.25)',
+  dividerDiamond: 'rgba(176, 141, 87, 0.45)',
+  separator: 'rgba(176, 141, 87, 0.12)',
+  separatorDashed: 'rgba(176, 141, 87, 0.2)',
+  materialBg: 'rgba(176, 141, 87, 0.06)',
+  materialText: 'rgba(176, 141, 87, 0.7)',
   badgeBg: 'rgba(12, 10, 8, 0.8)',
   categoryBg: 'rgba(247, 242, 235, 0.9)',
+  categoryText: '#2C2420',
   hoverGradient: 'linear-gradient(to top, rgba(12,10,8,0.5), transparent 60%)',
+  cornerGold: 'rgba(176, 141, 87, 0.55)',
+}
+
+const DARK = {
+  cardBg: '#1A1410',
+  text: '#F0E6D6',
+  textFaded: 'rgba(240, 230, 214, 0.55)',
+  textDim: 'rgba(240, 230, 214, 0.3)',
+  gold: '#C9A96E',
+  goldFaded: 'rgba(201, 169, 110, 0.6)',
+  imageBg: '#2C2420',
+  border: 'rgba(176, 141, 87, 0.15)',
+  borderHover: 'rgba(176, 141, 87, 0.4)',
+  shadow: '0 2px 12px rgba(0, 0, 0, 0.2)',
+  shadowHover: '0 4px 20px rgba(176, 141, 87, 0.15), 0 2px 8px rgba(0, 0, 0, 0.3)',
+  dividerBg: '#1A1410',
+  dividerLine: 'rgba(176, 141, 87, 0.2)',
+  dividerDiamond: 'rgba(176, 141, 87, 0.35)',
+  separator: 'rgba(176, 141, 87, 0.1)',
+  separatorDashed: 'rgba(176, 141, 87, 0.15)',
+  materialBg: 'rgba(176, 141, 87, 0.08)',
+  materialText: 'rgba(201, 169, 110, 0.6)',
+  badgeBg: 'rgba(12, 10, 8, 0.85)',
+  categoryBg: 'rgba(26, 20, 16, 0.9)',
+  categoryText: '#F0E6D6',
+  hoverGradient: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent 60%)',
+  cornerGold: 'rgba(176, 141, 87, 0.35)',
 }
 
 const CONDITION_STYLES = {
@@ -47,20 +88,19 @@ function getMaterialTag(product) {
   return material || origin || null
 }
 
-function GoldDivider() {
+function GoldDivider({ c }) {
   return (
-    <div className="flex items-center" style={{ padding: '5px 12px', backgroundColor: '#F7F2EB' }}>
-      <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(176, 141, 87, 0.25)' }} />
-      <span className="mx-2" style={{ fontSize: '7px', color: 'rgba(176, 141, 87, 0.45)', lineHeight: 1 }}>◆</span>
-      <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(176, 141, 87, 0.25)' }} />
+    <div className="flex items-center" style={{ padding: '5px 12px', backgroundColor: c.dividerBg }}>
+      <div className="flex-1 h-px" style={{ backgroundColor: c.dividerLine }} />
+      <span className="mx-2" style={{ fontSize: '7px', color: c.dividerDiamond, lineHeight: 1 }}>◆</span>
+      <div className="flex-1 h-px" style={{ backgroundColor: c.dividerLine }} />
     </div>
   )
 }
 
 const CORNER_STYLE = { position: 'absolute', width: 14, height: 14, pointerEvents: 'none', zIndex: 20 }
 
-function GoldCorners() {
-  const gold = 'rgba(176, 141, 87, 0.55)'
+function GoldCorners({ gold }) {
   return (
     <>
       <div style={{ ...CORNER_STYLE, top: 0, left: 0, borderTop: `1.5px solid ${gold}`, borderLeft: `1.5px solid ${gold}` }} />
@@ -76,8 +116,10 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
   const [activeImageIdx, setActiveImageIdx] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
   const { formatPrice } = useCurrency()
+  const { isDark } = useTheme()
+  const c = isDark ? DARK : LIGHT
 
-  const category = categories.find((c) => c.id === product.category)
+  const category = categories.find((cat) => cat.id === product.category)
   const allImages = product.images?.length > 0
     ? product.images.map(img => img.url || img)
     : (product.image_url ? [product.image_url] : [])
@@ -101,16 +143,16 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
 
   const handleMouseEnter = useCallback((e) => {
     setIsHovered(true)
-    e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.45)'
-    e.currentTarget.style.boxShadow = '0 4px 20px rgba(176, 141, 87, 0.12), 0 2px 8px rgba(44, 36, 32, 0.06)'
-  }, [])
+    e.currentTarget.style.borderColor = c.borderHover
+    e.currentTarget.style.boxShadow = c.shadowHover
+  }, [c])
 
   const handleMouseLeave = useCallback((e) => {
     setIsHovered(false)
     setActiveImageIdx(0)
-    e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.18)'
-    e.currentTarget.style.boxShadow = '0 2px 12px rgba(44, 36, 32, 0.06)'
-  }, [])
+    e.currentTarget.style.borderColor = c.border
+    e.currentTarget.style.boxShadow = c.shadow
+  }, [c])
 
   return (
     <Link
@@ -119,18 +161,18 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       style={{
-        border: '1px solid rgba(176, 141, 87, 0.18)',
+        border: `1px solid ${c.border}`,
         borderRadius: '2px',
-        backgroundColor: '#F7F2EB',
-        boxShadow: '0 2px 12px rgba(44, 36, 32, 0.06)',
+        backgroundColor: c.cardBg,
+        boxShadow: c.shadow,
         transition: 'box-shadow 0.4s ease, border-color 0.4s ease',
       }}
     >
-      <GoldCorners />
+      <GoldCorners gold={c.cornerGold} />
 
       <div
         className="relative aspect-[4/5] overflow-hidden"
-        style={{ backgroundColor: COLORS.imageBg, margin: '4px 4px 0 4px', borderRadius: '1px' }}
+        style={{ backgroundColor: c.imageBg, margin: '4px 4px 0 4px', borderRadius: '1px' }}
       >
         <ProductImage
           url={imageUrl}
@@ -142,7 +184,7 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
 
         <div
           className="absolute inset-0 transition-opacity duration-500 opacity-0 group-hover:opacity-100"
-          style={{ background: COLORS.hoverGradient }}
+          style={{ background: c.hoverGradient }}
         />
 
         {/* Brand ribbon */}
@@ -164,19 +206,19 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
           {showCompare && <CompareButton product={product} size="sm" />}
         </div>
 
-        {keyDetail ? <KeyDetailTag text={keyDetail} /> : category && <CategoryBadge name={category.name} />}
+        {keyDetail ? <KeyDetailTag text={keyDetail} /> : category && <CategoryBadge name={category.name} c={c} />}
 
         {imageCount > 1 && <ImageCountIndicator count={imageCount} activeIdx={activeImageIdx} />}
 
         <HoverSpecs product={product} />
       </div>
 
-      <GoldDivider />
+      <GoldDivider c={c} />
 
-      <div className="px-3 pb-3 flex-1 flex flex-col" style={{ backgroundColor: '#F7F2EB' }}>
+      <div className="px-3 pb-3 flex-1 flex flex-col" style={{ backgroundColor: c.cardBg }}>
         <h3
           className="font-display text-lg leading-snug italic"
-          style={{ color: COLORS.dark }}
+          style={{ color: c.text }}
         >
           {product.title}
         </h3>
@@ -185,7 +227,7 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
           <p
             className="font-body text-[11px] leading-relaxed mt-1"
             style={{
-              color: 'rgba(44, 36, 32, 0.55)',
+              color: c.textFaded,
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
@@ -196,15 +238,15 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
           </p>
         )}
 
-        <div className="w-full h-px my-2" style={{ backgroundColor: 'rgba(176, 141, 87, 0.12)' }} />
+        <div className="w-full h-px my-2" style={{ backgroundColor: c.separator }} />
 
         {getMaterialTag(product) && (
           <div className="mb-1.5">
             <span
               className="font-body text-[9px] tracking-[0.15em] uppercase px-2 py-0.5 inline-block"
               style={{
-                backgroundColor: 'rgba(176, 141, 87, 0.06)',
-                color: 'rgba(176, 141, 87, 0.7)',
+                backgroundColor: c.materialBg,
+                color: c.materialText,
                 borderRadius: '1px',
               }}
             >
@@ -219,8 +261,8 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
           )}
           {product.avgRating > 0 && (
             <div className="flex items-center gap-1">
-              <Star size={10} fill="#B08D57" stroke="none" />
-              <span className="font-body text-[10px]" style={{ color: COLORS.goldFaded }}>
+              <Star size={10} fill={c.gold} stroke="none" />
+              <span className="font-body text-[10px]" style={{ color: c.goldFaded }}>
                 {product.avgRating.toFixed(1)}
               </span>
             </div>
@@ -229,7 +271,7 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
 
         <div className="flex-1" />
         <div className="flex items-center justify-between mt-2 pt-2"
-          style={{ borderTop: '1px dashed rgba(176, 141, 87, 0.2)' }}
+          style={{ borderTop: `1px dashed ${c.separatorDashed}` }}
         >
           <ProductPrice
             price={product.price}
@@ -237,9 +279,10 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
             isShop={isShop}
             isRental={isRental}
             formatPrice={formatPrice}
+            c={c}
           />
           {product.era && (
-            <span className="font-body text-[11px]" style={{ color: COLORS.brownFaded }}>
+            <span className="font-body text-[11px]" style={{ color: c.textDim }}>
               {product.era}
             </span>
           )}
@@ -379,13 +422,13 @@ function PopularBadge() {
 
 /* ── Bottom-of-image elements ───────────────────────────────── */
 
-function CategoryBadge({ name }) {
+function CategoryBadge({ name, c }) {
   return (
     <div
       className="absolute bottom-3 left-3 px-2.5 py-1 font-body text-[10px] tracking-[0.15em] uppercase transition-all duration-300 opacity-0 group-hover:opacity-100"
       style={{
-        backgroundColor: COLORS.categoryBg,
-        color: COLORS.brown,
+        backgroundColor: c.categoryBg,
+        color: c.categoryText,
         backdropFilter: 'blur(4px)',
         borderRadius: '1px',
       }}
@@ -546,12 +589,12 @@ function ConditionDot({ color, label }) {
   )
 }
 
-function ProductPrice({ price, isSold, isShop, isRental, formatPrice }) {
+function ProductPrice({ price, isSold, isShop, isRental, formatPrice, c }) {
   if (price > 0) {
     return (
       <span
         className={`font-body text-sm tracking-wide ${isSold ? 'line-through' : ''}`}
-        style={{ color: isSold ? COLORS.brownFaded : COLORS.gold }}
+        style={{ color: isSold ? c.textDim : c.gold }}
       >
         {formatPrice ? formatPrice(price) : `${price}€`}{isRental && ' / мес.'}
       </span>
@@ -560,7 +603,7 @@ function ProductPrice({ price, isSold, isShop, isRental, formatPrice }) {
 
   if (isShop) {
     return (
-      <span className="font-body text-xs tracking-wide" style={{ color: COLORS.goldFaded }}>
+      <span className="font-body text-xs tracking-wide" style={{ color: c.goldFaded }}>
         Магазин
       </span>
     )
