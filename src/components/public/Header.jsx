@@ -281,7 +281,6 @@ function CatalogDropdown({ to, label, isActive, isTransparent, categories }) {
               onMouseEnter={(e) => { e.currentTarget.style.color = COLORS.gold; e.currentTarget.style.backgroundColor = COLORS.goldSubtle }}
               onMouseLeave={(e) => { e.currentTarget.style.color = COLORS.creamDim; e.currentTarget.style.backgroundColor = 'transparent' }}
             >
-              <span className="text-sm">{cat.icon}</span>
               <span className="font-body text-[12px] tracking-[0.08em]">{cat.name}</span>
               <span
                 className="ml-auto font-body text-[10px]"
@@ -543,7 +542,6 @@ function MobileOverlay({ links, pathname, favoritesCount, onClose, currency, set
                         className="flex items-center gap-2 py-1.5"
                         style={{ color: COLORS.creamDim }}
                       >
-                        <span className="text-sm">{cat.icon}</span>
                         <span className="font-body text-[13px] tracking-[0.05em]">{cat.name}</span>
                       </Link>
                     ))}

@@ -3,10 +3,10 @@
 // =============================================================================
 
 export const categoryGroups = [
-  { id: 'vintage',    name: 'Винтаж и антиквариат', icon: '🏺' },
-  { id: 'realestate', name: 'Недвижимость',         icon: '🏠' },
-  { id: 'shops',      name: 'Магазины и бутики',    icon: '🏪' },
-  { id: 'vehicles',   name: 'Транспорт',            icon: '🚗' },
+  { id: 'vintage',    name: 'Винтаж и антиквариат' },
+  { id: 'realestate', name: 'Недвижимость' },
+  { id: 'shops',      name: 'Магазины и бутики' },
+  { id: 'vehicles',   name: 'Транспорт' },
 ]
 
 // =============================================================================
@@ -15,29 +15,29 @@ export const categoryGroups = [
 
 export const categories = [
   // --- Vintage ---
-  { id: 'clothing',     name: 'Одежда',            icon: '👗', group: 'vintage' },
-  { id: 'accessories',  name: 'Аксессуары',        icon: '👜', group: 'vintage' },
-  { id: 'furniture',    name: 'Мебель',            icon: '🪑', group: 'vintage' },
-  { id: 'collectibles', name: 'Коллекционное',     icon: '🏺', group: 'vintage' },
-  { id: 'jewelry',          name: 'Ювелирные украшения', icon: '💎', group: 'vintage' },
-  { id: 'costume_jewelry',  name: 'Бижутерия',           icon: '📿', group: 'vintage' },
-  { id: 'art',          name: 'Искусство',         icon: '🎨', group: 'vintage' },
-  { id: 'books',        name: 'Книги',             icon: '📚', group: 'vintage' },
-  { id: 'vinyl',        name: 'Винил и музыка',    icon: '🎵', group: 'vintage' },
-  { id: 'electronics',  name: 'Электроника',       icon: '📻', group: 'vintage' },
-  { id: 'ceramics',     name: 'Посуда',            icon: '🍶', group: 'vintage' },
-  { id: 'cutlery',      name: 'Столовые приборы',  icon: '🍴', group: 'vintage' },
+  { id: 'clothing',     name: 'Одежда',            group: 'vintage' },
+  { id: 'accessories',  name: 'Аксессуары',        group: 'vintage' },
+  { id: 'furniture',    name: 'Мебель',            group: 'vintage' },
+  { id: 'collectibles', name: 'Коллекционное',     group: 'vintage' },
+  { id: 'jewelry',          name: 'Ювелирные украшения', group: 'vintage' },
+  { id: 'costume_jewelry',  name: 'Бижутерия',           group: 'vintage' },
+  { id: 'art',          name: 'Искусство',         group: 'vintage' },
+  { id: 'books',        name: 'Книги',             group: 'vintage' },
+  { id: 'vinyl',        name: 'Винил и музыка',    group: 'vintage' },
+  { id: 'electronics',  name: 'Электроника',       group: 'vintage' },
+  { id: 'ceramics',     name: 'Посуда',            group: 'vintage' },
+  { id: 'cutlery',      name: 'Столовые приборы',  group: 'vintage' },
 
   // --- Real Estate ---
-  { id: 'apartment',  name: 'Квартира',  icon: '🏠', group: 'realestate' },
-  { id: 'house',      name: 'Дом',       icon: '🏡', group: 'realestate' },
-  { id: 'commercial', name: 'Коммерция', icon: '🏢', group: 'realestate' },
+  { id: 'apartment',  name: 'Квартира',  group: 'realestate' },
+  { id: 'house',      name: 'Дом',       group: 'realestate' },
+  { id: 'commercial', name: 'Коммерция', group: 'realestate' },
 
   // --- Shops ---
-  { id: 'shop', name: 'Магазин / Бутик', icon: '🏪', group: 'shops' },
+  { id: 'shop', name: 'Магазин / Бутик', group: 'shops' },
 
   // --- Vehicles ---
-  { id: 'vehicle', name: 'Транспорт', icon: '🚗', group: 'vehicles' },
+  { id: 'vehicle', name: 'Транспорт', group: 'vehicles' },
 ]
 
 // =============================================================================

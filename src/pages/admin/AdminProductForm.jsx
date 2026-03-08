@@ -431,10 +431,10 @@ export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
               const groupCats = getActiveCategoryList().filter((c) => c.group === group.id)
               if (groupCats.length === 0) return null
               return (
-                <optgroup key={group.id} label={`${group.icon} ${group.name}`}>
+                <optgroup key={group.id} label={group.name}>
                   {groupCats.map((cat) => (
                     <option key={cat.id} value={cat.id}>
-                      {cat.icon} {cat.name}
+                      {cat.name}
                     </option>
                   ))}
                 </optgroup>

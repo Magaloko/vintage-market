@@ -72,28 +72,28 @@ const QUIZ_STEPS = [
   {
     question: 'Какая эпоха вас вдохновляет?',
     options: [
-      { label: '1920-1940', tag: 'art-deco', icon: '✨', desc: 'Арт-деко, гламур, геометрия' },
-      { label: '1950-1960', tag: 'mid-century', icon: '🪑', desc: 'Модернизм, элегантность, простота' },
-      { label: '1970-1980', tag: 'retro', icon: '🎵', desc: 'Бохо, диско, свобода' },
-      { label: '1990+', tag: 'modern-vintage', icon: '📷', desc: 'Минимализм, ностальгия, Y2K' },
+      { label: '1920-1940', tag: 'art-deco', desc: 'Арт-деко, гламур, геометрия' },
+      { label: '1950-1960', tag: 'mid-century', desc: 'Модернизм, элегантность, простота' },
+      { label: '1970-1980', tag: 'retro', desc: 'Бохо, диско, свобода' },
+      { label: '1990+', tag: 'modern-vintage', desc: 'Минимализм, ностальгия, Y2K' },
     ],
   },
   {
     question: 'Что вы ищете?',
     options: [
-      { label: 'Для дома', tag: 'home', icon: '🏡', desc: 'Мебель, декор, посуда' },
-      { label: 'Для себя', tag: 'personal', icon: '👗', desc: 'Одежда, украшения, аксессуары' },
-      { label: 'Коллекционирование', tag: 'collect', icon: '🏺', desc: 'Редкости, искусство, книги' },
-      { label: 'Подарок', tag: 'gift', icon: '🎁', desc: 'Уникальные вещи для близких' },
+      { label: 'Для дома', tag: 'home', desc: 'Мебель, декор, посуда' },
+      { label: 'Для себя', tag: 'personal', desc: 'Одежда, украшения, аксессуары' },
+      { label: 'Коллекционирование', tag: 'collect', desc: 'Редкости, искусство, книги' },
+      { label: 'Подарок', tag: 'gift', desc: 'Уникальные вещи для близких' },
     ],
   },
   {
     question: 'Ваш бюджет?',
     options: [
-      { label: 'До 50€', tag: 'budget-low', icon: '💰' },
-      { label: '50-200€', tag: 'budget-mid', icon: '💎' },
-      { label: '200-500€', tag: 'budget-high', icon: '👑' },
-      { label: '500€+', tag: 'budget-premium', icon: '🌟' },
+      { label: 'До 50€', tag: 'budget-low' },
+      { label: '50-200€', tag: 'budget-mid' },
+      { label: '200-500€', tag: 'budget-high' },
+      { label: '500€+', tag: 'budget-premium' },
     ],
   },
 ]
@@ -216,7 +216,7 @@ function EditorsPickCard({ product }) {
             <img src={imageUrl} alt={product.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <span className="text-6xl opacity-20">{category?.icon || '\uD83C\uDFFA'}</span>
+              <span className="font-display text-4xl italic opacity-15" style={{ color: '#B08D57' }}>G</span>
             </div>
           )}
           <div className="absolute inset-4 pointer-events-none">
@@ -1047,7 +1047,6 @@ export default function Home() {
                         e.currentTarget.style.backgroundColor = 'rgba(240, 230, 214, 0.3)'
                       }}
                     >
-                      <span className="text-2xl block mb-2">{opt.icon}</span>
                       <span className="font-display text-lg italic block" style={{ color: '#0C0A08' }}>
                         {opt.label}
                       </span>
@@ -1129,7 +1128,6 @@ export default function Home() {
                           e.currentTarget.style.backgroundColor = 'rgba(176, 141, 87, 0.08)'
                         }}
                       >
-                        <span>{cat.icon}</span>
                         <span className="font-body text-sm" style={{ color: '#0C0A08' }}>
                           {cat.name}
                         </span>
@@ -1196,7 +1194,6 @@ export default function Home() {
                     e.currentTarget.style.backgroundColor = 'transparent'
                   }}
                 >
-                  <span className="text-3xl block mb-3">{cat.icon}</span>
                   <h3 className="font-display text-sm italic" style={{ color: '#F0E6D6' }}>
                     {cat.name}
                   </h3>
@@ -1333,14 +1330,14 @@ export default function Home() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-2">
-                  {['🏺', '💎', '👗'].map((emoji, i) => (
+                  {[1, 2, 3].map((n) => (
                     <div
-                      key={i}
+                      key={n}
                       className="aspect-square"
                       style={{ backgroundColor: 'rgba(176, 141, 87, 0.06)', borderRadius: '2px' }}
                     >
-                      <div className="w-full h-full flex items-center justify-center text-2xl opacity-30">
-                        {emoji}
+                      <div className="w-full h-full flex items-center justify-center">
+                        <div className="w-6 h-6 rounded-full" style={{ backgroundColor: 'rgba(176, 141, 87, 0.08)' }} />
                       </div>
                     </div>
                   ))}

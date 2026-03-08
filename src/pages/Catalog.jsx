@@ -178,17 +178,40 @@ export default function Catalog() {
 
   return (
     <div className="page-enter">
-      {/* Page Header */}
-      <div className="pt-28 pb-16" style={{ backgroundColor: '#0C0A08' }}>
-        <div className="max-w-7xl mx-auto px-6">
-          <span
-            className="font-body text-[10px] tracking-[0.5em] uppercase"
-            style={{ color: 'rgba(176, 141, 87, 0.55)' }}
-          >
-            {searchQuery ? 'Результаты поиска' : 'Коллекция'}
-          </span>
+      {/* Page Header — compact breadcrumb strip */}
+      <div className="pt-24 pb-6" style={{ backgroundColor: '#0C0A08' }}>
+        <div className="max-w-7xl mx-auto px-6 flex items-baseline gap-3 flex-wrap">
+          {/* Breadcrumb */}
+          <nav className="flex items-baseline gap-2">
+            <Link
+              to="/"
+              className="font-body text-[10px] tracking-[0.2em] uppercase transition-colors duration-300"
+              style={{ color: 'rgba(176, 141, 87, 0.4)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#B08D57' }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(176, 141, 87, 0.4)' }}
+            >
+              Главная
+            </Link>
+            <span className="font-body text-[10px]" style={{ color: 'rgba(176, 141, 87, 0.2)' }}>/</span>
+            {currentCategory ? (
+              <>
+                <Link
+                  to="/catalog"
+                  className="font-body text-[10px] tracking-[0.2em] uppercase transition-colors duration-300"
+                  style={{ color: 'rgba(176, 141, 87, 0.4)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = '#B08D57' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(176, 141, 87, 0.4)' }}
+                >
+                  Каталог
+                </Link>
+                <span className="font-body text-[10px]" style={{ color: 'rgba(176, 141, 87, 0.2)' }}>/</span>
+              </>
+            ) : null}
+          </nav>
+
+          {/* Title */}
           <h1
-            className="font-display text-4xl md:text-6xl italic mt-4"
+            className="font-display text-2xl md:text-3xl italic"
             style={{ color: '#F0E6D6' }}
           >
             {searchQuery
@@ -197,18 +220,17 @@ export default function Catalog() {
                 ? currentCategory.name
                 : 'Каталог'}
           </h1>
-          {!searchQuery && (
-            <p
-              className="font-display text-lg italic mt-4 max-w-lg"
-              style={{ color: 'rgba(240, 230, 214, 0.45)' }}
+
+          {/* Product count */}
+          {!loading && (
+            <span
+              className="font-body text-[11px] ml-auto"
+              style={{ color: 'rgba(176, 141, 87, 0.35)' }}
             >
-              {currentCategory
-                ? `Все товары в категории \u00ab${currentCategory.name}\u00bb`
-                : 'Все уникальные вещи в одном месте'}
-            </p>
+              {products.length} {products.length === 1 ? 'товар' : products.length < 5 ? 'товара' : 'товаров'}
+            </span>
           )}
         </div>
-        <div className="gdt-divider mt-16" />
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-12">
@@ -267,7 +289,7 @@ export default function Catalog() {
                     border: `1px solid ${activeCategory === cat.id ? '#0C0A08' : 'rgba(44, 36, 32, 0.2)'}`,
                   }}
                 >
-                  {cat.icon} {cat.name}
+                  {cat.name}
                 </Link>
               ))
             })}

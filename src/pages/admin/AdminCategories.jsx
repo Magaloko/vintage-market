@@ -106,7 +106,6 @@ export default function AdminCategories() {
               {/* Group header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">{group.icon}</span>
                   <h2 className="font-display text-base italic" style={{ color: '#2C2420' }}>
                     {group.name}
                   </h2>
@@ -161,8 +160,6 @@ export default function AdminCategories() {
                         {active && <Check size={12} className="text-white" />}
                       </div>
 
-                      {/* Icon + Name */}
-                      <span className="text-base">{cat.icon}</span>
                       <span
                         className="font-body text-sm transition-colors duration-300"
                         style={{
