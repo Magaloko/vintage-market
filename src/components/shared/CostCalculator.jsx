@@ -79,7 +79,7 @@ function SectionTitle({ children }) {
   )
 }
 
-function NumberField({ label, value, onChange, placeholder, required }) {
+function NumberField({ label, value, onChange, placeholder, required, suffix = '€' }) {
   return (
     <div>
       <label className="block font-body text-xs mb-1.5 tracking-wider uppercase" style={{ color: COLORS.creamFaint }}>
@@ -96,7 +96,7 @@ function NumberField({ label, value, onChange, placeholder, required }) {
           className="gdt-input-dark pr-8"
         />
         <span className="absolute right-3 top-1/2 -translate-y-1/2 font-body text-sm" style={{ color: COLORS.creamFaint }}>
-          €
+          {suffix}
         </span>
       </div>
     </div>
@@ -124,7 +124,7 @@ function StatCard({ label, value, suffix, color, Icon }) {
 /*  Main component                                                     */
 /* ------------------------------------------------------------------ */
 
-export default function CostCalculator() {
+export default function CostCalculator({ currencySymbol = '€' }) {
   const [values, setValues] = useState(INITIAL_VALUES)
 
   const updateField = (key) => (e) => {
@@ -172,6 +172,7 @@ export default function CostCalculator() {
               onChange={updateField(f.key)}
               placeholder={f.placeholder}
               required={f.required}
+              suffix={currencySymbol}
             />
           ))}
         </div>
@@ -182,7 +183,7 @@ export default function CostCalculator() {
               Итого себестоимость:
             </span>
             <span className="font-display text-xl" style={{ color: COLORS.cream }}>
-              {results.totalCost.toLocaleString('ru-RU')}€
+              {results.totalCost.toLocaleString('ru-RU')}{currencySymbol}
             </span>
           </div>
         )}
@@ -198,6 +199,7 @@ export default function CostCalculator() {
             onChange={updateField('salePrice')}
             placeholder="0"
             required
+            suffix={currencySymbol}
           />
           <div>
             <label className="block font-body text-xs mb-1.5 tracking-wider uppercase" style={{ color: COLORS.creamFaint }}>
@@ -229,20 +231,20 @@ export default function CostCalculator() {
             <StatCard
               label="Валовая прибыль"
               value={results.grossProfit}
-              suffix="€"
+              suffix={currencySymbol}
               color={results.grossProfit >= 0 ? COLORS.profit : COLORS.loss}
               Icon={results.grossProfit >= 0 ? TrendingUp : TrendingDown}
             />
             <StatCard
               label="Вычеты компании"
               value={results.deductions}
-              suffix="€"
+              suffix={currencySymbol}
               color={COLORS.neutral}
             />
             <StatCard
               label="Чистая прибыль"
               value={results.netProfit}
-              suffix="€"
+              suffix={currencySymbol}
               color={profitColor}
               Icon={ProfitIcon}
             />
@@ -261,7 +263,7 @@ export default function CostCalculator() {
             <StatCard
               label="Себестоимость"
               value={results.totalCost}
-              suffix="€"
+              suffix={currencySymbol}
               color={COLORS.cream}
               Icon={Calculator}
             />
