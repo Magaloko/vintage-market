@@ -21,7 +21,7 @@ const SIDEBAR_LINKS = [
   { to: '/admin/products', icon: Package, label: 'Товары' },
   { to: '/admin/products/new', icon: Plus, label: 'Добавить товар' },
   { to: '/admin/products/bulk', icon: Upload, label: 'Массовый импорт' },
-  { to: '/admin/inquiries', icon: MessageSquare, label: 'Запросы' },
+  { to: '/admin/inquiries', icon: MessageSquare, label: 'Obzor' },
   { to: '/admin/categories', icon: Layers, label: 'Категории' },
   { to: '/admin/calculator', icon: Calculator, label: 'Калькулятор' },
 ]

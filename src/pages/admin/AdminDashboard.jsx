@@ -210,7 +210,7 @@ export default function AdminDashboard() {
     { label: 'Выручка',       value: `${totalRevenue}\u20ac`, icon: BarChart3,    color: colors.gold },
     { label: 'В избранном',   value: favCount,              icon: Heart,         color: colors.gold },
     {
-      label: 'Запросы',
+      label: 'Obzor',
       value: stats.newInquiries || 0,
       icon: MessageSquare,
       color: stats.newInquiries > 0 ? colors.goldLight : colors.gold,

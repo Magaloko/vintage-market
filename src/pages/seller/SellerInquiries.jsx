@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { MessageSquare, CheckCircle, Mail, Phone } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../lib/AuthContext'
-import { getShopInquiries, updateInquiryStatus } from '../../lib/api'
+import { getShopInquiries, updateTicketStatus } from '../../lib/api'
 
 // -- Constants ----------------------------------------------------------------
 
@@ -14,9 +14,15 @@ const TEXT_FAINT = 'rgba(240, 230, 214, 0.1)'
 const GREEN = '#7A8B6F'
 
 const STATUS_MAP = {
-  new:     { label: 'Новая',     color: GOLD,    bg: 'rgba(176, 141, 87, 0.15)' },
-  read:    { label: 'Прочитано', color: 'rgba(240, 230, 214, 0.4)', bg: 'rgba(240, 230, 214, 0.05)' },
-  replied: { label: 'Ответили',  color: GREEN,   bg: 'rgba(122, 139, 111, 0.15)' },
+  new:      { label: 'Новый',       color: GOLD,    bg: 'rgba(176, 141, 87, 0.15)' },
+  open:     { label: 'В работе',    color: GREEN,   bg: 'rgba(122, 139, 111, 0.15)' },
+  pending:  { label: 'Ожидание',    color: '#C17F3E', bg: 'rgba(193, 127, 62, 0.12)' },
+  on_hold:  { label: 'Удержание',   color: 'rgba(240, 230, 214, 0.3)', bg: 'rgba(240, 230, 214, 0.05)' },
+  solved:   { label: 'Решено',      color: '#4A7A5C', bg: 'rgba(74, 122, 92, 0.12)' },
+  closed:   { label: 'Закрыто',     color: 'rgba(240, 230, 214, 0.2)', bg: 'rgba(240, 230, 214, 0.03)' },
+  // Legacy
+  read:     { label: 'В работе',    color: GREEN,   bg: 'rgba(122, 139, 111, 0.15)' },
+  replied:  { label: 'Решено',      color: '#4A7A5C', bg: 'rgba(74, 122, 92, 0.12)' },
 }
 
 // -- Helpers ------------------------------------------------------------------
@@ -127,7 +133,7 @@ function InquiryRow({ inquiry, isExpanded, onToggle, onMarkReplied }) {
             </p>
           </div>
 
-          {inquiry.status !== 'replied' && (
+          {!['solved', 'closed', 'replied'].includes(inquiry.status) && (
             <button
               onClick={onMarkReplied}
               className="flex items-center gap-1.5 px-3 py-1.5 font-body text-xs"
@@ -161,15 +167,15 @@ export default function SellerInquiries() {
   const toggleExpand = async (id) => {
     const inquiry = inquiries.find((i) => i.id === id)
     if (inquiry?.status === 'new') {
-      await updateInquiryStatus(id, 'read')
-      setInquiries((prev) => prev.map((i) => (i.id === id ? { ...i, status: 'read' } : i)))
+      await updateTicketStatus(id, 'open')
+      setInquiries((prev) => prev.map((i) => (i.id === id ? { ...i, status: 'open' } : i)))
     }
     setExpandedId(expandedId === id ? null : id)
   }
 
   const markReplied = async (id) => {
-    await updateInquiryStatus(id, 'replied')
-    setInquiries((prev) => prev.map((i) => (i.id === id ? { ...i, status: 'replied' } : i)))
+    await updateTicketStatus(id, 'solved')
+    setInquiries((prev) => prev.map((i) => (i.id === id ? { ...i, status: 'solved' } : i)))
     toast.success('Отмечено')
   }
 

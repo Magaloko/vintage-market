@@ -26,6 +26,9 @@ export function invalidateCache(key) {
 
 let localProducts = demoProducts.map(p => ({ ...p, is_promoted: p.is_promoted ?? false }))
 let localInquiries = []
+let localInquiryNotes = []
+let localStatusLog = []
+let noteSeqId = 200
 let localReviews = [
   { id: 'r1', shop_id: 'demo-shop-001', name: 'Мария К.', rating: 5, comment: 'Прекрасный магазин! Нашла уникальное платье 70-х.', created_at: '2025-02-10T14:00:00Z' },
   { id: 'r2', shop_id: 'demo-shop-001', name: 'Thomas W.', rating: 4, comment: 'Gute Qualität, nette Beratung.', created_at: '2025-03-05T10:00:00Z' },
@@ -623,8 +626,20 @@ async function _getCategoryCounts() {
 }
 
 // =============================================================================
-// Inquiries API
+// Obzor — Ticket Lifecycle (Inquiries API)
 // =============================================================================
+
+export const OBZOR_TRANSITIONS = {
+  new:      ['open'],
+  open:     ['pending', 'on_hold', 'solved'],
+  pending:  ['open'],
+  on_hold:  ['open'],
+  solved:   ['open', 'closed'],
+  closed:   [],
+  // Legacy compat
+  read:     ['pending', 'on_hold', 'solved'],
+  replied:  ['open', 'closed'],
+}
 
 export async function createInquiry({ name, email, phone, message, product_id, product_title }) {
   const inquiry = {
@@ -635,6 +650,7 @@ export async function createInquiry({ name, email, phone, message, product_id, p
     product_title: product_title || null,
     status: 'new',
     created_at: now(),
+    updated_at: now(),
   }
 
   if (!isSupabaseConfigured) {
@@ -662,22 +678,60 @@ export async function getInquiries() {
   }, { data: [] })
 }
 
-export async function updateInquiryStatus(id, status) {
+export async function updateTicketStatus(id, newStatus, changedBy = 'admin') {
   if (!isSupabaseConfigured) {
     const idx = localInquiries.findIndex(i => i.id === id)
-    if (idx !== -1) localInquiries[idx].status = status
+    if (idx === -1) return { error: { message: 'Not found' } }
+    const current = localInquiries[idx]
+    const allowed = OBZOR_TRANSITIONS[current.status] || []
+    if (!allowed.includes(newStatus)) {
+      return { error: { message: `Cannot transition from ${current.status} to ${newStatus}` } }
+    }
+    localStatusLog.push({
+      id: String(++noteSeqId),
+      inquiry_id: id,
+      from_status: current.status,
+      to_status: newStatus,
+      changed_by: changedBy,
+      changed_at: now(),
+    })
+    current.status = newStatus
+    current.updated_at = now()
+    if (newStatus === 'solved') current.resolved_at = now()
+    if (newStatus === 'closed') current.closed_at = now()
     return { error: null }
   }
 
   return safeQuery(async () => {
-    const { error } = await supabase.from('inquiries').update({ status }).eq('id', id)
+    const { data: current } = await supabase
+      .from('inquiries').select('status').eq('id', id).single()
+    if (!current) return { error: { message: 'Not found' } }
+    const allowed = OBZOR_TRANSITIONS[current.status] || []
+    if (!allowed.includes(newStatus)) {
+      return { error: { message: `Cannot transition from ${current.status} to ${newStatus}` } }
+    }
+    const updates = { status: newStatus, updated_at: now() }
+    if (newStatus === 'solved') updates.resolved_at = now()
+    if (newStatus === 'closed') updates.closed_at = now()
+    const { error } = await supabase.from('inquiries').update(updates).eq('id', id)
+    if (!error) {
+      supabase.from('inquiry_status_log').insert([{
+        inquiry_id: id, from_status: current.status,
+        to_status: newStatus, changed_by: changedBy,
+      }]).then(() => {}).catch(() => {})
+    }
     return { error }
   }, {})
 }
 
+// Backward compat alias
+export const updateInquiryStatus = updateTicketStatus
+
 export async function deleteInquiry(id) {
   if (!isSupabaseConfigured) {
     localInquiries = localInquiries.filter(i => i.id !== id)
+    localInquiryNotes = localInquiryNotes.filter(n => n.inquiry_id !== id)
+    localStatusLog = localStatusLog.filter(l => l.inquiry_id !== id)
     return { error: null }
   }
 
@@ -685,6 +739,64 @@ export async function deleteInquiry(id) {
     const { error } = await supabase.from('inquiries').delete().eq('id', id)
     return { error }
   }, {})
+}
+
+export async function addInquiryNote(inquiryId, content, isInternal = true, author = 'admin') {
+  const note = { inquiry_id: inquiryId, content, is_internal: isInternal, author, created_at: now() }
+
+  if (!isSupabaseConfigured) {
+    note.id = String(++noteSeqId)
+    localInquiryNotes.push(note)
+    const idx = localInquiries.findIndex(i => i.id === inquiryId)
+    if (idx !== -1) localInquiries[idx].updated_at = now()
+    return { data: note, error: null }
+  }
+
+  return safeQuery(async () => {
+    const { data, error } = await supabase.from('inquiry_notes').insert([note]).select().single()
+    if (!error) {
+      await supabase.from('inquiries').update({ updated_at: now() }).eq('id', inquiryId)
+    }
+    return { data, error }
+  })
+}
+
+export async function getInquiryNotes(inquiryId) {
+  if (!isSupabaseConfigured) {
+    return {
+      data: localInquiryNotes
+        .filter(n => n.inquiry_id === inquiryId)
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at)),
+      error: null,
+    }
+  }
+
+  return safeQuery(async () => {
+    const { data, error } = await supabase
+      .from('inquiry_notes').select('*')
+      .eq('inquiry_id', inquiryId)
+      .order('created_at', { ascending: true })
+    return { data: data || [], error }
+  }, { data: [] })
+}
+
+export async function getStatusLog(inquiryId) {
+  if (!isSupabaseConfigured) {
+    return {
+      data: localStatusLog
+        .filter(l => l.inquiry_id === inquiryId)
+        .sort((a, b) => new Date(b.changed_at) - new Date(a.changed_at)),
+      error: null,
+    }
+  }
+
+  return safeQuery(async () => {
+    const { data, error } = await supabase
+      .from('inquiry_status_log').select('*')
+      .eq('inquiry_id', inquiryId)
+      .order('changed_at', { ascending: false })
+    return { data: data || [], error }
+  }, { data: [] })
 }
 
 // =============================================================================
