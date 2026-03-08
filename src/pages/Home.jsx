@@ -816,42 +816,13 @@ export default function Home() {
               </Link>
             </div>
 
-            {/* Top row: 2 featured products, centered, same card size */}
+            {/* Single-row slider */}
             {gridProducts.length > 0 && (
-              <div className="flex flex-col sm:flex-row justify-center gap-5 mb-8">
-                {gridProducts.slice(0, 2).map((product, i) => (
-                  <div
-                    key={product.id}
-                    className="animate-slide-up w-full sm:w-[calc(20%-0.8rem)] sm:min-w-[220px] sm:max-w-[260px]"
-                    style={{ animationDelay: `${i * 80}ms` }}
-                  >
-                    <ProductCard
-                      product={product}
-                      isBestseller={bestsellerIds.has(product.id)}
-                      isPopular={popularIds.has(product.id)}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Bottom row: 5 products in a grid */}
-            {gridProducts.length > 2 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
-                {gridProducts.slice(2, 7).map((product, i) => (
-                  <div
-                    key={product.id}
-                    className="animate-slide-up"
-                    style={{ animationDelay: `${(i + 2) * 60}ms` }}
-                  >
-                    <ProductCard
-                      product={product}
-                      isBestseller={bestsellerIds.has(product.id)}
-                      isPopular={popularIds.has(product.id)}
-                    />
-                  </div>
-                ))}
-              </div>
+              <ProductSlider
+                products={gridProducts}
+                bestsellerIds={bestsellerIds}
+                popularIds={popularIds}
+              />
             )}
 
             <div className="text-center mt-12 md:hidden">
