@@ -1,7 +1,7 @@
 import { memo, useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Star, TrendingUp, Flame, Sparkles } from 'lucide-react'
-import { categories, conditions } from '../../data/demoProducts'
+import { categories, conditions, specialAttributes } from '../../data/demoProducts'
 import { useCurrency } from '../../lib/CurrencyContext'
 import FavoriteButton from './FavoriteButton'
 import CompareButton from './CompareButton'
@@ -145,6 +145,14 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
           style={{ background: COLORS.hoverGradient }}
         />
 
+        {/* Brand ribbon */}
+        {product.brand && !isSold && <BrandRibbon brand={product.brand} />}
+
+        {/* Special attribute badges */}
+        {product.special_attributes?.length > 0 && !isSold && (
+          <SpecialBadges attrs={product.special_attributes} />
+        )}
+
         {isSold ? <SoldBadge /> : isNew && <NewBadge />}
 
         <ProductBadges isPromoted={product.is_promoted} isBestseller={isBestseller} isPopular={isPopular} />
@@ -177,7 +185,7 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
           <p
             className="font-body text-[11px] leading-relaxed mt-1"
             style={{
-              color: 'rgba(44, 36, 32, 0.45)',
+              color: 'rgba(44, 36, 32, 0.55)',
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
@@ -423,6 +431,74 @@ function ImageCountIndicator({ count, activeIdx = 0 }) {
           +{count - 5}
         </span>
       )}
+    </div>
+  )
+}
+
+/* ── Brand ribbon (diagonal) ────────────────────────────────── */
+
+function BrandRibbon({ brand }) {
+  if (!brand) return null
+  const displayBrand = brand.length > 14 ? brand.slice(0, 12) + '…' : brand
+  return (
+    <div
+      className="absolute top-0 left-0 z-10 overflow-hidden"
+      style={{ width: '110px', height: '110px', pointerEvents: 'none' }}
+    >
+      <div
+        className="absolute font-body text-center"
+        style={{
+          width: '160px',
+          top: '18px',
+          left: '-38px',
+          transform: 'rotate(-45deg)',
+          backgroundColor: 'rgba(12, 10, 8, 0.82)',
+          backdropFilter: 'blur(4px)',
+          color: '#C9A96E',
+          fontSize: '8px',
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          padding: '3px 0',
+          borderTop: '1px solid rgba(176, 141, 87, 0.3)',
+          borderBottom: '1px solid rgba(176, 141, 87, 0.3)',
+        }}
+      >
+        {displayBrand}
+      </div>
+    </div>
+  )
+}
+
+/* ── Special attribute badges ──────────────────────────────── */
+
+function SpecialBadges({ attrs }) {
+  if (!attrs || attrs.length === 0) return null
+
+  const badges = attrs
+    .map(id => specialAttributes.find(a => a.id === id))
+    .filter(Boolean)
+    .slice(0, 2)
+
+  if (badges.length === 0) return null
+
+  return (
+    <div className="absolute top-2 right-2 flex flex-col gap-1 z-10">
+      {badges.map((attr) => (
+        <div
+          key={attr.id}
+          className="px-1.5 py-0.5 font-body text-[8px] tracking-[0.1em] uppercase flex items-center gap-1"
+          style={{
+            backgroundColor: 'rgba(12, 10, 8, 0.8)',
+            backdropFilter: 'blur(4px)',
+            color: attr.color,
+            borderRadius: '1px',
+            border: `1px solid ${attr.color}30`,
+          }}
+        >
+          <span style={{ fontSize: '9px' }}>{attr.icon}</span>
+          {attr.label.length > 16 ? attr.label.slice(0, 14) + '…' : attr.label}
+        </div>
+      ))}
     </div>
   )
 }

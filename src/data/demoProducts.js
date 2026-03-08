@@ -223,6 +223,49 @@ export const getFieldLabel = (categoryId, fieldKey, value) => {
 }
 
 // =============================================================================
+// Known Brands (for brand dropdown in product form)
+// =============================================================================
+
+export const knownBrands = [
+  // Porcelain & Ceramics
+  { id: 'villeroy_boch',  name: 'Villeroy & Boch',  categories: ['ceramics', 'cutlery'] },
+  { id: 'wmf',            name: 'WMF',              categories: ['ceramics', 'cutlery'] },
+  { id: 'bauscher',       name: 'Bauscher',          categories: ['ceramics'] },
+  { id: 'schoenwald',     name: 'Schönwald',         categories: ['ceramics'] },
+  { id: 'playground',     name: 'Playground',         categories: ['ceramics'] },
+  { id: 'heart_soul',     name: 'Heart & Soul',      categories: ['ceramics'] },
+  { id: 'churchill',      name: 'Churchill',          categories: ['ceramics'] },
+  { id: 'fortessa',       name: 'Fortessa',           categories: ['ceramics', 'cutlery'] },
+  { id: 'meissen',        name: 'Meissen',            categories: ['ceramics'] },
+  { id: 'rosenthal',      name: 'Rosenthal',          categories: ['ceramics'] },
+  { id: 'lfz',            name: 'ЛФЗ / ИФЗ',        categories: ['ceramics'] },
+  // Jewelry
+  { id: 'cartier',   name: 'Cartier',   categories: ['jewelry', 'accessories'] },
+  { id: 'tiffany',   name: 'Tiffany',   categories: ['jewelry'] },
+  { id: 'bulgari',   name: 'Bulgari',   categories: ['jewelry'] },
+  // Fashion
+  { id: 'chanel',    name: 'Chanel',    categories: ['clothing', 'accessories', 'costume_jewelry'] },
+  { id: 'hermes',    name: 'Hermès',    categories: ['clothing', 'accessories'] },
+  { id: 'dior',      name: 'Dior',      categories: ['clothing', 'accessories', 'costume_jewelry'] },
+  // Electronics
+  { id: 'grundig',   name: 'Grundig',   categories: ['electronics'] },
+  { id: 'telefunken', name: 'Telefunken', categories: ['electronics'] },
+]
+
+// =============================================================================
+// Special Attributes (value-increasing markers)
+// =============================================================================
+
+export const specialAttributes = [
+  { id: 'unique',          label: 'Единственный экземпляр',  icon: '✦', color: '#B08D57' },
+  { id: 'limited_edition', label: 'Лимитированная серия',    icon: '◈', color: '#9B7CB8' },
+  { id: 'collectors_item', label: 'Коллекционное',           icon: '★', color: '#C9956B' },
+  { id: 'certified',       label: 'С сертификатом',          icon: '◉', color: '#7A8B6F' },
+  { id: 'signed',          label: 'С подписью автора',       icon: '✎', color: '#B5736A' },
+  { id: 'provenance',      label: 'С провенансом',           icon: '⚜', color: '#8B7355' },
+]
+
+// =============================================================================
 // Conditions
 // =============================================================================
 
@@ -276,6 +319,7 @@ export const demoProducts = [
     condition: 'vintage_character',
     era: '1960-е',
     brand: 'Итальянское производство',
+    special_attributes: ['unique'],
     image_url:
       'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600&h=600&fit=crop',
     images: [
@@ -390,6 +434,7 @@ export const demoProducts = [
     condition: 'excellent',
     era: '1920-е',
     brand: 'Meissen',
+    special_attributes: ['collectors_item', 'certified'],
     image_url:
       'https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=600&h=600&fit=crop',
     images: [
@@ -446,6 +491,7 @@ export const demoProducts = [
     condition: 'excellent',
     era: '1950-е',
     brand: null,
+    special_attributes: ['unique', 'signed'],
     image_url:
       'https://images.unsplash.com/photo-1515562141589-67f0d569b6e1?w=600&h=600&fit=crop',
     images: [
@@ -528,6 +574,7 @@ export const demoProducts = [
     condition: 'good',
     era: '1950-60-е',
     brand: 'Blue Note / Columbia',
+    special_attributes: ['limited_edition', 'collectors_item'],
     image_url:
       'https://images.unsplash.com/photo-1539375665275-f9de415ef9ac?w=600&h=600&fit=crop',
     images: [

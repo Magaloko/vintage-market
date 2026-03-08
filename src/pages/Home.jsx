@@ -1245,7 +1245,8 @@ export default function Home() {
       <div className="gdt-divider" />
 
       {/* ═══════════════ BECOME A SELLER ═══════════════ */}
-      <section className="py-24 relative overflow-hidden" style={{ backgroundColor: '#F7F2EB' }}>
+      {/* Hidden until full functionality is implemented */}
+      {false && <section className="py-24 relative overflow-hidden" style={{ backgroundColor: '#F7F2EB' }}>
         <div
           className="absolute top-0 left-0 w-64 h-64 rounded-full opacity-[0.04]"
           style={{
@@ -1387,7 +1388,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* Testimonials */}
       <section className="py-20 px-6" style={{ backgroundColor: '#F7F2EB' }}>

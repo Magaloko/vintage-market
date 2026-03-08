@@ -10,7 +10,7 @@ const NAV_LINKS = [
   { to: '/favorites', label: 'Избранное' },
   { to: '/about', label: 'О галерее' },
   { to: '/contact', label: 'Контакт' },
-  { to: '/seller/register', label: 'Стать продавцом' },
+  // { to: '/seller/register', label: 'Стать продавцом' }, // Hidden until seller functionality is ready
 ]
 
 const SOCIAL_LINKS = [
@@ -21,13 +21,13 @@ const SOCIAL_LINKS = [
 
 const COLORS = {
   gold: '#B08D57',
-  goldFaded: 'rgba(176, 141, 87, 0.5)',
-  goldDim: 'rgba(176, 141, 87, 0.4)',
-  goldBorder: 'rgba(176, 141, 87, 0.15)',
-  goldDivider: 'rgba(176, 141, 87, 0.2)',
-  goldSubtle: 'rgba(176, 141, 87, 0.08)',
-  creamFaded: 'rgba(240, 230, 214, 0.3)',
-  creamDim: 'rgba(240, 230, 214, 0.15)',
+  goldFaded: 'rgba(176, 141, 87, 0.6)',
+  goldDim: 'rgba(176, 141, 87, 0.5)',
+  goldBorder: 'rgba(176, 141, 87, 0.2)',
+  goldDivider: 'rgba(176, 141, 87, 0.25)',
+  goldSubtle: 'rgba(176, 141, 87, 0.1)',
+  creamFaded: 'rgba(240, 230, 214, 0.5)',
+  creamDim: 'rgba(240, 230, 214, 0.35)',
 }
 
 const footerLinkStyle = { color: COLORS.creamFaded }

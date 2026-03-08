@@ -183,7 +183,7 @@ export default function Catalog() {
         <div className="max-w-7xl mx-auto px-6">
           <span
             className="font-body text-[10px] tracking-[0.5em] uppercase"
-            style={{ color: 'rgba(176, 141, 87, 0.4)' }}
+            style={{ color: 'rgba(176, 141, 87, 0.55)' }}
           >
             {searchQuery ? 'Результаты поиска' : 'Коллекция'}
           </span>
@@ -200,7 +200,7 @@ export default function Catalog() {
           {!searchQuery && (
             <p
               className="font-display text-lg italic mt-4 max-w-lg"
-              style={{ color: 'rgba(240, 230, 214, 0.25)' }}
+              style={{ color: 'rgba(240, 230, 214, 0.45)' }}
             >
               {currentCategory
                 ? `Все товары в категории \u00ab${currentCategory.name}\u00bb`
@@ -241,7 +241,7 @@ export default function Catalog() {
               className="px-4 py-2 font-body text-xs tracking-wider rounded-full transition-all"
               style={{
                 backgroundColor: !activeCategory ? '#0C0A08' : 'transparent',
-                color: !activeCategory ? '#F0E6D6' : 'rgba(44, 36, 32, 0.5)',
+                color: !activeCategory ? '#F0E6D6' : 'rgba(44, 36, 32, 0.6)',
                 border: `1px solid ${!activeCategory ? '#0C0A08' : 'rgba(44, 36, 32, 0.2)'}`,
               }}
             >
@@ -263,7 +263,7 @@ export default function Catalog() {
                   className="px-3 py-2 font-body text-xs tracking-wider rounded-full transition-all"
                   style={{
                     backgroundColor: activeCategory === cat.id ? '#0C0A08' : 'transparent',
-                    color: activeCategory === cat.id ? '#F0E6D6' : 'rgba(44, 36, 32, 0.5)',
+                    color: activeCategory === cat.id ? '#F0E6D6' : 'rgba(44, 36, 32, 0.6)',
                     border: `1px solid ${activeCategory === cat.id ? '#0C0A08' : 'rgba(44, 36, 32, 0.2)'}`,
                   }}
                 >

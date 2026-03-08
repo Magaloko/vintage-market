@@ -21,7 +21,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { getProduct, getCategoryAvgPrice, getShop } from '../lib/api'
-import { categories, conditions, categoryFields } from '../data/demoProducts'
+import { categories, conditions, categoryFields, specialAttributes } from '../data/demoProducts'
 import ImageGallery from '../components/public/ImageGallery'
 import FavoriteButton from '../components/public/FavoriteButton'
 import CompareButton from '../components/public/CompareButton'
@@ -141,6 +141,56 @@ function ConditionMeter({ conditionId }) {
         ))}
       </div>
       <p className="font-body text-[10px]" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>{condInfo.desc}</p>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Special attributes badges                                          */
+/* ------------------------------------------------------------------ */
+
+function SpecialAttributesSection({ product }) {
+  if (!product.special_attributes || product.special_attributes.length === 0) return null
+
+  const attrs = product.special_attributes
+    .map(id => specialAttributes.find(a => a.id === id))
+    .filter(Boolean)
+
+  if (attrs.length === 0) return null
+
+  return (
+    <div
+      className="p-5"
+      style={{
+        backgroundColor: 'rgba(176, 141, 87, 0.03)',
+        border: '1px solid rgba(176, 141, 87, 0.1)',
+        borderRadius: '2px',
+      }}
+    >
+      <p
+        className="font-body text-[9px] tracking-[0.3em] uppercase mb-3"
+        style={{ color: 'rgba(176, 141, 87, 0.5)' }}
+      >
+        Особые характеристики
+      </p>
+      <div className="flex flex-wrap gap-2">
+        {attrs.map((attr) => (
+          <div
+            key={attr.id}
+            className="inline-flex items-center gap-2 px-3 py-2"
+            style={{
+              backgroundColor: `${attr.color}10`,
+              border: `1px solid ${attr.color}25`,
+              borderRadius: '2px',
+            }}
+          >
+            <span style={{ fontSize: '14px', color: attr.color }}>{attr.icon}</span>
+            <span className="font-body text-sm font-medium" style={{ color: attr.color }}>
+              {attr.label}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -420,6 +470,25 @@ export default function ProductPage() {
 
           {/* Product info */}
           <div className="space-y-6">
+            {/* Brand banner */}
+            {product.brand && (
+              <div
+                className="inline-flex items-center gap-2 px-3 py-1.5"
+                style={{
+                  backgroundColor: 'rgba(12, 10, 8, 0.04)',
+                  borderLeft: '3px solid #B08D57',
+                  borderRadius: '0 2px 2px 0',
+                }}
+              >
+                <span className="font-body text-[9px] tracking-[0.2em] uppercase" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>
+                  Коллекция
+                </span>
+                <span className="font-display text-sm italic" style={{ color: '#B08D57' }}>
+                  {product.brand}
+                </span>
+              </div>
+            )}
+
             {/* Title + actions */}
             <div className="flex items-start justify-between gap-4">
               <h1
@@ -502,6 +571,9 @@ export default function ProductPage() {
 
             {/* Specs highlight strip */}
             <SpecsStrip product={product} />
+
+            {/* Special attributes */}
+            <SpecialAttributesSection product={product} />
 
             {/* Divider */}
             <div className="w-12 h-px" style={{ backgroundColor: '#B08D57' }} />

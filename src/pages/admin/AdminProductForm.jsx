@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Save, ArrowLeft, Sparkles, Tag, Info, Settings2 } from 'lucide-react'
+import { Save, ArrowLeft, Sparkles, Tag, Info, Settings2, Award } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getProduct, createProduct, updateProduct } from '../../lib/api'
-import { categories, conditions, categoryFields, categoryGroups } from '../../data/demoProducts'
+import { categories, conditions, categoryFields, categoryGroups, knownBrands, specialAttributes } from '../../data/demoProducts'
 import { getActiveCategoryList } from '../../lib/categorySettings'
 import ImageUploader from '../../components/admin/ImageUploader'
 
@@ -18,6 +18,7 @@ const EMPTY_FORM = {
   brand: '',
   image_url: '',
   status: 'active',
+  special_attributes: [],
 }
 
 /* ── Loading skeleton ──────────────────────────────────────────── */
@@ -245,6 +246,7 @@ export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
         brand:       data.brand || '',
         image_url:   data.image_url || '',
         status:      data.status || 'active',
+        special_attributes: data.special_attributes || [],
       })
 
       setDetails(data.details || {})
@@ -298,6 +300,7 @@ export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
       image_url: images[0]?.url || form.image_url || '',
       images,
       details,
+      special_attributes: form.special_attributes || [],
       ...(sellerShopId && { shop_id: sellerShopId }),
     }
 
@@ -439,18 +442,111 @@ export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
                 placeholder="0"
               />
               {isVintage && (
-                <FormInput
-                  type="text"
-                  name="brand"
-                  label="Бренд"
-                  value={form.brand}
-                  onChange={handleChange}
-                  placeholder="Если известен"
-                />
+                <div>
+                  <Label>Бренд / Марка</Label>
+                  <select
+                    value={knownBrands.some(b => b.name === form.brand) ? form.brand : (form.brand ? '__custom__' : '')}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      if (val === '__custom__') {
+                        setForm(prev => ({ ...prev, brand: prev.brand && !knownBrands.some(b => b.name === prev.brand) ? prev.brand : '' }))
+                      } else {
+                        setForm(prev => ({ ...prev, brand: val }))
+                      }
+                    }}
+                    className="w-full px-4 py-3 font-body text-sm rounded transition-all duration-300 focus:outline-none appearance-none cursor-pointer"
+                    style={{
+                      backgroundColor: 'rgba(247, 242, 235, 0.8)',
+                      border: '1px solid rgba(176, 141, 87, 0.15)',
+                      color: '#2C2420',
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23B08D57' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      paddingRight: '36px',
+                    }}
+                  >
+                    <option value="">— Без бренда —</option>
+                    {knownBrands
+                      .filter(b => b.categories.includes(form.category))
+                      .map(b => (
+                        <option key={b.id} value={b.name}>{b.name}</option>
+                      ))
+                    }
+                    <option value="__custom__">Другой бренд...</option>
+                  </select>
+                  {(form.brand && !knownBrands.some(b => b.name === form.brand)) && (
+                    <input
+                      type="text"
+                      value={form.brand}
+                      onChange={(e) => setForm(prev => ({ ...prev, brand: e.target.value }))}
+                      placeholder="Введите название бренда"
+                      className="w-full px-4 py-2.5 font-body text-sm rounded mt-2 transition-all duration-300 focus:outline-none"
+                      style={{
+                        backgroundColor: 'rgba(247, 242, 235, 0.8)',
+                        border: '1px solid rgba(176, 141, 87, 0.15)',
+                        color: '#2C2420',
+                      }}
+                    />
+                  )}
+                </div>
               )}
             </div>
           </div>
         </Section>
+
+        {/* Special Attributes */}
+        {isVintage && (
+          <Section icon={Award} title="Особые характеристики">
+            <p className="font-body text-xs mb-4" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>
+              Отметьте характеристики, которые повышают ценность товара
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {specialAttributes.map((attr) => {
+                const isChecked = form.special_attributes?.includes(attr.id)
+                return (
+                  <label
+                    key={attr.id}
+                    className="flex items-center gap-3 p-3 rounded cursor-pointer transition-all duration-300"
+                    style={{
+                      backgroundColor: isChecked ? 'rgba(176, 141, 87, 0.08)' : 'rgba(247, 242, 235, 0.5)',
+                      border: `1px solid ${isChecked ? 'rgba(176, 141, 87, 0.3)' : 'rgba(176, 141, 87, 0.08)'}`,
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => {
+                        setForm(prev => ({
+                          ...prev,
+                          special_attributes: isChecked
+                            ? prev.special_attributes.filter(a => a !== attr.id)
+                            : [...(prev.special_attributes || []), attr.id],
+                        }))
+                      }}
+                      className="sr-only"
+                    />
+                    <div
+                      className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 transition-all duration-300"
+                      style={{
+                        backgroundColor: isChecked ? attr.color : 'transparent',
+                        border: `1.5px solid ${isChecked ? attr.color : 'rgba(44, 36, 32, 0.15)'}`,
+                      }}
+                    >
+                      {isChecked && (
+                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                          <path d="M2 6L5 9L10 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </div>
+                    <span className="font-body text-sm" style={{ color: isChecked ? attr.color : 'rgba(44, 36, 32, 0.6)' }}>
+                      {attr.icon} {attr.label}
+                    </span>
+                  </label>
+                )
+              })}
+            </div>
+          </Section>
+        )}
 
         {/* Vintage-specific: Condition + Era */}
         {isVintage && (
