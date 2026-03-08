@@ -12,8 +12,9 @@ const About = lazy(() => import('./pages/About'))
 const Contact = lazy(() => import('./pages/Contact'))
 const Favorites = lazy(() => import('./pages/Favorites'))
 const Compare = lazy(() => import('./pages/Compare'))
-const ShopPage = lazy(() => import('./pages/ShopPage'))
-const ShopsList = lazy(() => import('./pages/ShopsList'))
+// Shops disabled — only Katalog active
+// const ShopPage = lazy(() => import('./pages/ShopPage'))
+// const ShopsList = lazy(() => import('./pages/ShopsList'))
 
 // Legal
 const Impressum = lazy(() => import('./pages/legal/Impressum'))
@@ -113,8 +114,7 @@ export default function App() {
                   <Route path="/catalog" element={<Catalog />} />
                   <Route path="/catalog/:category" element={<Catalog />} />
                   <Route path="/product/:id" element={<ProductPage />} />
-                  <Route path="/shop/:slug" element={<ShopPage />} />
-                  <Route path="/shops" element={<ShopsList />} />
+                  {/* Shops disabled — only Katalog active */}
                   <Route path="/favorites" element={<Favorites />} />
                   <Route path="/compare" element={<Compare />} />
                   <Route path="/about" element={<About />} />

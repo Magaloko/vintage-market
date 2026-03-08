@@ -6,11 +6,9 @@ import { getCategoryCounts } from '../../lib/api'
 
 const NAV_LINKS = [
   { to: '/catalog', label: 'Каталог' },
-  { to: '/shops', label: 'Магазины' },
   { to: '/favorites', label: 'Избранное' },
   { to: '/about', label: 'О галерее' },
   { to: '/contact', label: 'Контакт' },
-  // { to: '/seller/register', label: 'Стать продавцом' }, // Hidden until seller functionality is ready
 ]
 
 const SOCIAL_LINKS = [

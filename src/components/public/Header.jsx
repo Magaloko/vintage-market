@@ -7,7 +7,6 @@ import { useCurrency } from '../../lib/CurrencyContext'
 
 const NAV_LINKS = [
   { to: '/catalog', label: 'Каталог' },
-  { to: '/shops', label: 'Магазины' },
   { to: '/about', label: 'О нас' },
   { to: '/contact', label: 'Контакт' },
 ]

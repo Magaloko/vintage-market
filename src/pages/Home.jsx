@@ -628,9 +628,6 @@ export default function Home() {
                 <button onClick={() => scrollTo('quiz')} className="btn-secondary group">
                   <Sparkles size={14} className="mr-2" /> Подобрать стиль
                 </button>
-                <Link to="/seller/register" className="btn-light group">
-                  <Store size={14} className="mr-2" /> Открыть магазин
-                </Link>
               </div>
             </div>
           )}
@@ -1325,9 +1322,6 @@ export default function Home() {
                     size={14}
                     className="ml-2 transition-transform duration-300 group-hover:translate-x-1"
                   />
-                </Link>
-                <Link to="/shops" className="btn-secondary">
-                  Все магазины
                 </Link>
               </div>
             </div>
