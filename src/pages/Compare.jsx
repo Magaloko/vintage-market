@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, X } from 'lucide-react'
 import { useCompare } from '../lib/CompareContext'
 import { useCurrency } from '../lib/CurrencyContext'
-import { categories, conditions, categoryFields } from '../data/demoProducts'
+import { categories, conditions, categoryFields, formatEra } from '../data/demoProducts'
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -21,7 +21,7 @@ function buildBaseRows(minPrice, formatPrice) {
     },
     { label: 'Категория', key: 'category', format: getCategoryName },
     { label: 'Состояние', key: 'condition', format: getConditionName },
-    { label: 'Эпоха', key: 'era', format: (v) => v || '\u2014' },
+    { label: 'Эпоха', key: 'era_start', format: (v, item) => formatEra(item?.era_start, item?.era_end) || '\u2014' },
     { label: 'Бренд', key: 'brand', format: (v) => v || '\u2014' },
     { label: 'Просмотры', key: 'views', format: (v) => v || 0 },
     {
@@ -194,7 +194,7 @@ export default function Compare() {
                   </td>
                   {compareItems.map((item) => {
                     const val = item[row.key]
-                    const formatted = row.format(val)
+                    const formatted = row.format(val, item)
                     const isBest =
                       row.highlight === 'min' && val === minPrice && val > 0
                     return (

@@ -281,12 +281,78 @@ export const conditions = [
 // =============================================================================
 
 export const eras = [
-  { id: '1920s-1930s', name: '1920–1930е' },
-  { id: '1940s-1950s', name: '1940–1950е' },
-  { id: '1960s',       name: '1960е' },
-  { id: '1970s',       name: '1970е' },
-  { id: '1980s',       name: '1980е' },
-  { id: '1990s',       name: '1990е' },
+  { id: '1920s-1930s', name: '1920–1930е', start: 1920, end: 1939 },
+  { id: '1940s-1950s', name: '1940–1950е', start: 1940, end: 1959 },
+  { id: '1960s',       name: '1960е',      start: 1960, end: 1969 },
+  { id: '1970s',       name: '1970е',      start: 1970, end: 1979 },
+  { id: '1980s',       name: '1980е',      start: 1980, end: 1989 },
+  { id: '1990s',       name: '1990е',      start: 1990, end: 1999 },
+]
+
+// =============================================================================
+// Format Era Range
+// =============================================================================
+
+export function formatEra(start, end) {
+  if (start && end) return start === end ? String(start) : `${start}–${end}`
+  if (start) return `с ${start}`
+  if (end) return `до ${end}`
+  return null
+}
+
+// =============================================================================
+// Subcategories
+// =============================================================================
+
+export const subcategories = {
+  jewelry: [
+    { id: 'watches',       name: 'Часы' },
+    { id: 'pendants',      name: 'Подвески / Charms' },
+    { id: 'bracelets',     name: 'Браслеты' },
+    { id: 'brooches',      name: 'Броши / Манжеты' },
+    { id: 'necklaces',     name: 'Ожерелья / Колье' },
+    { id: 'earrings',      name: 'Серьги' },
+    { id: 'piercings',     name: 'Пирсинг' },
+    { id: 'rings',         name: 'Кольца' },
+    { id: 'sets',          name: 'Наборы / Комплекты' },
+    { id: 'j_accessories', name: 'Аксессуары / Хранение' },
+  ],
+  costume_jewelry: [
+    { id: 'cj_pendants',   name: 'Подвески' },
+    { id: 'cj_bracelets',  name: 'Браслеты' },
+    { id: 'cj_brooches',   name: 'Броши' },
+    { id: 'cj_necklaces',  name: 'Ожерелья / Бусы' },
+    { id: 'cj_earrings',   name: 'Серьги / Клипсы' },
+    { id: 'cj_rings',      name: 'Кольца' },
+    { id: 'cj_sets',       name: 'Комплекты' },
+  ],
+  cutlery: [
+    { id: 'spoons',     name: 'Ложки' },
+    { id: 'forks',      name: 'Вилки' },
+    { id: 'knives',     name: 'Ножи' },
+    { id: 'ct_sets',    name: 'Наборы' },
+    { id: 'serving',    name: 'Сервировочные' },
+    { id: 'cupholders', name: 'Подстаканники' },
+  ],
+  ceramics: [
+    { id: 'plates',    name: 'Тарелки' },
+    { id: 'cups',      name: 'Чашки / Кружки' },
+    { id: 'vases',     name: 'Вазы' },
+    { id: 'services',  name: 'Сервизы' },
+    { id: 'figurines', name: 'Фигурки / Статуэтки' },
+  ],
+}
+
+// =============================================================================
+// Shipping Options
+// =============================================================================
+
+export const shippingOptions = [
+  { id: 'pickup',        name: 'Самовывоз' },
+  { id: 'post_kz',       name: 'Почта Казахстана' },
+  { id: 'cdek',          name: 'СДЭК' },
+  { id: 'courier',       name: 'Курьерская доставка' },
+  { id: 'international', name: 'Международная' },
 ]
 
 // =============================================================================
@@ -317,7 +383,7 @@ export const demoProducts = [
     price: 320,
     category: 'accessories',
     condition: 'vintage_character',
-    era: '1960-е',
+    era_start: 1960, era_end: 1969,
     brand: 'Итальянское производство',
     special_attributes: ['unique'],
     image_url:
@@ -348,7 +414,7 @@ export const demoProducts = [
     price: 180,
     category: 'clothing',
     condition: 'excellent',
-    era: '1970-е',
+    era_start: 1970, era_end: 1979,
     brand: null,
     image_url:
       'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=600&h=600&fit=crop',
@@ -377,7 +443,7 @@ export const demoProducts = [
     price: 450,
     category: 'furniture',
     condition: 'excellent',
-    era: '1930-е',
+    era_start: 1930, era_end: 1939,
     brand: null,
     image_url:
       'https://images.unsplash.com/photo-1507473885765-e6ed057ab6fe?w=600&h=600&fit=crop',
@@ -405,7 +471,7 @@ export const demoProducts = [
     price: 250,
     category: 'accessories',
     condition: 'good',
-    era: '1970-е',
+    era_start: 1970, era_end: 1979,
     brand: 'Полёт',
     image_url:
       'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=600&h=600&fit=crop',
@@ -432,9 +498,12 @@ export const demoProducts = [
     price: 680,
     category: 'ceramics',
     condition: 'excellent',
-    era: '1920-е',
+    era_start: 1920, era_end: 1929,
     brand: 'Meissen',
+    subcategory: 'vases',
     special_attributes: ['collectors_item', 'certified'],
+    hashtags: ['мейсен', 'фарфор', 'коллекция'],
+    quantity: 1,
     image_url:
       'https://images.unsplash.com/photo-1578500494198-246f612d3b3d?w=600&h=600&fit=crop',
     images: [
@@ -461,7 +530,7 @@ export const demoProducts = [
     price: 220,
     category: 'clothing',
     condition: 'good',
-    era: '1980-е',
+    era_start: 1980, era_end: 1989,
     brand: 'Harris Tweed',
     image_url:
       'https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&h=600&fit=crop',
@@ -489,9 +558,15 @@ export const demoProducts = [
     price: 145,
     category: 'jewelry',
     condition: 'excellent',
-    era: '1950-е',
+    era_start: 1950, era_end: 1959,
     brand: null,
+    subcategory: 'brooches',
     special_attributes: ['unique', 'signed'],
+    hashtags: ['винтаж', 'серебро', 'аметист'],
+    quantity: 1,
+    shipping: [{ method: 'pickup', price: 0, note: 'Алматы' }, { method: 'post_kz', price: 500, note: '3-5 дней' }],
+    contact_whatsapp: '77001234567',
+    contact_telegram: 'vintageshop',
     image_url:
       'https://images.unsplash.com/photo-1515562141589-67f0d569b6e1?w=600&h=600&fit=crop',
     images: [
@@ -518,7 +593,7 @@ export const demoProducts = [
     price: 380,
     category: 'furniture',
     condition: 'vintage_character',
-    era: '1970-е',
+    era_start: 1970, era_end: 1979,
     brand: null,
     image_url:
       'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=600&h=600&fit=crop',
@@ -544,7 +619,7 @@ export const demoProducts = [
     price: 95,
     category: 'art',
     condition: 'new',
-    era: '1920-е (репродукция)',
+    era_start: 1920, era_end: 1929,
     brand: null,
     image_url:
       'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=600&fit=crop',
@@ -572,7 +647,7 @@ export const demoProducts = [
     price: 520,
     category: 'vinyl',
     condition: 'good',
-    era: '1950-60-е',
+    era_start: 1950, era_end: 1969,
     brand: 'Blue Note / Columbia',
     special_attributes: ['limited_edition', 'collectors_item'],
     image_url:
@@ -604,7 +679,7 @@ export const demoProducts = [
     price: 1200,
     category: 'apartment',
     condition: 'good',
-    era: null,
+    era_start: null, era_end: null,
     brand: null,
     image_url:
       'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&h=600&fit=crop',
@@ -637,7 +712,7 @@ export const demoProducts = [
     price: 0,
     category: 'shop',
     condition: null,
-    era: null,
+    era_start: null, era_end: null,
     brand: null,
     image_url:
       'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=600&fit=crop',

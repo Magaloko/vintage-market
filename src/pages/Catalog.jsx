@@ -9,6 +9,7 @@ import {
   sortOptions,
   eras,
   categoryGroups,
+  subcategories,
 } from '../data/demoProducts'
 
 /* ------------------------------------------------------------------ */
@@ -70,6 +71,7 @@ export default function Catalog() {
   const [categoryCounts, setCategoryCounts] = useState({})
 
   const [activeCategory, setActiveCategory] = useState(paramCategory || '')
+  const [activeSubcategory, setActiveSubcategory] = useState('')
   const [activeCondition, setActiveCondition] = useState('')
   const [activeEra, setActiveEra] = useState('')
   const [activePriceRange, setActivePriceRange] = useState('all')
@@ -100,6 +102,7 @@ export default function Catalog() {
 
   useEffect(() => {
     setActiveCategory(paramCategory || '')
+    setActiveSubcategory('')
     setVisibleCount(ITEMS_PER_PAGE)
   }, [paramCategory])
 
@@ -135,15 +138,24 @@ export default function Catalog() {
   useEffect(() => {
     let filtered = [...allProducts]
 
+    if (activeSubcategory) {
+      filtered = filtered.filter((p) => p.subcategory === activeSubcategory)
+    }
+
     if (activeCondition) {
       filtered = filtered.filter((p) => p.condition === activeCondition)
     }
 
     if (activeEra) {
-      const eraDecade = activeEra.replace(/s$/, '')
-      filtered = filtered.filter(
-        (p) => p.era && p.era.toLowerCase().includes(eraDecade.toLowerCase()),
-      )
+      const sel = eras.find((e) => e.id === activeEra)
+      if (sel) {
+        filtered = filtered.filter((p) => {
+          if (!p.era_start && !p.era_end) return false
+          const s = p.era_start || p.era_end
+          const e = p.era_end || p.era_start
+          return s <= sel.end && e >= sel.start
+        })
+      }
     }
 
     const priceRange = PRICE_RANGES.find((r) => r.id === activePriceRange)
@@ -156,17 +168,19 @@ export default function Catalog() {
 
     setProducts(sortProducts(filtered, sortBy))
     setVisibleCount(ITEMS_PER_PAGE)
-  }, [allProducts, activeCondition, activeEra, activePriceRange, sortBy])
+  }, [allProducts, activeSubcategory, activeCondition, activeEra, activePriceRange, sortBy])
 
   /* ---------- Derived values ---------- */
 
   const currentCategory = categories.find((c) => c.id === activeCategory)
   const currentSort = sortOptions.find((s) => s.id === sortBy)
-  const activeFilterCount = [activeCondition, activeEra, activePriceRange !== 'all'].filter(
+  const currentSubcats = subcategories[activeCategory] || []
+  const activeFilterCount = [activeSubcategory, activeCondition, activeEra, activePriceRange !== 'all'].filter(
     Boolean,
   ).length
 
   const clearAllFilters = () => {
+    setActiveSubcategory('')
     setActiveCondition('')
     setActiveEra('')
     setActivePriceRange('all')
@@ -294,6 +308,29 @@ export default function Catalog() {
               ))
             })}
           </div>
+
+          {/* Subcategory pills */}
+          {currentSubcats.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 w-full md:w-auto">
+              <span className="font-body text-[10px] tracking-wider uppercase self-center mr-1" style={{ color: 'rgba(44, 36, 32, 0.3)' }}>
+                Подкатегория:
+              </span>
+              {currentSubcats.map((sc) => (
+                <button
+                  key={sc.id}
+                  onClick={() => setActiveSubcategory(activeSubcategory === sc.id ? '' : sc.id)}
+                  className="px-3 py-1.5 font-body text-xs rounded-full transition-all"
+                  style={{
+                    backgroundColor: activeSubcategory === sc.id ? 'rgba(176, 141, 87, 0.15)' : 'transparent',
+                    color: activeSubcategory === sc.id ? '#B08D57' : 'rgba(44, 36, 32, 0.4)',
+                    border: `1px solid ${activeSubcategory === sc.id ? 'rgba(176, 141, 87, 0.4)' : 'rgba(44, 36, 32, 0.12)'}`,
+                  }}
+                >
+                  {sc.name}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Sort dropdown */}
           <div className="relative ml-auto">
@@ -439,7 +476,7 @@ export default function Catalog() {
         </div>
 
         {/* Active filters bar */}
-        {(activeCategory || activeCondition || activeEra || activePriceRange !== 'all' || searchQuery) && (
+        {(activeCategory || activeSubcategory || activeCondition || activeEra || activePriceRange !== 'all' || searchQuery) && (
           <div className="flex items-center gap-2 mb-6 text-sm">
             <span className="font-body" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>
               Фильтры:
@@ -453,6 +490,16 @@ export default function Catalog() {
               >
                 {searchQuery} <X size={12} />
               </Link>
+            )}
+
+            {activeSubcategory && (
+              <button
+                onClick={() => setActiveSubcategory('')}
+                className="flex items-center gap-1 px-3 py-1 rounded-full font-body text-xs"
+                style={{ backgroundColor: 'rgba(176, 141, 87, 0.1)', color: '#B08D57' }}
+              >
+                {currentSubcats.find((sc) => sc.id === activeSubcategory)?.name} <X size={12} />
+              </button>
             )}
 
             {activePriceRange !== 'all' && (

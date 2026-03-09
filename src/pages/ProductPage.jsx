@@ -18,15 +18,21 @@ import {
   Shield,
   Gem,
   Sparkles,
+  Truck,
+  Package,
+  Instagram,
+  Hash,
 } from 'lucide-react'
-import { getProduct, getCategoryAvgPrice } from '../lib/api'
-import { categories, conditions, categoryFields, specialAttributes } from '../data/demoProducts'
+import { QRCodeSVG } from 'qrcode.react'
+import { getProduct, getCategoryAvgPrice, getProductsByIds } from '../lib/api'
+import { categories, conditions, categoryFields, specialAttributes, formatEra, subcategories, shippingOptions } from '../data/demoProducts'
 import ImageGallery from '../components/public/ImageGallery'
 import FavoriteButton from '../components/public/FavoriteButton'
 import CompareButton from '../components/public/CompareButton'
 import PriceInsight from '../components/public/PriceInsight'
 import PriceHistoryChart from '../components/public/PriceHistoryChart'
 import SimilarProducts from '../components/public/SimilarProducts'
+import ProductCard from '../components/public/ProductCard'
 import ProductReviews from '../components/public/ProductReviews'
 import { siteConfig } from '../lib/siteConfig'
 import { useCurrency } from '../lib/CurrencyContext'
@@ -73,7 +79,8 @@ function SpecsStrip({ product }) {
       const cond = conditions.find(c => c.id === product.condition)
       if (cond) specs.push({ icon: Award, label: 'Состояние', value: cond.name })
     }
-    if (product.era) specs.push({ icon: Clock, label: 'Эпоха', value: product.era })
+    const eraDisplay = formatEra(product.era_start, product.era_end)
+    if (eraDisplay) specs.push({ icon: Clock, label: 'Эпоха', value: eraDisplay })
     if (product.brand) specs.push({ icon: ShoppingBag, label: 'Бренд', value: product.brand })
   }
 
@@ -286,6 +293,7 @@ export default function ProductPage() {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [avgPrice, setAvgPrice] = useState(null)
+  const [linkedProducts, setLinkedProducts] = useState([])
 
   /* ---------- Load product + secondary data ---------- */
 
@@ -307,12 +315,14 @@ export default function ProductPage() {
         setProduct(data)
 
         // Load secondary data in parallel (both optional)
-        const [avg] = await Promise.allSettled([
+        const [avg, linked] = await Promise.allSettled([
           getCategoryAvgPrice(data.category),
+          data.linked_product_ids?.length > 0 ? getProductsByIds(data.linked_product_ids) : Promise.resolve({ data: [] }),
         ])
 
         if (!mounted) return
         if (avg.status === 'fulfilled') setAvgPrice(avg.value)
+        if (linked.status === 'fulfilled') setLinkedProducts(linked.value?.data || [])
       } catch {
         if (mounted) navigate('/catalog', { replace: true })
       }
@@ -379,7 +389,7 @@ export default function ProductPage() {
   const baseDetails = [
     category && { icon: Tag, label: 'Категория', value: category.name },
     condition && { icon: Award, label: 'Состояние', value: condition.name },
-    product.era && { icon: Clock, label: 'Эпоха', value: product.era },
+    formatEra(product.era_start, product.era_end) && { icon: Clock, label: 'Эпоха', value: formatEra(product.era_start, product.era_end) },
     product.brand && { icon: ShoppingBag, label: 'Бренд', value: product.brand },
   ].filter(Boolean)
 
@@ -447,6 +457,19 @@ export default function ProductPage() {
             </>
           )}
 
+          {product.subcategory && (() => {
+            const subcatList = subcategories[product.category] || []
+            const subcat = subcatList.find(s => s.id === product.subcategory)
+            if (!subcat) return null
+            return (
+              <>
+                <span>/</span>
+                <span className="transition-colors" style={{ color: 'rgba(44, 36, 32, 0.45)' }}>
+                  {subcat.name}
+                </span>
+              </>
+            )
+          })()}
           <span>/</span>
           <span
             className="truncate max-w-[200px]"
@@ -533,6 +556,16 @@ export default function ProductPage() {
               </div>
             )}
 
+            {/* Quantity */}
+            {product.quantity > 1 && (
+              <div className="flex items-center gap-2">
+                <Package size={14} style={{ color: '#B08D57' }} />
+                <span className="font-body text-sm" style={{ color: 'rgba(44, 36, 32, 0.6)' }}>
+                  В наличии: <strong style={{ color: '#2C2420' }}>{product.quantity} шт.</strong>
+                </span>
+              </div>
+            )}
+
             {/* Price insight */}
             {avgPrice && product.status !== 'sold' && !isRealEstate && !isShop && (
               <PriceInsight price={product.price} avgPrice={avgPrice} />
@@ -546,6 +579,35 @@ export default function ProductPage() {
 
             {/* Special attributes */}
             <SpecialAttributesSection product={product} />
+
+            {/* Hashtags */}
+            {product.hashtags?.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {product.hashtags.map((tag) => (
+                  <Link
+                    key={tag}
+                    to={`/catalog?search=%23${encodeURIComponent(tag)}`}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 font-body text-xs rounded-full transition-all duration-300"
+                    style={{
+                      backgroundColor: 'rgba(176, 141, 87, 0.08)',
+                      color: '#B08D57',
+                      border: '1px solid rgba(176, 141, 87, 0.2)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(176, 141, 87, 0.15)'
+                      e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.4)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(176, 141, 87, 0.08)'
+                      e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.2)'
+                    }}
+                  >
+                    <Hash size={10} />
+                    {tag}
+                  </Link>
+                ))}
+              </div>
+            )}
 
             {/* Divider */}
             <div className="w-12 h-px" style={{ backgroundColor: '#B08D57' }} />
@@ -614,6 +676,101 @@ export default function ProductPage() {
 
             {/* Authenticity / Provenance */}
             <AuthenticitySection product={product} />
+
+            {/* Shipping info */}
+            {product.shipping?.length > 0 && (
+              <div
+                className="p-4"
+                style={{
+                  backgroundColor: 'rgba(44, 36, 32, 0.03)',
+                  border: '1px solid rgba(176, 141, 87, 0.1)',
+                  borderRadius: '2px',
+                }}
+              >
+                <p className="font-body text-[9px] tracking-[0.3em] uppercase mb-3" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>
+                  Доставка
+                </p>
+                <div className="space-y-2">
+                  {product.shipping.map((s) => {
+                    const opt = shippingOptions.find(o => o.id === s.id)
+                    if (!opt) return null
+                    return (
+                      <div key={s.id} className="flex items-center gap-2">
+                        <Truck size={12} style={{ color: '#B08D57' }} />
+                        <span className="font-body text-sm" style={{ color: '#2C2420' }}>{opt.name}</span>
+                        {s.price && (
+                          <span className="font-body text-xs" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>— {s.price}</span>
+                        )}
+                        {s.note && (
+                          <span className="font-body text-xs italic" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>({s.note})</span>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Product-specific contact buttons */}
+            {(product.contact_whatsapp || product.contact_telegram || product.contact_instagram) && (
+              <div className="space-y-2">
+                <p className="font-body text-[9px] tracking-[0.3em] uppercase" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>
+                  Контакт продавца
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {product.contact_whatsapp && (
+                    <a
+                      href={`https://wa.me/${product.contact_whatsapp.replace(/[^\d+]/g, '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 font-body text-xs tracking-wide rounded transition-all duration-300"
+                      style={{ backgroundColor: '#25D366', color: '#fff' }}
+                    >
+                      <MessageCircle size={14} />
+                      WhatsApp
+                    </a>
+                  )}
+                  {product.contact_telegram && (
+                    <a
+                      href={product.contact_telegram.startsWith('http') ? product.contact_telegram : `https://t.me/${product.contact_telegram.replace('@', '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 font-body text-xs tracking-wide rounded transition-all duration-300"
+                      style={{ backgroundColor: '#26A3EE', color: '#fff' }}
+                    >
+                      <SendIcon size={14} />
+                      Telegram
+                    </a>
+                  )}
+                  {product.contact_instagram && (
+                    <a
+                      href={`https://instagram.com/${product.contact_instagram.replace('@', '')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 font-body text-xs tracking-wide rounded transition-all duration-300"
+                      style={{ background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)', color: '#fff' }}
+                    >
+                      <Instagram size={14} />
+                      Instagram
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* QR Code */}
+            <div className="flex items-center gap-3">
+              <QRCodeSVG
+                value={window.location.href}
+                size={64}
+                level="M"
+                fgColor="#2C2420"
+                bgColor="#F7F2EB"
+              />
+              <p className="font-body text-[10px]" style={{ color: 'rgba(44, 36, 32, 0.3)' }}>
+                Отсканируйте для быстрого доступа
+              </p>
+            </div>
 
             {/* Contact CTAs */}
             {product.status !== 'sold' && (
@@ -694,6 +851,25 @@ export default function ProductPage() {
             )}
           </div>
         </div>
+
+        {/* Linked products */}
+        {linkedProducts.length > 0 && (
+          <section className="mt-16 pt-12" style={{ borderTop: '1px solid rgba(44, 36, 32, 0.1)' }}>
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-8 h-px" style={{ backgroundColor: '#B08D57' }} />
+              <h2 className="font-display text-2xl" style={{ color: '#0C0A08' }}>
+                Рекомендуемые товары
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {linkedProducts.map((p, i) => (
+                <div key={p.id} className="animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
+                  <ProductCard product={p} />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Similar products */}
         {!isShop && <SimilarProducts currentProduct={product} />}

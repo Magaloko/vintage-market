@@ -13,7 +13,7 @@ import {
   Coffee,
 } from 'lucide-react'
 import { getProducts, getCategoryCounts } from '../lib/api'
-import { categoryGroups, categories } from '../data/demoProducts'
+import { categoryGroups, categories, formatEra } from '../data/demoProducts'
 import ProductCard from '../components/public/ProductCard'
 import { useCurrency } from '../lib/CurrencyContext'
 
@@ -233,9 +233,9 @@ function EditorsPickCard({ product }) {
             {product.title}
           </h3>
 
-          {product.era && (
+          {formatEra(product.era_start, product.era_end) && (
             <p className="font-body text-sm mt-2" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>
-              {product.era}
+              {formatEra(product.era_start, product.era_end)}
             </p>
           )}
 

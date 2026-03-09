@@ -1,7 +1,7 @@
 import { memo, useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Star, TrendingUp, Flame, Sparkles } from 'lucide-react'
-import { categories, conditions, specialAttributes } from '../../data/demoProducts'
+import { categories, conditions, specialAttributes, formatEra } from '../../data/demoProducts'
 import { useCurrency } from '../../lib/CurrencyContext'
 import { useTheme } from '../../lib/ThemeContext'
 import FavoriteButton from './FavoriteButton'
@@ -208,6 +208,41 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
 
         {keyDetail ? <KeyDetailTag text={keyDetail} /> : category && <CategoryBadge name={category.name} c={c} />}
 
+        {/* Hashtag badges (max 2) */}
+        {product.hashtags?.length > 0 && !isSold && (
+          <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-10" style={{ maxWidth: '70%' }}>
+            {product.hashtags.slice(0, 2).map((tag) => (
+              <span
+                key={tag}
+                className="px-1.5 py-0.5 font-body text-[8px] tracking-wide"
+                style={{
+                  backgroundColor: 'rgba(176, 141, 87, 0.85)',
+                  color: '#0C0A08',
+                  borderRadius: '1px',
+                  backdropFilter: 'blur(4px)',
+                }}
+              >
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Quantity badge */}
+        {product.quantity > 1 && !isSold && (
+          <div
+            className="absolute bottom-3 right-3 px-1.5 py-0.5 font-body text-[9px] tracking-wider z-10"
+            style={{
+              backgroundColor: 'rgba(12, 10, 8, 0.75)',
+              color: '#C9A96E',
+              backdropFilter: 'blur(4px)',
+              borderRadius: '1px',
+            }}
+          >
+            {product.quantity} шт.
+          </div>
+        )}
+
         {imageCount > 1 && <ImageCountIndicator count={imageCount} activeIdx={activeImageIdx} />}
 
         <HoverSpecs product={product} />
@@ -281,9 +316,9 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
             formatPrice={formatPrice}
             c={c}
           />
-          {product.era && (
+          {formatEra(product.era_start, product.era_end) && (
             <span className="font-body text-[11px]" style={{ color: c.textDim }}>
-              {product.era}
+              {formatEra(product.era_start, product.era_end)}
             </span>
           )}
         </div>

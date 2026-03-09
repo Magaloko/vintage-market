@@ -140,20 +140,30 @@ function computeProductStats(products) {
 // Products API
 // =============================================================================
 
-export async function getProducts({ category, condition, status, search, shop_id, limit, offset = 0 } = {}) {
+export async function getProducts({ category, subcategory, condition, status, search, shop_id, limit, offset = 0 } = {}) {
   if (!isSupabaseConfigured) {
     let filtered = [...localProducts]
-    if (category)  filtered = filtered.filter(p => p.category === category)
-    if (condition) filtered = filtered.filter(p => p.condition === condition)
-    if (status)    filtered = filtered.filter(p => p.status === status)
-    if (shop_id)   filtered = filtered.filter(p => p.shop_id === shop_id)
+    if (category)    filtered = filtered.filter(p => p.category === category)
+    if (subcategory) filtered = filtered.filter(p => p.subcategory === subcategory)
+    if (condition)   filtered = filtered.filter(p => p.condition === condition)
+    if (status)      filtered = filtered.filter(p => p.status === status)
+    if (shop_id)     filtered = filtered.filter(p => p.shop_id === shop_id)
     if (search) {
       const q = search.toLowerCase()
-      filtered = filtered.filter(p =>
-        p.title.toLowerCase().includes(q) ||
-        p.description.toLowerCase().includes(q) ||
-        p.brand?.toLowerCase().includes(q)
-      )
+      // Hashtag search: #tag
+      if (q.startsWith('#')) {
+        const tag = q.slice(1)
+        filtered = filtered.filter(p =>
+          (p.hashtags || []).some(h => h.toLowerCase().includes(tag))
+        )
+      } else {
+        filtered = filtered.filter(p =>
+          p.title.toLowerCase().includes(q) ||
+          p.description.toLowerCase().includes(q) ||
+          p.brand?.toLowerCase().includes(q) ||
+          (p.hashtags || []).some(h => h.toLowerCase().includes(q))
+        )
+      }
     }
     const total = filtered.length
     if (limit) filtered = filtered.slice(offset, offset + limit)
@@ -162,12 +172,21 @@ export async function getProducts({ category, condition, status, search, shop_id
 
   return safeQuery(async () => {
     let query = supabase.from('products').select('*', { count: 'exact' })
-    if (category)  query = query.eq('category', category)
-    if (condition) query = query.eq('condition', condition)
-    if (status)    query = query.eq('status', status)
-    if (shop_id)   query = query.eq('shop_id', shop_id)
-    if (search)    query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,brand.ilike.%${search}%`)
-    if (limit)     query = query.range(offset, offset + limit - 1)
+    if (category)    query = query.eq('category', category)
+    if (subcategory) query = query.eq('subcategory', subcategory)
+    if (condition)   query = query.eq('condition', condition)
+    if (status)      query = query.eq('status', status)
+    if (shop_id)     query = query.eq('shop_id', shop_id)
+    if (search) {
+      const q = search.toLowerCase()
+      if (q.startsWith('#')) {
+        // Hashtag search via JSONB containment
+        query = query.contains('hashtags', [q.slice(1)])
+      } else {
+        query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,brand.ilike.%${search}%`)
+      }
+    }
+    if (limit) query = query.range(offset, offset + limit - 1)
     query = query.order('created_at', { ascending: false })
 
     const { data, count, error } = await query
@@ -177,6 +196,27 @@ export async function getProducts({ category, condition, status, search, shop_id
     }
     return { data: data || [], count: count || 0, error: null }
   }, { data: [], count: 0 })
+}
+
+export async function getProductsByIds(ids) {
+  if (!ids || ids.length === 0) return { data: [], error: null }
+
+  if (!isSupabaseConfigured) {
+    const found = ids.map(id => localProducts.find(p => p.id === id)).filter(Boolean)
+    return { data: found, error: null }
+  }
+
+  return safeQuery(async () => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .in('id', ids)
+    if (error) return { data: [], error }
+    // Preserve original order
+    const map = new Map((data || []).map(p => [p.id, p]))
+    const ordered = ids.map(id => map.get(id)).filter(Boolean)
+    return { data: ordered, error: null }
+  }, { data: [] })
 }
 
 export async function getProduct(id) {
