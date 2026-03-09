@@ -14,11 +14,13 @@ import {
   Layers,
   Upload,
   Users,
+  BarChart3,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 
 const SIDEBAR_LINKS = [
   { to: '/admin', icon: LayoutDashboard, label: 'Панель управления', end: true },
+  { to: '/admin/analytics', icon: BarChart3, label: 'Аналитика' },
   { to: '/admin/products', icon: Package, label: 'Товары' },
   { to: '/admin/products/new', icon: Plus, label: 'Добавить товар' },
   { to: '/admin/products/bulk', icon: Upload, label: 'Массовый импорт' },

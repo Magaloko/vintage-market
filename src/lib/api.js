@@ -1320,3 +1320,255 @@ export async function getUsersByRole(...roles) {
     return { data, error }
   })
 }
+
+// =============================================================================
+// Deep Analytics API (Matomo-inspired)
+// =============================================================================
+
+function seededRandom(seed) {
+  let s = Math.abs(seed) || 1
+  return () => {
+    s = (s * 16807) % 2147483647
+    return (s - 1) / 2147483646
+  }
+}
+
+function generateDailyPoints(days, basePerDay, variance, rand) {
+  const points = []
+  const now = new Date()
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now)
+    d.setDate(d.getDate() - i)
+    const dow = d.getDay()
+    const weekendFactor = (dow === 0 || dow === 6) ? 0.6 : 1.0
+    const trendFactor = 1 + (days - i) / days * 0.15
+    const value = Math.round(basePerDay * weekendFactor * trendFactor * (1 + (rand() - 0.5) * variance))
+    points.push({ date: d.toISOString().slice(0, 10), value: Math.max(1, value) })
+  }
+  return points
+}
+
+const daySeed = () => Math.floor(Date.now() / 86400000)
+
+export async function getAnalyticsOverview(days = 30) {
+  const rand = seededRandom(daySeed() + 1)
+  const dailyVisits = generateDailyPoints(days, 120, 0.4, rand)
+  const totalVisits = dailyVisits.reduce((s, p) => s + p.value, 0)
+  const uniqueRatio = 0.62 + rand() * 0.1
+  const uniqueVisitors = Math.round(totalVisits * uniqueRatio)
+  const pagesPerVisit = +(2.1 + rand() * 1.4).toFixed(1)
+  const avgSessionDuration = Math.round(90 + rand() * 120)
+  const bounceRate = +(38 + rand() * 18).toFixed(1)
+  const totalVisitsDelta = +(-8 + rand() * 25).toFixed(1)
+  const uniqueVisitorsDelta = +(-5 + rand() * 20).toFixed(1)
+  const bounceRateDelta = +(-4 + rand() * 8).toFixed(1)
+  return {
+    data: {
+      totalVisits, uniqueVisitors, pagesPerVisit, avgSessionDuration, bounceRate,
+      totalVisitsDelta, uniqueVisitorsDelta, bounceRateDelta,
+      dailyVisits: dailyVisits.map(p => ({ date: p.date, visits: p.value, unique: Math.round(p.value * uniqueRatio) })),
+    },
+    error: null,
+  }
+}
+
+export async function getAnalyticsVisitors(days = 30) {
+  const rand = seededRandom(daySeed() + 2)
+  const totalGeo = Math.round(800 + rand() * 600) * (days / 30)
+  const geoData = [
+    { country: 'Казахстан', city: 'Алматы', percent: 35 },
+    { country: 'Казахстан', city: 'Астана', percent: 15 },
+    { country: 'Казахстан', city: 'Шымкент', percent: 10 },
+    { country: 'Россия', city: 'Москва', percent: 12 },
+    { country: 'Австрия', city: 'Вена', percent: 8 },
+    { country: 'Турция', city: 'Стамбул', percent: 6 },
+    { country: 'Германия', city: 'Берлин', percent: 5 },
+    { country: 'Узбекистан', city: 'Ташкент', percent: 4 },
+    { country: 'Другие', city: '—', percent: 5 },
+  ].map(g => ({ ...g, visits: Math.round(totalGeo * g.percent / 100 * (0.85 + rand() * 0.3)) }))
+
+  const newPct = 55 + Math.round(rand() * 15)
+  const devices = [
+    { type: 'Mobile', count: 58 + Math.round(rand() * 8) },
+    { type: 'Desktop', count: 32 + Math.round(rand() * 6) },
+    { type: 'Tablet', count: 5 + Math.round(rand() * 4) },
+  ]
+  const browsers = [
+    { name: 'Chrome', percent: 52 + Math.round(rand() * 8) },
+    { name: 'Safari', percent: 18 + Math.round(rand() * 5) },
+    { name: 'Yandex', percent: 12 + Math.round(rand() * 4) },
+    { name: 'Firefox', percent: 6 + Math.round(rand() * 3) },
+    { name: 'Other', percent: 5 },
+  ]
+  return {
+    data: {
+      geography: geoData,
+      newVsReturning: { new: newPct, returning: 100 - newPct },
+      devices,
+      browsers,
+    },
+    error: null,
+  }
+}
+
+export async function getAnalyticsActions(days = 30) {
+  const rand = seededRandom(daySeed() + 3)
+  const scale = days / 30
+  const totalPageViews = Math.round((3200 + rand() * 1800) * scale)
+  const uniquePageViews = Math.round(totalPageViews * (0.6 + rand() * 0.12))
+  const avgTimeOnPage = Math.round(35 + rand() * 50)
+
+  const topProducts = [...localProducts]
+    .sort((a, b) => (b.views || 0) - (a.views || 0))
+    .slice(0, 10)
+    .map(p => ({
+      id: p.id, title: p.title, image_url: p.image_url,
+      views: p.views || Math.round(30 + rand() * 200),
+      uniqueViews: Math.round((p.views || 50) * (0.55 + rand() * 0.15)),
+      avgTime: Math.round(20 + rand() * 60),
+      category: p.category,
+    }))
+
+  const catMap = {}
+  localProducts.forEach(p => { catMap[p.category] = (catMap[p.category] || 0) + (p.views || Math.round(10 + rand() * 40)) })
+  const topCategories = Object.entries(catMap)
+    .map(([id, views]) => ({ id, name: id, views }))
+    .sort((a, b) => b.views - a.views)
+    .slice(0, 8)
+
+  const interactionTimeline = generateDailyPoints(days, 100, 0.35, rand).map(p => ({
+    date: p.date,
+    views: p.value,
+    favorites: Math.round(p.value * 0.08 * (0.7 + rand() * 0.6)),
+    inquiries: Math.round(p.value * 0.03 * (0.6 + rand() * 0.8)),
+    shares: Math.round(p.value * 0.02 * (0.5 + rand() * 1)),
+  }))
+
+  return {
+    data: { totalPageViews, uniquePageViews, avgTimeOnPage, topProducts, topCategories, interactionTimeline },
+    error: null,
+  }
+}
+
+export async function getAnalyticsChannels(days = 30) {
+  const rand = seededRandom(daySeed() + 4)
+  const base = Math.round((2800 + rand() * 1500) * (days / 30))
+  const channels = [
+    { name: 'Прямой', key: 'direct', pct: 30, color: '#B08D57' },
+    { name: 'WhatsApp', key: 'whatsapp', pct: 25, color: '#25D366' },
+    { name: 'Telegram', key: 'telegram', pct: 15, color: '#0088CC' },
+    { name: 'Instagram', key: 'instagram', pct: 15, color: '#E4405F' },
+    { name: 'Поиск', key: 'search', pct: 10, color: '#4285F4' },
+    { name: 'Реферал', key: 'referral', pct: 5, color: '#7A5340' },
+  ].map(ch => ({
+    ...ch,
+    visits: Math.round(base * ch.pct / 100 * (0.85 + rand() * 0.3)),
+    bounceRate: +(30 + rand() * 30).toFixed(1),
+    conversions: Math.round(base * ch.pct / 100 * 0.012 * (0.6 + rand() * 0.8)),
+    conversionRate: +(0.5 + rand() * 2.5).toFixed(1),
+  }))
+
+  const trendDays = generateDailyPoints(days, base / days, 0.35, rand)
+  const channelTrend = trendDays.map(p => {
+    const obj = { date: p.date }
+    channels.forEach(ch => { obj[ch.key] = Math.round(p.value * ch.pct / 100 * (0.8 + rand() * 0.4)) })
+    return obj
+  })
+
+  return { data: { channels, channelTrend }, error: null }
+}
+
+export async function getAnalyticsSales(days = 30) {
+  const rand = seededRandom(daySeed() + 5)
+  const scale = days / 30
+  const soldProducts = localProducts.filter(p => p.status === 'sold')
+  const totalRevenue = soldProducts.length > 0
+    ? soldProducts.reduce((s, p) => s + (p.price || 0), 0)
+    : Math.round((4500 + rand() * 3000) * scale)
+  const ordersCount = soldProducts.length > 0
+    ? Math.round(soldProducts.length * scale)
+    : Math.round((12 + rand() * 18) * scale)
+  const avgOrderValue = ordersCount > 0 ? Math.round(totalRevenue / ordersCount) : 0
+  const conversionRate = +(1 + rand() * 2).toFixed(1)
+  const revenueDelta = +(-10 + rand() * 30).toFixed(1)
+
+  const revenueTimeline = generateDailyPoints(days, totalRevenue / days, 0.5, rand).map(p => ({
+    date: p.date,
+    revenue: p.value,
+    orders: Math.max(0, Math.round(p.value / (avgOrderValue || 200) * (0.7 + rand() * 0.6))),
+  }))
+
+  const catRevenue = {}
+  soldProducts.forEach(p => {
+    catRevenue[p.category] = (catRevenue[p.category] || 0) + (p.price || 0)
+  })
+  if (Object.keys(catRevenue).length === 0) {
+    ;['jewelry', 'furniture', 'art', 'clothing', 'ceramics'].forEach(c => {
+      catRevenue[c] = Math.round(500 + rand() * 2000)
+    })
+  }
+  const revenueByCategory = Object.entries(catRevenue)
+    .map(([name, revenue]) => ({ name, revenue, orders: Math.max(1, Math.round(revenue / (avgOrderValue || 200))) }))
+    .sort((a, b) => b.revenue - a.revenue)
+
+  const totalViews = localProducts.reduce((s, p) => s + (p.views || 0), 0) || Math.round(3000 * scale)
+  const funnel = {
+    views: totalViews,
+    favorites: Math.round(totalViews * 0.08),
+    inquiries: Math.round(totalViews * 0.03),
+    sales: ordersCount,
+  }
+
+  const topByRevenue = (soldProducts.length > 0 ? soldProducts : localProducts.slice(0, 5))
+    .map(p => ({ id: p.id, title: p.title, image_url: p.image_url, revenue: p.price || Math.round(100 + rand() * 800), orders: 1, category: p.category }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 10)
+
+  return {
+    data: { totalRevenue, ordersCount, avgOrderValue, conversionRate, revenueDelta, revenueTimeline, revenueByCategory, funnel, topByRevenue },
+    error: null,
+  }
+}
+
+export async function getAnalyticsGoals(days = 30) {
+  const rand = seededRandom(daySeed() + 6)
+  const scale = days / 30
+  const goals = [
+    { id: 'inquiry', name: 'Заявка отправлена', base: 45, rate: 3.2 },
+    { id: 'favorite', name: 'Добавлено в избранное', base: 120, rate: 8.5 },
+    { id: 'inquiry_to_sale', name: 'Заявка → Продажа', base: 8, rate: 18 },
+    { id: 'response_time', name: 'Ответ < 4 часа', base: 35, rate: 78 },
+  ].map(g => {
+    const completions = Math.round(g.base * scale * (0.8 + rand() * 0.4))
+    const conversionRate = +(g.rate * (0.85 + rand() * 0.3)).toFixed(1)
+    const trend = generateDailyPoints(Math.min(days, 30), g.base / 30, 0.45, rand)
+      .map(p => ({ date: p.date, completions: p.value }))
+    return { id: g.id, name: g.name, completions, conversionRate, trend }
+  })
+  return { data: { goals }, error: null }
+}
+
+export async function getAnalyticsSellers(days = 30) {
+  const rand = seededRandom(daySeed() + 7)
+  const scale = days / 30
+  const sellerUsers = localUsers.filter(u => u.role === 'seller' || u.role === 'agent')
+  const sellers = (sellerUsers.length > 0 ? sellerUsers : [
+    { id: 's1', name: 'Алия К.', role: 'seller' },
+    { id: 's2', name: 'Thomas M.', role: 'seller' },
+    { id: 's3', name: 'Марат Б.', role: 'agent' },
+  ]).map(u => ({
+    id: u.id,
+    name: u.name,
+    role: u.role,
+    products: Math.round((3 + rand() * 12) * scale),
+    views: Math.round((80 + rand() * 400) * scale),
+    inquiries: Math.round((2 + rand() * 15) * scale),
+    sales: Math.round((1 + rand() * 6) * scale),
+    revenue: Math.round((300 + rand() * 3000) * scale),
+  }))
+
+  const activityTimeline = generateDailyPoints(Math.min(days, 30), 2, 0.6, rand)
+    .map(p => ({ date: p.date, newListings: Math.max(0, p.value) }))
+
+  return { data: { sellers, activityTimeline }, error: null }
+}
