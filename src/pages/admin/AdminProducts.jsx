@@ -304,7 +304,7 @@ function ProductRow({ product, onDelete, onTogglePromote, onInlineEdit, isDraggi
         opacity: isDragging ? 0.5 : 1,
         cursor: 'default',
       }}
-      draggable
+      draggable={!!onDragStart}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
@@ -315,8 +315,8 @@ function ProductRow({ product, onDelete, onTogglePromote, onInlineEdit, isDraggi
       <td className="px-2 py-3 w-8">
         <GripVertical
           size={14}
-          className="cursor-grab active:cursor-grabbing"
-          style={{ color: alpha.ink20 }}
+          className={onDragStart ? 'cursor-grab active:cursor-grabbing' : ''}
+          style={{ color: onDragStart ? alpha.ink20 : alpha.ink10, opacity: onDragStart ? 1 : 0.4 }}
         />
       </td>
 
@@ -764,6 +764,9 @@ export default function AdminProducts() {
         if (loading) return <ProductsSkeleton />
         if (displayed.length === 0) return <EmptyState />
 
+        // Drag-and-drop only works on unfiltered, unsorted list
+        const canDrag = statusFilter === 'all' && !sortByStatus
+
         return (
           <div style={panelStyle} className="overflow-hidden">
             <div className="overflow-x-auto">
@@ -793,10 +796,10 @@ export default function AdminProducts() {
                       onDelete={handleDelete}
                       onTogglePromote={handleTogglePromote}
                       onInlineEdit={handleInlineEdit}
-                      isDragging={dragIdx === idx}
-                      onDragStart={() => handleDragStart(idx)}
-                      onDragOver={(e) => handleDragOver(e, idx)}
-                      onDragEnd={handleDragEnd}
+                      isDragging={canDrag && dragIdx === idx}
+                      onDragStart={canDrag ? () => handleDragStart(idx) : undefined}
+                      onDragOver={canDrag ? (e) => handleDragOver(e, idx) : undefined}
+                      onDragEnd={canDrag ? handleDragEnd : undefined}
                       statusDropdownId={statusDropdownId}
                       onStatusDropdown={setStatusDropdownId}
                     />

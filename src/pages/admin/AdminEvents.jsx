@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import {
   CalendarDays, Plus, Trash2, Edit, X, MessageSquare, Check, HelpCircle, XCircle,
-  List, ChevronLeft, ChevronRight, LayoutGrid, Package, Briefcase, DollarSign,
+  List, ChevronLeft, ChevronRight, LayoutGrid,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import useLocalStorage from '../../lib/useLocalStorage'
@@ -705,7 +705,7 @@ export default function AdminEvents() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {filtered.sort((a, b) => new Date(a.datetime) - new Date(b.datetime)).map((ev) => {
+              {[...filtered].sort((a, b) => new Date(a.datetime) - new Date(b.datetime)).map((ev) => {
                 const cat = CATEGORIES.find((c) => c.key === ev.category)
                 const isPast = new Date(ev.datetime) < now
                 return (
