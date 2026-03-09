@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Edit, Trash2, Eye, Search, Package, X, Star, GripVertical, Check } from 'lucide-react'
+import { Plus, Edit, Trash2, Eye, Search, Package, X, Star, GripVertical, Check, ChevronDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getProducts, deleteProduct, togglePromoted, updateProduct } from '../../lib/api'
-import { categories } from '../../data/demoProducts'
+import { categories, specialAttributes } from '../../data/demoProducts'
 
 /* ── Shared style tokens (light) ─────────────────────────────── */
 const colors = {
@@ -137,11 +137,76 @@ function InlineEditCell({ value, onChange, onSave, type = 'text', options, class
   )
 }
 
+/* ── Special attributes dropdown (multi-select) ─────────────── */
+function SpecialAttributesDropdown({ value = [], onChange, onClose }) {
+  const ref = useRef(null)
+  const current = Array.isArray(value) ? value : []
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) onClose()
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [onClose])
+
+  const toggle = (id) => {
+    const next = current.includes(id)
+      ? current.filter((a) => a !== id)
+      : [...current, id]
+    onChange(next)
+  }
+
+  return (
+    <div
+      ref={ref}
+      className="absolute z-50 mt-1 py-1 shadow-lg"
+      style={{
+        ...panelStyle,
+        backgroundColor: 'rgba(255, 255, 255, 0.98)',
+        minWidth: '220px',
+        border: `1px solid ${alpha.gold12}`,
+      }}
+    >
+      {specialAttributes.map((attr) => (
+        <button
+          key={attr.id}
+          onClick={() => toggle(attr.id)}
+          className="flex items-center gap-2 w-full px-3 py-1.5 text-left font-body text-xs transition-colors hover:bg-gray-50"
+          style={{ color: current.includes(attr.id) ? colors.ink : alpha.ink40 }}
+        >
+          <span className="w-4 h-4 flex items-center justify-center rounded border"
+            style={{
+              borderColor: current.includes(attr.id) ? colors.gold : alpha.ink15,
+              backgroundColor: current.includes(attr.id) ? alpha.gold10 : 'transparent',
+            }}
+          >
+            {current.includes(attr.id) && <Check size={10} style={{ color: colors.gold }} />}
+          </span>
+          <span style={{ color: attr.color }}>{attr.icon}</span>
+          {attr.label}
+        </button>
+      ))}
+      <div className="px-3 pt-1.5 mt-1" style={{ borderTop: `1px solid ${alpha.gold08}` }}>
+        <button
+          onClick={onClose}
+          className="w-full py-1 font-body text-xs text-center transition-colors"
+          style={{ color: colors.gold }}
+        >
+          Готово
+        </button>
+      </div>
+    </div>
+  )
+}
+
 /* ── Product table row ───────────────────────────────────────── */
 function ProductRow({ product, onDelete, onTogglePromote, onInlineEdit, isDragging, onDragStart, onDragOver, onDragEnd }) {
   const categoryName = categories.find((c) => c.id === product.category)?.name || product.category
   const [editField, setEditField] = useState(null)
   const [editValue, setEditValue] = useState('')
+  const [showAttrs, setShowAttrs] = useState(false)
+  const attrs = Array.isArray(product.special_attributes) ? product.special_attributes : []
 
   const startEdit = (field, value) => {
     setEditField(field)
@@ -283,18 +348,56 @@ function ProductRow({ product, onDelete, onTogglePromote, onInlineEdit, isDraggi
         )}
       </td>
 
-      {/* Status */}
+      {/* Status — click to toggle */}
       <td className="px-4 py-3 hidden sm:table-cell">
-        <span
-          className="inline-flex px-2 py-1 rounded-full font-body text-xs"
+        <button
+          onClick={() => {
+            const newStatus = product.status === 'active' ? 'sold' : 'active'
+            onInlineEdit(product.id, 'status', newStatus)
+          }}
+          className="inline-flex px-2 py-1 rounded-full font-body text-xs cursor-pointer transition-all hover:scale-105"
           style={statusBadge(product.status)}
+          title="Клик для смены статуса"
         >
           {product.status === 'active' ? 'В наличии' : 'Продано'}
-        </span>
+        </button>
+      </td>
+
+      {/* Special Attributes — dropdown */}
+      <td className="px-4 py-3 hidden lg:table-cell relative">
+        <button
+          onClick={() => setShowAttrs(!showAttrs)}
+          className="flex items-center gap-1 font-body text-xs transition-colors"
+          style={{ color: attrs.length > 0 ? colors.ink : alpha.ink20 }}
+          title="Особенности"
+        >
+          {attrs.length > 0 ? (
+            <span className="flex items-center gap-0.5 flex-wrap">
+              {attrs.map((a) => {
+                const attr = specialAttributes.find((sa) => sa.id === a)
+                return attr ? (
+                  <span key={a} title={attr.label} style={{ color: attr.color }}>{attr.icon}</span>
+                ) : null
+              })}
+            </span>
+          ) : (
+            <span>—</span>
+          )}
+          <ChevronDown size={10} style={{ color: alpha.ink20 }} />
+        </button>
+        {showAttrs && (
+          <SpecialAttributesDropdown
+            value={attrs}
+            onChange={(newAttrs) => {
+              onInlineEdit(product.id, 'special_attributes', newAttrs)
+            }}
+            onClose={() => setShowAttrs(false)}
+          />
+        )}
       </td>
 
       {/* Views */}
-      <td className="px-4 py-3 hidden lg:table-cell">
+      <td className="px-4 py-3 hidden xl:table-cell">
         <span className="font-body text-xs flex items-center gap-1" style={{ color: alpha.ink30 }}>
           <Eye size={12} /> {product.views || 0}
         </span>
@@ -341,13 +444,14 @@ function ProductRow({ product, onDelete, onTogglePromote, onInlineEdit, isDraggi
 
 /* ── Table header columns ────────────────────────────────────── */
 const TABLE_COLUMNS = [
-  { label: '',          align: 'left',  className: 'w-8' },
-  { label: 'Товар',     align: 'left',  className: '' },
-  { label: 'Категория', align: 'left',  className: 'hidden md:table-cell' },
-  { label: 'Цена',      align: 'left',  className: '' },
-  { label: 'Статус',    align: 'left',  className: 'hidden sm:table-cell' },
-  { label: 'Просмотры', align: 'left',  className: 'hidden lg:table-cell' },
-  { label: 'Действия',  align: 'right', className: '' },
+  { label: '',            align: 'left',  className: 'w-8' },
+  { label: 'Товар',       align: 'left',  className: '' },
+  { label: 'Категория',   align: 'left',  className: 'hidden md:table-cell' },
+  { label: 'Цена',        align: 'left',  className: '' },
+  { label: 'Статус',      align: 'left',  className: 'hidden sm:table-cell' },
+  { label: 'Особенности', align: 'left',  className: 'hidden lg:table-cell' },
+  { label: 'Просмотры',   align: 'left',  className: 'hidden xl:table-cell' },
+  { label: 'Действия',    align: 'right', className: '' },
 ]
 
 /* ── Main component ──────────────────────────────────────────── */
@@ -419,17 +523,24 @@ export default function AdminProducts() {
     const product = products.find((p) => p.id === id)
     if (!product) return
 
-    const updates = { ...product, [field]: value }
-    if (field === 'price') updates.price = Number(value) || 0
+    const parsedValue = field === 'price' ? (Number(value) || 0) : value
+    const updates = { ...product, [field]: parsedValue }
 
     const { error } = await updateProduct(id, updates)
     if (error) {
       toast.error('Ошибка сохранения')
       return
     }
-    toast.success('Сохранено')
+
+    const label = field === 'status'
+      ? (value === 'active' ? 'В наличии' : 'Продано')
+      : field === 'special_attributes'
+        ? 'Особенности обновлены'
+        : 'Сохранено'
+    toast.success(label)
+
     setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, [field]: field === 'price' ? Number(value) || 0 : value } : p))
+      prev.map((p) => (p.id === id ? { ...p, [field]: parsedValue } : p))
     )
   }
 
