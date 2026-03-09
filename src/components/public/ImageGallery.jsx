@@ -147,22 +147,100 @@ function ThumbnailSlider({ images, activeIndex, onSelect, title }) {
 
 function MainImage({ src, alt, onZoom }) {
   return (
-    <div
-      className="aspect-[4/5] overflow-hidden cursor-zoom-in relative"
-      style={{ backgroundColor: GALLERY_BG, borderRadius: '2px' }}
-      onClick={onZoom}
-    >
-      <img
-        src={src}
-        alt={alt}
-        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-      />
+    <div className="relative cursor-zoom-in" onClick={onZoom}>
+      {/* Outer vintage frame */}
       <div
-        className="absolute top-4 right-4 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-        style={{ backgroundColor: OVERLAY_BG, backdropFilter: 'blur(4px)' }}
+        className="relative p-[6px] md:p-2"
+        style={{
+          background: 'linear-gradient(135deg, #C9A96E 0%, #8A6D3B 25%, #B08D57 50%, #8A6D3B 75%, #C9A96E 100%)',
+          boxShadow: '0 4px 24px rgba(12, 10, 8, 0.15), inset 0 1px 0 rgba(255,255,255,0.15)',
+        }}
       >
-        <ZoomIn size={16} className="text-white" />
+        {/* Inner border line */}
+        <div
+          className="relative p-[3px] md:p-1"
+          style={{
+            border: '1px solid rgba(201, 169, 110, 0.4)',
+            backgroundColor: 'rgba(12, 10, 8, 0.08)',
+          }}
+        >
+          {/* Image container */}
+          <div
+            className="aspect-[4/5] overflow-hidden relative"
+            style={{ backgroundColor: GALLERY_BG }}
+          >
+            <img
+              src={src}
+              alt={alt}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+            />
+
+            {/* Vintage vignette overlay */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                boxShadow: 'inset 0 0 60px rgba(12, 10, 8, 0.12), inset 0 0 120px rgba(12, 10, 8, 0.06)',
+              }}
+            />
+
+            {/* Zoom icon */}
+            <div
+              className="absolute top-4 right-4 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+              style={{ backgroundColor: OVERLAY_BG, backdropFilter: 'blur(4px)' }}
+            >
+              <ZoomIn size={16} className="text-white" />
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Corner ornaments */}
+      <FrameCorner position="top-left" />
+      <FrameCorner position="top-right" />
+      <FrameCorner position="bottom-left" />
+      <FrameCorner position="bottom-right" />
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Frame Corner Ornaments                                              */
+/* ------------------------------------------------------------------ */
+
+function FrameCorner({ position }) {
+  const posMap = {
+    'top-left': { top: '-2px', left: '-2px' },
+    'top-right': { top: '-2px', right: '-2px' },
+    'bottom-left': { bottom: '-2px', left: '-2px' },
+    'bottom-right': { bottom: '-2px', right: '-2px' },
+  }
+
+  const rotMap = {
+    'top-left': '0deg',
+    'top-right': '90deg',
+    'bottom-left': '-90deg',
+    'bottom-right': '180deg',
+  }
+
+  return (
+    <div
+      className="absolute w-5 h-5 pointer-events-none"
+      style={{ ...posMap[position] }}
+    >
+      <svg
+        viewBox="0 0 20 20"
+        className="w-full h-full"
+        style={{ transform: `rotate(${rotMap[position]})`, opacity: 0.5 }}
+      >
+        <path
+          d="M0 0 L8 0 L6 2 L2 2 L2 6 L0 8 Z"
+          fill="#B08D57"
+        />
+        <path
+          d="M0 0 L4 0 L3 1 L1 1 L1 3 L0 4 Z"
+          fill="#C9A96E"
+        />
+      </svg>
     </div>
   )
 }
