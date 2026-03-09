@@ -41,7 +41,11 @@ const today = () => new Date().toISOString().slice(0, 10)
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('ru-RU') : '—'
 const fmtCur = (n) => new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR' }).format(n || 0)
 
-const EMPTY_LINE = { desc: '', qty: 1, unitPrice: 0, vat: 20 }
+const EMPTY_LINE = { desc: '', qty: 1, unitPrice: 0, vat: 20, productId: '' }
+
+function readLS(key, fallback = []) {
+  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback } catch { return fallback }
+}
 
 function calcLine(l) {
   const net = (l.qty || 0) * (l.unitPrice || 0)
@@ -160,6 +164,7 @@ function DashboardTab({ invoices, expenses }) {
 /* ── Invoice Modal ─────────────────────────────────────────────── */
 
 function InvoiceModal({ invoice, customers, onSave, onClose }) {
+  const products = useMemo(() => readLS('vm_products', []), [])
   const [form, setForm] = useState(
     invoice || {
       id: uid(), number: genInvoiceNumber(), date: today(), dueDate: '',
@@ -179,8 +184,26 @@ function InvoiceModal({ invoice, customers, onSave, onClose }) {
   const removeLine = (i) => setForm((f) => ({ ...f, lines: f.lines.filter((_, idx) => idx !== i) }))
   const updateLine = (i, key, val) => setForm((f) => ({
     ...f,
-    lines: f.lines.map((l, idx) => (idx === i ? { ...l, [key]: key === 'desc' ? val : Number(val) || 0 } : l)),
+    lines: f.lines.map((l, idx) => (idx === i ? { ...l, [key]: key === 'desc' || key === 'productId' ? val : Number(val) || 0 } : l)),
   }))
+
+  // Lookup product by ID and auto-fill line fields
+  const linkProduct = (lineIdx, productId) => {
+    const prod = products.find((p) => String(p.id) === String(productId))
+    if (prod) {
+      setForm((f) => ({
+        ...f,
+        lines: f.lines.map((l, idx) =>
+          idx === lineIdx
+            ? { ...l, productId: String(prod.id), desc: prod.title || prod.name || '', unitPrice: prod.price || 0, vat: 20 }
+            : l
+        ),
+      }))
+      toast.success(`${prod.title || prod.name}`)
+    } else if (productId) {
+      toast.error('\u0422\u043e\u0432\u0430\u0440 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d')
+    }
+  }
 
   const handleSave = () => {
     if (!form.number.trim()) return toast.error('Введите номер счёта')
@@ -238,21 +261,42 @@ function InvoiceModal({ invoice, customers, onSave, onClose }) {
             <label className="font-body text-[10px] tracking-[0.2em] uppercase" style={{ color: 'rgba(44,36,32,0.4)' }}>Позиции</label>
             <button onClick={addLine} className="flex items-center gap-1 font-body text-xs" style={{ color: GOLD }}><Plus size={12} /> Добавить</button>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {form.lines.map((line, i) => {
               const c = calcLine(line)
               return (
-                <div key={i} className="grid grid-cols-12 gap-2 items-end">
-                  <input className="gdt-input col-span-4 text-xs" placeholder="Описание" value={line.desc} onChange={(e) => updateLine(i, 'desc', e.target.value)} />
-                  <input className="gdt-input col-span-2 text-xs text-right" type="number" min="1" value={line.qty} onChange={(e) => updateLine(i, 'qty', e.target.value)} />
-                  <input className="gdt-input col-span-2 text-xs text-right" type="number" step="0.01" value={line.unitPrice} onChange={(e) => updateLine(i, 'unitPrice', e.target.value)} />
-                  <select className="gdt-input col-span-2 text-xs" value={line.vat} onChange={(e) => updateLine(i, 'vat', e.target.value)}>
-                    {VAT_RATES.map((v) => <option key={v} value={v}>{v}%</option>)}
-                  </select>
-                  <div className="col-span-1 flex items-center justify-between">
-                    <span className="font-body text-[10px]" style={{ color: MUTED }}>{fmtCur(c.gross)}</span>
+                <div key={i} className="p-2.5 rounded" style={{ backgroundColor: 'rgba(176,141,87,0.03)', border: `1px solid ${FAINT}` }}>
+                  {/* Product picker row */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <select
+                      className="gdt-input text-xs flex-1"
+                      value={line.productId || ''}
+                      onChange={(e) => { updateLine(i, 'productId', e.target.value); if (e.target.value) linkProduct(i, e.target.value) }}
+                    >
+                      <option value="">\u2014 \u0422\u043e\u0432\u0430\u0440 (\u043e\u043f\u0446\u0438\u043e\u043d\u0430\u043b\u044c\u043d\u043e) \u2014</option>
+                      {products.map((p) => <option key={p.id} value={p.id}>{p.title || p.name} &mdash; {fmtCur(p.price)}</option>)}
+                    </select>
+                    <input
+                      className="gdt-input text-xs w-20"
+                      placeholder="ID"
+                      value={line.productId || ''}
+                      onChange={(e) => updateLine(i, 'productId', e.target.value)}
+                      onBlur={(e) => { if (e.target.value) linkProduct(i, e.target.value) }}
+                    />
+                    <button onClick={() => removeLine(i)} className="p-1 shrink-0" title="\u0423\u0434\u0430\u043b\u0438\u0442\u044c"><Trash2 size={13} style={{ color: '#B5736A' }} /></button>
                   </div>
-                  <button onClick={() => removeLine(i)} className="col-span-1 p-1" title="Удалить"><Trash2 size={12} style={{ color: '#B5736A' }} /></button>
+                  {/* Standard fields */}
+                  <div className="grid grid-cols-12 gap-2 items-end">
+                    <input className="gdt-input col-span-5 text-xs" placeholder="\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435" value={line.desc} onChange={(e) => updateLine(i, 'desc', e.target.value)} />
+                    <input className="gdt-input col-span-2 text-xs text-right" type="number" min="1" value={line.qty} onChange={(e) => updateLine(i, 'qty', e.target.value)} />
+                    <input className="gdt-input col-span-2 text-xs text-right" type="number" step="0.01" value={line.unitPrice} onChange={(e) => updateLine(i, 'unitPrice', e.target.value)} />
+                    <select className="gdt-input col-span-2 text-xs" value={line.vat} onChange={(e) => updateLine(i, 'vat', e.target.value)}>
+                      {VAT_RATES.map((v) => <option key={v} value={v}>{v}%</option>)}
+                    </select>
+                    <div className="col-span-1 flex items-center justify-end">
+                      <span className="font-body text-[10px] font-medium" style={{ color: INK }}>{fmtCur(c.gross)}</span>
+                    </div>
+                  </div>
                 </div>
               )
             })}

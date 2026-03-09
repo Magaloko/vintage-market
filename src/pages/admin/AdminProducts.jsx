@@ -705,7 +705,7 @@ export default function AdminProducts() {
         </select>
       </div>
 
-      {/* Status filter tabs */}
+      {/* Status filter tabs: Groups */}
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setStatusFilter('all')}
@@ -740,6 +740,29 @@ export default function AdminProducts() {
         })}
       </div>
 
+      {/* Individual status filters */}
+      <div className="flex flex-wrap gap-1.5">
+        {PRODUCT_STATUSES.map(s => {
+          const count = products.filter(p => p.status === s.key).length
+          if (count === 0) return null
+          return (
+            <button
+              key={s.key}
+              onClick={() => setStatusFilter(`s:${s.key}`)}
+              className="px-2 py-1 font-body text-[11px] rounded-sm transition-colors"
+              style={{
+                backgroundColor: statusFilter === `s:${s.key}` ? `${s.color}22` : 'transparent',
+                color: statusFilter === `s:${s.key}` ? s.color : alpha.ink30,
+                fontWeight: statusFilter === `s:${s.key}` ? 600 : 400,
+                border: statusFilter === `s:${s.key}` ? `1px solid ${s.color}40` : `1px solid ${alpha.ink10}`,
+              }}
+            >
+              {s.emoji} {s.label} ({count})
+            </button>
+          )
+        })}
+      </div>
+
       {/* Pipeline bar */}
       {!loading && products.length > 0 && <PipelineBar products={products} />}
 
@@ -748,10 +771,17 @@ export default function AdminProducts() {
         // Apply status filter + sort
         let displayed = products
         if (statusFilter !== 'all') {
-          displayed = displayed.filter(p => {
-            const def = getStatusDef(p.status)
-            return def?.group === statusFilter
-          })
+          if (statusFilter.startsWith('s:')) {
+            // Individual status filter (e.g. "s:sold")
+            const statusKey = statusFilter.slice(2)
+            displayed = displayed.filter(p => p.status === statusKey)
+          } else {
+            // Group filter (e.g. "procurement", "sales")
+            displayed = displayed.filter(p => {
+              const def = getStatusDef(p.status)
+              return def?.group === statusFilter
+            })
+          }
         }
         if (sortByStatus) {
           displayed = [...displayed].sort((a, b) => {

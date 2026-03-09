@@ -54,14 +54,14 @@ const SIDEBAR_LINKS = [
       { to: '/admin/jobs', icon: UserSearch, label: 'Вакансии' },
     ],
   },
+  { to: '/admin/events', icon: CalendarDays, label: 'События' },
+  { to: '/admin/reviews', icon: Star, label: 'Отзывы' },
   {
     id: 'hr',
     icon: Users,
     label: 'HR & Команда',
     children: [
       { to: '/admin/cv-analyzer', icon: FileSearch, label: 'CV Анализатор' },
-      { to: '/admin/events', icon: CalendarDays, label: 'События' },
-      { to: '/admin/reviews', icon: Star, label: 'Отзывы' },
     ],
   },
 ]

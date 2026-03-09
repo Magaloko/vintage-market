@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import {
   CalendarDays, Plus, Trash2, Edit, X, MessageSquare, Check, HelpCircle, XCircle,
   List, ChevronLeft, ChevronRight, LayoutGrid,
@@ -75,14 +75,28 @@ function getCrossModuleEvents() {
       }
     })
   } catch {}
+  // Invoices due dates (from AdminAccounting)
+  try {
+    const invoices = JSON.parse(localStorage.getItem('vm_invoices') || '[]')
+    invoices.forEach((inv) => {
+      if (inv.dueDate && (inv.status === '\u041e\u0442\u043a\u0440\u044b\u0442\u0430' || inv.status === '\u041f\u0440\u043e\u0441\u0440\u043e\u0447\u0435\u043d\u0430')) {
+        cross.push({
+          id: `inv_${inv.id}`, title: `\ud83d\udcc4 ${inv.number || 'Rechnung'}: ${inv.client || ''}`, datetime: inv.dueDate,
+          category: '_invoice', source: 'accounting', color: '#B5736A', emoji: '\ud83d\udcc4', readonly: true,
+        })
+      }
+    })
+  } catch {}
   // Product deliveries (from Supabase products cache or demo)
   try {
     const prods = JSON.parse(localStorage.getItem('vm_product_deliveries') || '[]')
     prods.forEach((p) => {
-      cross.push({
-        id: `prod_${p.id}`, title: `\ud83d\udce6 ${p.name}`, datetime: p.expectedDate,
-        category: '_delivery', source: 'products', color: '#5A6B3C', emoji: '\ud83d\udce6', readonly: true,
-      })
+      if (p.expectedDate) {
+        cross.push({
+          id: `prod_${p.id}`, title: `\ud83d\udce6 ${p.name}`, datetime: p.expectedDate,
+          category: '_delivery', source: 'products', color: '#5A6B3C', emoji: '\ud83d\udce6', readonly: true,
+        })
+      }
     })
   } catch {}
   return cross
@@ -115,6 +129,7 @@ function getCalendarDays(year, month) {
 }
 
 function isSameDay(d1, d2) {
+  if (!d1 || !d2 || isNaN(d1.getTime()) || isNaN(d2.getTime())) return false
   return d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate()
 }
 
@@ -555,8 +570,16 @@ export default function AdminEvents() {
   const [view, setView] = useState('calendar') // 'list' | 'calendar'
   const [newEventDate, setNewEventDate] = useState(null)
   const [showCrossModule, setShowCrossModule] = useLocalStorage('events_cross_module', true)
+  const [crossRefresh, setCrossRefresh] = useState(0)
 
-  const crossEvents = useMemo(() => showCrossModule ? getCrossModuleEvents() : [], [showCrossModule, events])
+  // Refresh cross-module events when tab gains focus (handles updates from other admin modules)
+  useEffect(() => {
+    const onFocus = () => setCrossRefresh((c) => c + 1)
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
+  }, [])
+
+  const crossEvents = useMemo(() => showCrossModule ? getCrossModuleEvents() : [], [showCrossModule, events, crossRefresh])
 
   // Comments stored per event in localStorage
   const getComments = (eventId) => {

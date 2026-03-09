@@ -209,8 +209,8 @@ function EditorsPickCard({ product }) {
       >
         <Link
           to={`/product/${product.id}`}
-          className="group relative aspect-[3/4] lg:aspect-auto overflow-hidden"
-          style={{ backgroundColor: '#E0D4C0', minHeight: '360px' }}
+          className="group relative aspect-[4/5] lg:aspect-auto overflow-hidden"
+          style={{ backgroundColor: '#E0D4C0', minHeight: '260px', maxHeight: '420px' }}
         >
           {imageUrl ? (
             <img src={imageUrl} alt={product.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
@@ -225,11 +225,11 @@ function EditorsPickCard({ product }) {
           </div>
         </Link>
 
-        <div className="p-8 lg:p-12 flex flex-col justify-center" style={{ backgroundColor: 'rgba(255, 255, 255, 0.5)' }}>
+        <div className="p-6 lg:p-8 flex flex-col justify-center" style={{ backgroundColor: 'rgba(255, 255, 255, 0.5)' }}>
           <span className="font-body text-[10px] tracking-[0.5em] uppercase" style={{ color: 'rgba(176, 141, 87, 0.6)' }}>
             Выбор редакции
           </span>
-          <h3 className="font-display text-3xl lg:text-4xl italic mt-3 leading-tight" style={{ color: '#0C0A08' }}>
+          <h3 className="font-display text-2xl lg:text-3xl italic mt-3 leading-tight" style={{ color: '#0C0A08' }}>
             {product.title}
           </h3>
 
@@ -239,7 +239,7 @@ function EditorsPickCard({ product }) {
             </p>
           )}
 
-          <div className="w-10 h-px my-6" style={{ backgroundColor: 'rgba(176, 141, 87, 0.3)' }} />
+          <div className="w-10 h-px my-4" style={{ backgroundColor: 'rgba(176, 141, 87, 0.3)' }} />
 
           {product.description && (
             <p className="font-body text-sm leading-relaxed" style={{ color: 'rgba(44, 36, 32, 0.5)', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
@@ -267,7 +267,7 @@ function EditorsPickCard({ product }) {
             </div>
           )}
 
-          <div className="flex items-center gap-6 mt-8">
+          <div className="flex items-center gap-6 mt-5">
             {product.price > 0 && (
               <span className="font-display text-2xl" style={{ color: '#B08D57' }}>
                 {formatPrice(product.price)}
