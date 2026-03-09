@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import { getProducts, deleteProduct, togglePromoted } from '../../lib/api'
 import { useAuth } from '../../lib/AuthContext'
 import { categories } from '../../data/demoProducts'
+import { getStatusLabel } from '../../data/productStatuses'
 
 // -- Constants ----------------------------------------------------------------
 
@@ -78,7 +79,7 @@ function ProductRow({ product, onDelete, onTogglePromote }) {
         </p>
         <p className="font-body text-xs" style={{ color: TEXT_MUTED }}>
           {category?.name || product.category} · {product.price}€
-          {product.status === 'sold' && ' · Продано'}
+          {product.status !== 'active' && ` · ${getStatusLabel(product.status)}`}
         </p>
       </div>
 

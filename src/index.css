@@ -216,7 +216,7 @@
   margin: 0.5em 0;
 }
 .vintage-description li { margin-bottom: 0.25em; }
-.vintage-description li::marker { color: rgba(176, 141, 87, 0.5); }
+.vintage-description li::marker { color: #eb752f; }
 .vintage-description p { margin-bottom: 0.6em; }
 .vintage-description p:last-child { margin-bottom: 0; }
 .vintage-description a {

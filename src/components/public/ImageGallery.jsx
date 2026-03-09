@@ -13,6 +13,7 @@ export default function ImageGallery({ images = [], title = '' }) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const sliderRef = useRef(null)
+  const pointerStart = useRef(null)
 
   const goTo = useCallback(
     (idx) => setActiveIndex(Math.max(0, Math.min(idx, images.length - 1))),
@@ -62,7 +63,15 @@ export default function ImageGallery({ images = [], title = '' }) {
               key={idx}
               className="snap-center flex-shrink-0 cursor-zoom-in h-full"
               style={{ width: images.length === 1 ? '100%' : images.length === 2 ? '50%' : 'auto' }}
-              onClick={() => { setActiveIndex(idx); setLightboxOpen(true) }}
+              onPointerDown={(e) => { pointerStart.current = { x: e.clientX, y: e.clientY } }}
+              onPointerUp={(e) => {
+                const s = pointerStart.current
+                if (s && Math.abs(e.clientX - s.x) < 8 && Math.abs(e.clientY - s.y) < 8) {
+                  setActiveIndex(idx)
+                  setLightboxOpen(true)
+                }
+                pointerStart.current = null
+              }}
             >
               <img
                 src={getImageSrc(img)}
@@ -70,6 +79,7 @@ export default function ImageGallery({ images = [], title = '' }) {
                 className="h-full w-auto max-w-none object-cover transition-transform duration-500 hover:scale-[1.02] bg-neutral-100"
                 style={images.length <= 2 ? { width: '100%' } : undefined}
                 loading={idx > 2 ? 'lazy' : 'eager'}
+                draggable={false}
               />
             </div>
           ))}
@@ -188,7 +198,7 @@ function Lightbox({ images, activeIndex, title, onClose, onPrev, onNext, onSelec
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center"
+      className="fixed inset-0 z-[70] bg-black/95 flex items-center justify-center"
       onClick={onClose}
     >
       <button

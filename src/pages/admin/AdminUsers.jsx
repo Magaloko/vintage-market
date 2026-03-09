@@ -9,6 +9,17 @@ const ROLES = [
   { id: 'agent', label: 'Агент', color: '#4A8B6E' },
 ]
 
+/** Extract plain Instagram username from URL or @handle */
+function extractInstagramHandle(input) {
+  if (!input) return ''
+  let val = input.trim()
+  // Strip full URL: https://www.instagram.com/username/ → username
+  const urlMatch = val.match(/(?:https?:\/\/)?(?:www\.)?instagram\.com\/([a-zA-Z0-9_.]+)\/?/)
+  if (urlMatch) return urlMatch[1]
+  // Strip @ prefix
+  return val.replace(/^@/, '')
+}
+
 const EMPTY_USER = {
   name: '',
   email: '',
@@ -66,12 +77,19 @@ export default function AdminUsers() {
     if (!form.name.trim()) return toast.error('Введите имя')
     if (!form.email.trim()) return toast.error('Введите email')
 
+    // Clean social handles before saving
+    const cleanedForm = {
+      ...form,
+      contact_instagram: extractInstagramHandle(form.contact_instagram),
+      contact_telegram: form.contact_telegram?.trim().replace(/^@/, '').replace(/^https?:\/\/(t\.me|telegram\.me)\//, '') || '',
+    }
+
     if (editingUser) {
-      const { error } = await updateUser(editingUser.id, form)
+      const { error } = await updateUser(editingUser.id, cleanedForm)
       if (error) return toast.error('Ошибка: ' + error.message)
       toast.success('Пользователь обновлён')
     } else {
-      const { error } = await createUser(form)
+      const { error } = await createUser(cleanedForm)
       if (error) return toast.error('Ошибка: ' + error.message)
       toast.success('Пользователь создан')
     }
@@ -421,9 +439,16 @@ export default function AdminUsers() {
                   type="text"
                   value={form.contact_instagram}
                   onChange={(e) => setForm({ ...form, contact_instagram: e.target.value })}
-                  placeholder="@username"
+                  onBlur={(e) => {
+                    const cleaned = extractInstagramHandle(e.target.value)
+                    if (cleaned !== e.target.value) setForm((f) => ({ ...f, contact_instagram: cleaned }))
+                  }}
+                  placeholder="@username или ссылка"
                   className="gdt-input"
                 />
+                <p className="font-body text-[9px] mt-1" style={{ color: 'rgba(44, 36, 32, 0.3)' }}>
+                  Можно вставить ссылку — имя пользователя будет извлечено автоматически
+                </p>
               </div>
 
               {/* Status */}

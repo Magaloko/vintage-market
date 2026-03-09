@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from './supabase'
 import { demoProducts } from '../data/demoProducts'
 import { trackEvent, getLocalEvents } from './analytics'
+import { REVENUE_STATUSES, FINAL_STATUSES, PUBLIC_VISIBLE_STATUSES } from '../data/productStatuses'
 
 // =============================================================================
 // TTL Cache
@@ -106,8 +107,8 @@ function buildPriceRanges(prices) {
 /** Compute basic product statistics from an array of products. */
 function computeProductStats(products) {
   const total  = products.length
-  const active = products.filter(p => p.status === 'active').length
-  const sold   = products.filter(p => p.status === 'sold').length
+  const active = products.filter(p => !FINAL_STATUSES.includes(p.status)).length
+  const sold   = products.filter(p => REVENUE_STATUSES.includes(p.status)).length
   const prices = products.map(p => p.price).filter(Boolean)
   const avgPrice = prices.length
     ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length)
@@ -118,11 +119,11 @@ function computeProductStats(products) {
   const topCategoryEntry = Object.entries(cats).sort((a, b) => b[1] - a[1])[0]
 
   const totalRevenue = products
-    .filter(p => p.status === 'sold')
+    .filter(p => REVENUE_STATUSES.includes(p.status))
     .reduce((s, p) => s + (p.price || 0), 0)
 
   const revByCat = {}
-  products.filter(p => p.status === 'sold').forEach(p => {
+  products.filter(p => REVENUE_STATUSES.includes(p.status)).forEach(p => {
     revByCat[p.category] = (revByCat[p.category] || 0) + (p.price || 0)
   })
   const revenueByCategory = Object.entries(revByCat).map(([name, revenue]) => ({ name, revenue }))
@@ -131,10 +132,12 @@ function computeProductStats(products) {
     .sort((a, b) => (b.views || 0) - (a.views || 0))
     .slice(0, 5)
 
+  const statusCounts = countBy(products, p => p.status)
+
   return {
     total, active, sold, avgPrice, totalViews,
     topCategory: topCategoryEntry ? topCategoryEntry[0] : '-',
-    categories: cats,
+    categories: cats, statusCounts,
     priceRanges: buildPriceRanges(prices),
     totalRevenue, revenueByCategory, topByViews,
   }
@@ -563,8 +566,8 @@ export async function getShopStats(shopId) {
     return {
       data: {
         total: prods.length,
-        active: prods.filter(p => p.status === 'active').length,
-        sold: prods.filter(p => p.status === 'sold').length,
+        active: prods.filter(p => !FINAL_STATUSES.includes(p.status)).length,
+        sold: prods.filter(p => REVENUE_STATUSES.includes(p.status)).length,
         totalViews: prods.reduce((s, p) => s + (p.views || 0), 0),
         newInquiries: shopInqs.filter(i => i.status === 'new').length,
         totalInquiries: shopInqs.length,
@@ -591,8 +594,8 @@ export async function getShopStats(shopId) {
     return {
       data: {
         total: products.length,
-        active: products.filter(p => p.status === 'active').length,
-        sold: products.filter(p => p.status === 'sold').length,
+        active: products.filter(p => !FINAL_STATUSES.includes(p.status)).length,
+        sold: products.filter(p => REVENUE_STATUSES.includes(p.status)).length,
         totalViews: products.reduce((s, p) => s + (p.views || 0), 0),
         newInquiries,
         totalInquiries,
@@ -646,7 +649,7 @@ export function getCategoryCounts() {
 async function _getCategoryCounts() {
   if (!isSupabaseConfigured) {
     return {
-      data: countBy(localProducts, p => p.category, p => p.status !== 'sold'),
+      data: countBy(localProducts, p => p.category, p => !FINAL_STATUSES.includes(p.status)),
       error: null,
     }
   }
@@ -660,7 +663,7 @@ async function _getCategoryCounts() {
       return { data: {}, error: null }
     }
     return {
-      data: countBy(data || [], p => p.category, p => p.status !== 'sold'),
+      data: countBy(data || [], p => p.category, p => !FINAL_STATUSES.includes(p.status)),
       error: null,
     }
   } catch (e) {
@@ -1187,7 +1190,11 @@ export async function createProductReview({ product_id, name, rating, comment, s
     rating: Math.max(1, Math.min(5, Number(rating))),
     comment: comment.trim(),
     screenshot_url: screenshot_url || null,
-    instagram_handle: instagram_handle ? instagram_handle.trim().replace(/^@/, '') : null,
+    instagram_handle: instagram_handle ? (() => {
+      const v = instagram_handle.trim()
+      const m = v.match(/(?:https?:\/\/)?(?:www\.)?instagram\.com\/([a-zA-Z0-9_.]+)\/?/)
+      return m ? m[1] : v.replace(/^@/, '')
+    })() : null,
     created_at: now(),
   }
 
@@ -1438,212 +1445,86 @@ async function fetchAnalyticsEvents(days, eventTypes = null) {
   return events
 }
 
-function buildRealOverview(events, days) {
-  const sessions = new Set(events.map(e => e.session_id))
-  const totalVisits = events.length
-  const uniqueVisitors = sessions.size
-  const pagesPerVisit = sessions.size > 0 ? +(totalVisits / sessions.size).toFixed(1) : 0
-
-  const byDate = {}
-  events.forEach(e => {
-    const d = e.created_at.slice(0, 10)
-    if (!byDate[d]) byDate[d] = { total: 0, sessions: new Set() }
-    byDate[d].total++
-    byDate[d].sessions.add(e.session_id)
-  })
-  const dailyVisits = Object.entries(byDate)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, d]) => ({ date, visits: d.total, unique: d.sessions.size }))
-
-  return {
-    totalVisits, uniqueVisitors, pagesPerVisit,
-    avgSessionDuration: 0, bounceRate: 0,
-    totalVisitsDelta: 0, uniqueVisitorsDelta: 0, bounceRateDelta: 0,
-    dailyVisits,
-  }
-}
-
-function buildRealVisitors(events) {
-  const deviceCounts = {}
-  const browserCounts = {}
-  const sessionDevices = {}
-  events.forEach(e => {
-    if (!sessionDevices[e.session_id]) {
-      sessionDevices[e.session_id] = true
-      deviceCounts[e.device_type || 'desktop'] = (deviceCounts[e.device_type || 'desktop'] || 0) + 1
-      browserCounts[e.browser || 'other'] = (browserCounts[e.browser || 'other'] || 0) + 1
-    }
-  })
-  const totalDevices = Object.values(deviceCounts).reduce((s, v) => s + v, 0) || 1
-  const totalBrowsers = Object.values(browserCounts).reduce((s, v) => s + v, 0) || 1
-  return {
-    geography: [{ country: 'Данные', city: 'скоро', visits: events.length, percent: 100 }],
-    newVsReturning: { new: 65, returning: 35 },
-    devices: Object.entries(deviceCounts).map(([type, count]) => ({ type, count: Math.round(count / totalDevices * 100) })),
-    browsers: Object.entries(browserCounts).map(([name, count]) => ({ name, percent: Math.round(count / totalBrowsers * 100) })),
-  }
-}
-
-function buildRealActions(events, allEvents) {
-  const pvEvents = events.filter(e => e.event_type === 'product_view')
-  const favEvents = allEvents.filter(e => e.event_type === 'favorite_add')
-  const inqEvents = allEvents.filter(e => e.event_type === 'inquiry_create')
-  const shareEvents = allEvents.filter(e => e.event_type === 'share_click')
-
-  const productViews = {}
-  pvEvents.forEach(e => {
-    if (!e.product_id) return
-    if (!productViews[e.product_id]) productViews[e.product_id] = { views: 0, sessions: new Set() }
-    productViews[e.product_id].views++
-    productViews[e.product_id].sessions.add(e.session_id)
-  })
-
-  const topProducts = Object.entries(productViews)
-    .map(([id, d]) => {
-      const p = localProducts.find(x => x.id === id)
-      return { id, title: p?.title || id, image_url: p?.image_url, views: d.views, uniqueViews: d.sessions.size, avgTime: 0, category: p?.category }
-    })
-    .sort((a, b) => b.views - a.views)
-    .slice(0, 10)
-
-  const catViews = {}
-  pvEvents.forEach(e => { if (e.category) catViews[e.category] = (catViews[e.category] || 0) + 1 })
-  const topCategories = Object.entries(catViews).map(([id, views]) => ({ id, name: id, views })).sort((a, b) => b.views - a.views).slice(0, 8)
-
-  const byDate = {}
-  allEvents.forEach(e => {
-    const d = e.created_at.slice(0, 10)
-    if (!byDate[d]) byDate[d] = { views: 0, favorites: 0, inquiries: 0, shares: 0 }
-    if (e.event_type === 'product_view') byDate[d].views++
-    if (e.event_type === 'favorite_add') byDate[d].favorites++
-    if (e.event_type === 'inquiry_create') byDate[d].inquiries++
-    if (e.event_type === 'share_click') byDate[d].shares++
-  })
-  const interactionTimeline = Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b)).map(([date, d]) => ({ date, ...d }))
-
-  return {
-    totalPageViews: pvEvents.length,
-    uniquePageViews: new Set(pvEvents.map(e => e.session_id + e.product_id)).size,
-    avgTimeOnPage: 0,
-    topProducts, topCategories, interactionTimeline,
-  }
-}
-
-function buildRealChannels(events) {
-  const channelMap = {}
-  events.forEach(e => {
-    const ch = e.channel || (e.referrer ? 'referral' : 'direct')
-    if (!channelMap[ch]) channelMap[ch] = { visits: 0, sessions: new Set() }
-    channelMap[ch].visits++
-    channelMap[ch].sessions.add(e.session_id)
-  })
-  const colorMap = { direct: '#B08D57', whatsapp: '#25D366', telegram: '#0088CC', instagram: '#E4405F', search: '#4285F4', referral: '#7A5340', native: '#9B7E4A', clipboard: '#6E5535' }
-  const channels = Object.entries(channelMap).map(([key, d]) => ({
-    name: key, key, color: colorMap[key] || '#7A5340',
-    visits: d.visits, bounceRate: 0, conversions: 0, conversionRate: 0,
-  }))
-  return { channels, channelTrend: [] }
-}
-
-const REAL_DATA_THRESHOLD = 5
 
 // =============================================================================
-// Deep Analytics API (Matomo-inspired)
+// Analytics — always real data from localProducts + localStorage events
 // =============================================================================
 
-function seededRandom(seed) {
-  let s = Math.abs(seed) || 1
-  return () => {
-    s = (s * 16807) % 2147483647
-    return (s - 1) / 2147483646
-  }
-}
-
-function generateDailyPoints(days, basePerDay, variance, rand) {
-  const points = []
+function buildDailyTimeline(events, days, keyFn) {
   const now = new Date()
+  const byDate = {}
   for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now)
-    d.setDate(d.getDate() - i)
-    const dow = d.getDay()
-    const weekendFactor = (dow === 0 || dow === 6) ? 0.6 : 1.0
-    const trendFactor = 1 + (days - i) / days * 0.15
-    const value = Math.round(basePerDay * weekendFactor * trendFactor * (1 + (rand() - 0.5) * variance))
-    points.push({ date: d.toISOString().slice(0, 10), value: Math.max(1, value) })
+    const d = new Date(now); d.setDate(d.getDate() - i)
+    byDate[d.toISOString().slice(0, 10)] = {}
   }
-  return points
+  events.forEach(e => {
+    const d = e.created_at.slice(0, 10)
+    if (byDate[d]) keyFn(byDate[d], e)
+  })
+  return Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b)).map(([date, v]) => ({ date, ...v }))
 }
-
-const daySeed = () => Math.floor(Date.now() / 86400000)
 
 export async function getAnalyticsOverview(days = 30) {
-  try {
-    const events = await fetchAnalyticsEvents(days, ['page_view'])
-    if (events.length >= REAL_DATA_THRESHOLD) {
-      return { data: buildRealOverview(events, days), error: null }
-    }
-  } catch { /* fall through */ }
+  const events = await fetchAnalyticsEvents(days, ['page_view'])
+  const totalViewsFromProducts = localProducts.reduce((s, p) => s + (p.views || 0), 0)
 
-  const rand = seededRandom(daySeed() + 1)
-  const dailyVisits = generateDailyPoints(days, 120, 0.4, rand)
-  const totalVisits = dailyVisits.reduce((s, p) => s + p.value, 0)
-  const uniqueRatio = 0.62 + rand() * 0.1
-  const uniqueVisitors = Math.round(totalVisits * uniqueRatio)
-  const pagesPerVisit = +(2.1 + rand() * 1.4).toFixed(1)
-  const avgSessionDuration = Math.round(90 + rand() * 120)
-  const bounceRate = +(38 + rand() * 18).toFixed(1)
-  const totalVisitsDelta = +(-8 + rand() * 25).toFixed(1)
-  const uniqueVisitorsDelta = +(-5 + rand() * 20).toFixed(1)
-  const bounceRateDelta = +(-4 + rand() * 8).toFixed(1)
+  const sessions = new Set(events.map(e => e.session_id).filter(Boolean))
+  const totalVisits = events.length > 0 ? events.length : totalViewsFromProducts
+  const uniqueVisitors = sessions.size > 0 ? sessions.size : Math.round(totalVisits * 0.65)
+  const pagesPerVisit = sessions.size > 0 ? +(totalVisits / sessions.size).toFixed(1) : (totalVisits > 0 ? 2.5 : 0)
+
+  const dailyVisits = buildDailyTimeline(events, days, (bucket, e) => {
+    bucket.visits = (bucket.visits || 0) + 1
+    if (!bucket._sessions) bucket._sessions = new Set()
+    bucket._sessions.add(e.session_id)
+    bucket.unique = bucket._sessions.size
+  }).map(({ _sessions, ...rest }) => ({ visits: 0, unique: 0, ...rest }))
+
   return {
     data: {
-      totalVisits, uniqueVisitors, pagesPerVisit, avgSessionDuration, bounceRate,
-      totalVisitsDelta, uniqueVisitorsDelta, bounceRateDelta,
-      dailyVisits: dailyVisits.map(p => ({ date: p.date, visits: p.value, unique: Math.round(p.value * uniqueRatio) })),
+      totalVisits, uniqueVisitors, pagesPerVisit,
+      avgSessionDuration: 0, bounceRate: 0,
+      totalVisitsDelta: 0, uniqueVisitorsDelta: 0, bounceRateDelta: 0,
+      dailyVisits,
     },
     error: null,
   }
 }
 
 export async function getAnalyticsVisitors(days = 30) {
-  try {
-    const events = await fetchAnalyticsEvents(days, ['page_view'])
-    if (events.length >= REAL_DATA_THRESHOLD) {
-      return { data: buildRealVisitors(events), error: null }
+  const events = await fetchAnalyticsEvents(days, ['page_view'])
+
+  const deviceCounts = {}
+  const browserCounts = {}
+  const sessionSeen = {}
+  events.forEach(e => {
+    if (!sessionSeen[e.session_id]) {
+      sessionSeen[e.session_id] = true
+      const dt = e.device_type || 'Desktop'
+      const br = e.browser || 'Chrome'
+      deviceCounts[dt] = (deviceCounts[dt] || 0) + 1
+      browserCounts[br] = (browserCounts[br] || 0) + 1
     }
-  } catch { /* fall through */ }
+  })
 
-  const rand = seededRandom(daySeed() + 2)
-  const totalGeo = Math.round(800 + rand() * 600) * (days / 30)
-  const geoData = [
-    { country: 'Казахстан', city: 'Алматы', percent: 35 },
-    { country: 'Казахстан', city: 'Астана', percent: 15 },
-    { country: 'Казахстан', city: 'Шымкент', percent: 10 },
-    { country: 'Россия', city: 'Москва', percent: 12 },
-    { country: 'Австрия', city: 'Вена', percent: 8 },
-    { country: 'Турция', city: 'Стамбул', percent: 6 },
-    { country: 'Германия', city: 'Берлин', percent: 5 },
-    { country: 'Узбекистан', city: 'Ташкент', percent: 4 },
-    { country: 'Другие', city: '—', percent: 5 },
-  ].map(g => ({ ...g, visits: Math.round(totalGeo * g.percent / 100 * (0.85 + rand() * 0.3)) }))
+  const totalDevices = Object.values(deviceCounts).reduce((s, v) => s + v, 0) || 1
+  const totalBrowsers = Object.values(browserCounts).reduce((s, v) => s + v, 0) || 1
 
-  const newPct = 55 + Math.round(rand() * 15)
-  const devices = [
-    { type: 'Mobile', count: 58 + Math.round(rand() * 8) },
-    { type: 'Desktop', count: 32 + Math.round(rand() * 6) },
-    { type: 'Tablet', count: 5 + Math.round(rand() * 4) },
-  ]
-  const browsers = [
-    { name: 'Chrome', percent: 52 + Math.round(rand() * 8) },
-    { name: 'Safari', percent: 18 + Math.round(rand() * 5) },
-    { name: 'Yandex', percent: 12 + Math.round(rand() * 4) },
-    { name: 'Firefox', percent: 6 + Math.round(rand() * 3) },
-    { name: 'Other', percent: 5 },
-  ]
+  const devices = Object.keys(deviceCounts).length > 0
+    ? Object.entries(deviceCounts).map(([type, count]) => ({ type, count: Math.round(count / totalDevices * 100) }))
+    : [{ type: 'Desktop', count: 100 }]
+
+  const browsers = Object.keys(browserCounts).length > 0
+    ? Object.entries(browserCounts).map(([name, count]) => ({ name, percent: Math.round(count / totalBrowsers * 100) }))
+    : [{ name: 'Нет данных', percent: 100 }]
+
+  const uniqueSessions = Object.keys(sessionSeen).length
+  const totalEvents = events.length
+
   return {
     data: {
-      geography: geoData,
-      newVsReturning: { new: newPct, returning: 100 - newPct },
+      geography: [{ country: '—', city: 'Всего визитов', visits: totalEvents, percent: 100 }],
+      newVsReturning: { new: Math.min(uniqueSessions, totalEvents), returning: Math.max(0, totalEvents - uniqueSessions) },
       devices,
       browsers,
     },
@@ -1652,252 +1533,200 @@ export async function getAnalyticsVisitors(days = 30) {
 }
 
 export async function getAnalyticsActions(days = 30) {
-  try {
-    const allEvents = await fetchAnalyticsEvents(days, ['product_view', 'favorite_add', 'inquiry_create', 'share_click'])
-    const pvEvents = allEvents.filter(e => e.event_type === 'product_view')
-    if (pvEvents.length >= REAL_DATA_THRESHOLD) {
-      return { data: buildRealActions(pvEvents, allEvents), error: null }
-    }
-  } catch { /* fall through */ }
+  const allEvents = await fetchAnalyticsEvents(days, ['product_view', 'favorite_add', 'inquiry_create', 'share_click'])
+  const pvEvents = allEvents.filter(e => e.event_type === 'product_view')
+  const favEvents = allEvents.filter(e => e.event_type === 'favorite_add')
+  const inqEvents = allEvents.filter(e => e.event_type === 'inquiry_create')
 
-  const rand = seededRandom(daySeed() + 3)
-  const scale = days / 30
-  const totalPageViews = Math.round((3200 + rand() * 1800) * scale)
-  const uniquePageViews = Math.round(totalPageViews * (0.6 + rand() * 0.12))
-  const avgTimeOnPage = Math.round(35 + rand() * 50)
+  const totalViewsFromProducts = localProducts.reduce((s, p) => s + (p.views || 0), 0)
+  const totalPageViews = pvEvents.length > 0 ? pvEvents.length : totalViewsFromProducts
+  const uniquePageViews = pvEvents.length > 0
+    ? new Set(pvEvents.map(e => e.session_id + e.product_id)).size
+    : Math.round(totalPageViews * 0.65)
+
+  // Top products: merge event data with localProducts.views
+  const evtViewMap = {}
+  pvEvents.forEach(e => {
+    if (!e.product_id) return
+    if (!evtViewMap[e.product_id]) evtViewMap[e.product_id] = { views: 0, sessions: new Set() }
+    evtViewMap[e.product_id].views++
+    evtViewMap[e.product_id].sessions.add(e.session_id)
+  })
 
   const topProducts = [...localProducts]
-    .sort((a, b) => (b.views || 0) - (a.views || 0))
-    .slice(0, 10)
-    .map(p => ({
-      id: p.id, title: p.title, image_url: p.image_url,
-      views: p.views || Math.round(30 + rand() * 200),
-      uniqueViews: Math.round((p.views || 50) * (0.55 + rand() * 0.15)),
-      avgTime: Math.round(20 + rand() * 60),
-      category: p.category,
-    }))
-
-  const catMap = {}
-  localProducts.forEach(p => { catMap[p.category] = (catMap[p.category] || 0) + (p.views || Math.round(10 + rand() * 40)) })
-  const topCategories = Object.entries(catMap)
-    .map(([id, views]) => ({ id, name: id, views }))
+    .map(p => {
+      const ev = evtViewMap[p.id]
+      const views = ev ? ev.views : (p.views || 0)
+      const uniqueViews = ev ? ev.sessions.size : Math.round(views * 0.65)
+      return { id: p.id, title: p.title, image_url: p.image_url, views, uniqueViews, avgTime: 0, category: p.category }
+    })
     .sort((a, b) => b.views - a.views)
-    .slice(0, 8)
+    .slice(0, 10)
 
-  const interactionTimeline = generateDailyPoints(days, 100, 0.35, rand).map(p => ({
-    date: p.date,
-    views: p.value,
-    favorites: Math.round(p.value * 0.08 * (0.7 + rand() * 0.6)),
-    inquiries: Math.round(p.value * 0.03 * (0.6 + rand() * 0.8)),
-    shares: Math.round(p.value * 0.02 * (0.5 + rand() * 1)),
-  }))
+  const interactionTimeline = buildDailyTimeline(allEvents, days, (bucket, e) => {
+    if (e.event_type === 'product_view') bucket.views = (bucket.views || 0) + 1
+    if (e.event_type === 'favorite_add') bucket.favorites = (bucket.favorites || 0) + 1
+    if (e.event_type === 'inquiry_create') bucket.inquiries = (bucket.inquiries || 0) + 1
+    if (e.event_type === 'share_click') bucket.shares = (bucket.shares || 0) + 1
+  }).map(d => ({ views: 0, favorites: 0, inquiries: 0, shares: 0, ...d }))
 
   return {
-    data: { totalPageViews, uniquePageViews, avgTimeOnPage, topProducts, topCategories, interactionTimeline },
+    data: { totalPageViews, uniquePageViews, avgTimeOnPage: 0, topProducts, topCategories: [], interactionTimeline },
     error: null,
   }
 }
 
 export async function getAnalyticsChannels(days = 30) {
-  try {
-    const events = await fetchAnalyticsEvents(days, ['page_view', 'share_click'])
-    if (events.length >= REAL_DATA_THRESHOLD) {
-      return { data: buildRealChannels(events), error: null }
-    }
-  } catch { /* fall through */ }
+  const events = await fetchAnalyticsEvents(days, ['page_view', 'share_click'])
+  const colorMap = { direct: '#B08D57', whatsapp: '#25D366', telegram: '#0088CC', instagram: '#E4405F', search: '#4285F4', referral: '#7A5340', native: '#9B7E4A', clipboard: '#6E5535' }
+  const channelNames = { direct: 'Прямой', whatsapp: 'WhatsApp', telegram: 'Telegram', instagram: 'Instagram', search: 'Поиск', referral: 'Реферал', native: 'Приложение', clipboard: 'Буфер' }
 
-  const rand = seededRandom(daySeed() + 4)
-  const base = Math.round((2800 + rand() * 1500) * (days / 30))
-  const channels = [
-    { name: 'Прямой', key: 'direct', pct: 30, color: '#B08D57' },
-    { name: 'WhatsApp', key: 'whatsapp', pct: 25, color: '#25D366' },
-    { name: 'Telegram', key: 'telegram', pct: 15, color: '#0088CC' },
-    { name: 'Instagram', key: 'instagram', pct: 15, color: '#E4405F' },
-    { name: 'Поиск', key: 'search', pct: 10, color: '#4285F4' },
-    { name: 'Реферал', key: 'referral', pct: 5, color: '#7A5340' },
-  ].map(ch => ({
-    ...ch,
-    visits: Math.round(base * ch.pct / 100 * (0.85 + rand() * 0.3)),
-    bounceRate: +(30 + rand() * 30).toFixed(1),
-    conversions: Math.round(base * ch.pct / 100 * 0.012 * (0.6 + rand() * 0.8)),
-    conversionRate: +(0.5 + rand() * 2.5).toFixed(1),
-  }))
+  const channelMap = {}
+  events.forEach(e => {
+    const ch = e.channel || (e.referrer ? 'referral' : 'direct')
+    if (!channelMap[ch]) channelMap[ch] = { visits: 0, sessions: new Set() }
+    channelMap[ch].visits++
+    channelMap[ch].sessions.add(e.session_id)
+  })
 
-  const trendDays = generateDailyPoints(days, base / days, 0.35, rand)
-  const channelTrend = trendDays.map(p => {
-    const obj = { date: p.date }
-    channels.forEach(ch => { obj[ch.key] = Math.round(p.value * ch.pct / 100 * (0.8 + rand() * 0.4)) })
-    return obj
+  const channels = Object.keys(channelMap).length > 0
+    ? Object.entries(channelMap).map(([key, d]) => ({
+        name: channelNames[key] || key, key, color: colorMap[key] || '#7A5340',
+        visits: d.visits, bounceRate: 0, conversions: 0, conversionRate: 0,
+      })).sort((a, b) => b.visits - a.visits)
+    : [{ name: 'Прямой', key: 'direct', color: '#B08D57', visits: 0, bounceRate: 0, conversions: 0, conversionRate: 0 }]
+
+  const channelTrend = buildDailyTimeline(events, days, (bucket, e) => {
+    const ch = e.channel || (e.referrer ? 'referral' : 'direct')
+    bucket[ch] = (bucket[ch] || 0) + 1
   })
 
   return { data: { channels, channelTrend }, error: null }
 }
 
 export async function getAnalyticsSales(days = 30) {
-  try {
-    const events = await fetchAnalyticsEvents(days, ['inquiry_create', 'product_view', 'favorite_add'])
-    const inqEvents = events.filter(e => e.event_type === 'inquiry_create')
-    if (inqEvents.length >= REAL_DATA_THRESHOLD) {
-      const soldProducts = localProducts.filter(p => p.status === 'sold')
-      const pvEvents = events.filter(e => e.event_type === 'product_view')
-      const favEvents = events.filter(e => e.event_type === 'favorite_add')
-      const totalRevenue = soldProducts.reduce((s, p) => s + (p.price || 0), 0)
-      const ordersCount = soldProducts.length || inqEvents.length
-      const avgOrderValue = ordersCount > 0 ? Math.round(totalRevenue / ordersCount) : 0
-      const totalViews = pvEvents.length || 1
+  const events = await fetchAnalyticsEvents(days, ['inquiry_create', 'product_view', 'favorite_add'])
+  const inqEvents = events.filter(e => e.event_type === 'inquiry_create')
+  const pvEvents = events.filter(e => e.event_type === 'product_view')
+  const favEvents = events.filter(e => e.event_type === 'favorite_add')
 
-      const byDate = {}
-      inqEvents.forEach(e => {
-        const d = e.created_at.slice(0, 10)
-        if (!byDate[d]) byDate[d] = { revenue: 0, orders: 0 }
-        byDate[d].orders++
-        byDate[d].revenue += avgOrderValue || 200
-      })
-      const revenueTimeline = Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b)).map(([date, d]) => ({ date, ...d }))
-
-      const catRevenue = {}
-      soldProducts.forEach(p => { catRevenue[p.category] = (catRevenue[p.category] || 0) + (p.price || 0) })
-      const revenueByCategory = Object.entries(catRevenue).map(([name, revenue]) => ({
-        name, revenue, orders: Math.max(1, Math.round(revenue / (avgOrderValue || 200)))
-      })).sort((a, b) => b.revenue - a.revenue)
-
-      const funnel = {
-        views: totalViews,
-        favorites: favEvents.length,
-        inquiries: inqEvents.length,
-        sales: soldProducts.length,
-      }
-
-      const topByRevenue = soldProducts.slice(0, 10).map(p => ({
-        id: p.id, title: p.title, image_url: p.image_url, revenue: p.price || 0, orders: 1, category: p.category
-      })).sort((a, b) => b.revenue - a.revenue)
-
-      return {
-        data: {
-          totalRevenue, ordersCount, avgOrderValue,
-          conversionRate: totalViews > 0 ? +(inqEvents.length / totalViews * 100).toFixed(1) : 0,
-          revenueDelta: 0, revenueTimeline, revenueByCategory, funnel, topByRevenue,
-        },
-        error: null,
-      }
-    }
-  } catch { /* fall through */ }
-
-  const rand = seededRandom(daySeed() + 5)
-  const scale = days / 30
-  const soldProducts = localProducts.filter(p => p.status === 'sold')
-  const totalRevenue = soldProducts.length > 0
-    ? soldProducts.reduce((s, p) => s + (p.price || 0), 0)
-    : Math.round((4500 + rand() * 3000) * scale)
-  const ordersCount = soldProducts.length > 0
-    ? Math.round(soldProducts.length * scale)
-    : Math.round((12 + rand() * 18) * scale)
+  const soldProducts = localProducts.filter(p => REVENUE_STATUSES.includes(p.status))
+  const totalRevenue = soldProducts.reduce((s, p) => s + (p.price || 0), 0)
+  const ordersCount = soldProducts.length
   const avgOrderValue = ordersCount > 0 ? Math.round(totalRevenue / ordersCount) : 0
-  const conversionRate = +(1 + rand() * 2).toFixed(1)
-  const revenueDelta = +(-10 + rand() * 30).toFixed(1)
 
-  const revenueTimeline = generateDailyPoints(days, totalRevenue / days, 0.5, rand).map(p => ({
-    date: p.date,
-    revenue: p.value,
-    orders: Math.max(0, Math.round(p.value / (avgOrderValue || 200) * (0.7 + rand() * 0.6))),
-  }))
+  const totalViewsFromProducts = localProducts.reduce((s, p) => s + (p.views || 0), 0)
+  const totalViews = pvEvents.length > 0 ? pvEvents.length : (totalViewsFromProducts || 1)
+  const totalFavsFromProducts = localProducts.reduce((s, p) => s + (p.favCount || 0), 0)
+  const totalFavs = favEvents.length > 0 ? favEvents.length : totalFavsFromProducts
+
+  const conversionRate = totalViews > 0 ? +(ordersCount / totalViews * 100).toFixed(1) : 0
+
+  // Revenue timeline from product dates (sold products)
+  const byDate = {}
+  soldProducts.forEach(p => {
+    const d = (p.sold_at || p.updated_at || p.created_at || '').slice(0, 10)
+    if (!d) return
+    if (!byDate[d]) byDate[d] = { revenue: 0, orders: 0 }
+    byDate[d].orders++
+    byDate[d].revenue += (p.price || 0)
+  })
+  inqEvents.forEach(e => {
+    const d = e.created_at.slice(0, 10)
+    if (!byDate[d]) byDate[d] = { revenue: 0, orders: 0 }
+  })
+  const revenueTimeline = Object.entries(byDate)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, d]) => ({ date, ...d }))
 
   const catRevenue = {}
-  soldProducts.forEach(p => {
-    catRevenue[p.category] = (catRevenue[p.category] || 0) + (p.price || 0)
-  })
-  if (Object.keys(catRevenue).length === 0) {
-    ;['jewelry', 'furniture', 'art', 'clothing', 'ceramics'].forEach(c => {
-      catRevenue[c] = Math.round(500 + rand() * 2000)
-    })
-  }
+  soldProducts.forEach(p => { catRevenue[p.category] = (catRevenue[p.category] || 0) + (p.price || 0) })
   const revenueByCategory = Object.entries(catRevenue)
     .map(([name, revenue]) => ({ name, revenue, orders: Math.max(1, Math.round(revenue / (avgOrderValue || 200))) }))
     .sort((a, b) => b.revenue - a.revenue)
 
-  const totalViews = localProducts.reduce((s, p) => s + (p.views || 0), 0) || Math.round(3000 * scale)
   const funnel = {
     views: totalViews,
-    favorites: Math.round(totalViews * 0.08),
-    inquiries: Math.round(totalViews * 0.03),
+    favorites: totalFavs,
+    inquiries: inqEvents.length + localInquiries.length,
     sales: ordersCount,
   }
 
-  const topByRevenue = (soldProducts.length > 0 ? soldProducts : localProducts.slice(0, 5))
-    .map(p => ({ id: p.id, title: p.title, image_url: p.image_url, revenue: p.price || Math.round(100 + rand() * 800), orders: 1, category: p.category }))
+  const topByRevenue = soldProducts
+    .map(p => ({ id: p.id, title: p.title, image_url: p.image_url, revenue: p.price || 0, orders: 1, category: p.category }))
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 10)
 
   return {
-    data: { totalRevenue, ordersCount, avgOrderValue, conversionRate, revenueDelta, revenueTimeline, revenueByCategory, funnel, topByRevenue },
+    data: { totalRevenue, ordersCount, avgOrderValue, conversionRate, revenueDelta: 0, revenueTimeline, revenueByCategory, funnel, topByRevenue },
     error: null,
   }
 }
 
 export async function getAnalyticsGoals(days = 30) {
-  try {
-    const events = await fetchAnalyticsEvents(days, ['inquiry_create', 'favorite_add', 'page_view'])
-    const inqEvents = events.filter(e => e.event_type === 'inquiry_create')
-    const favEvents = events.filter(e => e.event_type === 'favorite_add')
-    const pvEvents = events.filter(e => e.event_type === 'page_view')
-    if (pvEvents.length >= REAL_DATA_THRESHOLD) {
-      const buildGoalTrend = (evts) => {
-        const byDate = {}
-        evts.forEach(e => {
-          const d = e.created_at.slice(0, 10)
-          byDate[d] = (byDate[d] || 0) + 1
-        })
-        return Object.entries(byDate).sort(([a], [b]) => a.localeCompare(b)).map(([date, completions]) => ({ date, completions }))
-      }
-      const totalPV = pvEvents.length || 1
-      const goals = [
-        { id: 'inquiry', name: 'Заявка отправлена', completions: inqEvents.length, conversionRate: +(inqEvents.length / totalPV * 100).toFixed(1), trend: buildGoalTrend(inqEvents) },
-        { id: 'favorite', name: 'Добавлено в избранное', completions: favEvents.length, conversionRate: +(favEvents.length / totalPV * 100).toFixed(1), trend: buildGoalTrend(favEvents) },
-        { id: 'inquiry_to_sale', name: 'Заявка → Продажа', completions: localProducts.filter(p => p.status === 'sold').length, conversionRate: inqEvents.length > 0 ? +(localProducts.filter(p => p.status === 'sold').length / inqEvents.length * 100).toFixed(1) : 0, trend: [] },
-        { id: 'response_time', name: 'Ответ < 4 часа', completions: inqEvents.length, conversionRate: 0, trend: [] },
-      ]
-      return { data: { goals }, error: null }
-    }
-  } catch { /* fall through */ }
+  const events = await fetchAnalyticsEvents(days, ['inquiry_create', 'favorite_add', 'page_view'])
+  const inqEvents = events.filter(e => e.event_type === 'inquiry_create')
+  const favEvents = events.filter(e => e.event_type === 'favorite_add')
+  const pvEvents = events.filter(e => e.event_type === 'page_view')
 
-  const rand = seededRandom(daySeed() + 6)
-  const scale = days / 30
+  const totalViewsFromProducts = localProducts.reduce((s, p) => s + (p.views || 0), 0)
+  const totalPV = pvEvents.length > 0 ? pvEvents.length : (totalViewsFromProducts || 1)
+  const soldCount = localProducts.filter(p => REVENUE_STATUSES.includes(p.status)).length
+  const totalInq = inqEvents.length + localInquiries.length
+  const totalFav = favEvents.length + localProducts.reduce((s, p) => s + (p.favCount || 0), 0)
+
+  const buildGoalTrend = (evts) => {
+    const bd = {}
+    evts.forEach(e => {
+      const d = e.created_at.slice(0, 10)
+      bd[d] = (bd[d] || 0) + 1
+    })
+    return Object.entries(bd).sort(([a], [b]) => a.localeCompare(b)).map(([date, completions]) => ({ date, completions }))
+  }
+
   const goals = [
-    { id: 'inquiry', name: 'Заявка отправлена', base: 45, rate: 3.2 },
-    { id: 'favorite', name: 'Добавлено в избранное', base: 120, rate: 8.5 },
-    { id: 'inquiry_to_sale', name: 'Заявка → Продажа', base: 8, rate: 18 },
-    { id: 'response_time', name: 'Ответ < 4 часа', base: 35, rate: 78 },
-  ].map(g => {
-    const completions = Math.round(g.base * scale * (0.8 + rand() * 0.4))
-    const conversionRate = +(g.rate * (0.85 + rand() * 0.3)).toFixed(1)
-    const trend = generateDailyPoints(Math.min(days, 30), g.base / 30, 0.45, rand)
-      .map(p => ({ date: p.date, completions: p.value }))
-    return { id: g.id, name: g.name, completions, conversionRate, trend }
-  })
+    { id: 'inquiry', name: 'Заявка отправлена', completions: totalInq, conversionRate: totalPV > 0 ? +(totalInq / totalPV * 100).toFixed(1) : 0, trend: buildGoalTrend(inqEvents) },
+    { id: 'favorite', name: 'Добавлено в избранное', completions: totalFav, conversionRate: totalPV > 0 ? +(totalFav / totalPV * 100).toFixed(1) : 0, trend: buildGoalTrend(favEvents) },
+    { id: 'inquiry_to_sale', name: 'Заявка → Продажа', completions: soldCount, conversionRate: totalInq > 0 ? +(soldCount / totalInq * 100).toFixed(1) : 0, trend: [] },
+    { id: 'response_time', name: 'Ответ < 4 часа', completions: totalInq, conversionRate: 0, trend: [] },
+  ]
+
   return { data: { goals }, error: null }
 }
 
 export async function getAnalyticsSellers(days = 30) {
-  const rand = seededRandom(daySeed() + 7)
-  const scale = days / 30
   const sellerUsers = localUsers.filter(u => u.role === 'seller' || u.role === 'agent')
-  const sellers = (sellerUsers.length > 0 ? sellerUsers : [
-    { id: 's1', name: 'Алия К.', role: 'seller' },
-    { id: 's2', name: 'Thomas M.', role: 'seller' },
-    { id: 's3', name: 'Марат Б.', role: 'agent' },
-  ]).map(u => ({
-    id: u.id,
-    name: u.name,
-    role: u.role,
-    products: Math.round((3 + rand() * 12) * scale),
-    views: Math.round((80 + rand() * 400) * scale),
-    inquiries: Math.round((2 + rand() * 15) * scale),
-    sales: Math.round((1 + rand() * 6) * scale),
-    revenue: Math.round((300 + rand() * 3000) * scale),
-  }))
 
-  const activityTimeline = generateDailyPoints(Math.min(days, 30), 2, 0.6, rand)
-    .map(p => ({ date: p.date, newListings: Math.max(0, p.value) }))
+  const sellers = sellerUsers.map(u => {
+    const userProducts = localProducts.filter(p => p.seller_id === u.id || p.user_id === u.id)
+    const userSold = userProducts.filter(p => p.status === 'sold')
+    return {
+      id: u.id,
+      name: u.name || u.email || u.id,
+      role: u.role,
+      products: userProducts.length,
+      views: userProducts.reduce((s, p) => s + (p.views || 0), 0),
+      inquiries: localInquiries.filter(i => userProducts.some(p => p.id === i.product_id)).length,
+      sales: userSold.length,
+      revenue: userSold.reduce((s, p) => s + (p.price || 0), 0),
+    }
+  })
+
+  // Activity timeline from product created_at
+  const now = new Date()
+  const byDate = {}
+  for (let i = Math.min(days, 30) - 1; i >= 0; i--) {
+    const d = new Date(now); d.setDate(d.getDate() - i)
+    byDate[d.toISOString().slice(0, 10)] = 0
+  }
+  localProducts.forEach(p => {
+    if (!p.created_at) return
+    const d = p.created_at.slice(0, 10)
+    if (d in byDate) byDate[d]++
+  })
+  const activityTimeline = Object.entries(byDate)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, newListings]) => ({ date, newListings }))
 
   return { data: { sellers, activityTimeline }, error: null }
 }

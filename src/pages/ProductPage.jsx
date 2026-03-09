@@ -34,6 +34,7 @@ import SimilarProducts from '../components/public/SimilarProducts'
 import ProductCard from '../components/public/ProductCard'
 import ProductReviews from '../components/public/ProductReviews'
 import InlineDescriptionEditor from '../components/public/InlineDescriptionEditor'
+import { FINAL_STATUSES } from '../data/productStatuses'
 import { siteConfig } from '../lib/siteConfig'
 import { useCurrency } from '../lib/CurrencyContext'
 
@@ -254,7 +255,8 @@ export default function ProductPage() {
   const isRealEstate = category?.group === 'realestate'
   const isShop = category?.group === 'shops'
   const showPrice = product.price > 0
-  const isSold = product.status === 'sold'
+  const isSold = FINAL_STATUSES.includes(product.status)
+  const isReserved = product.status === 'reserved'
 
   // Resolve contact: product-level → siteConfig fallback
   const resolvedWhatsapp = (product.contact_whatsapp || siteConfig.whatsapp || '').replace(/[^\d+]/g, '')
@@ -382,6 +384,9 @@ export default function ProductPage() {
           )}
           {isSold && (
             <span className="font-body text-xs tracking-[0.2em] uppercase" style={{ color: '#B08D57' }}>Продано</span>
+          )}
+          {isReserved && (
+            <span className="font-body text-xs tracking-[0.2em] uppercase" style={{ color: '#9B7CB8' }}>Забронировано</span>
           )}
 
           {/* Availability */}
@@ -603,6 +608,11 @@ export default function ProductPage() {
                   {isSold && (
                     <span className="font-body text-xs tracking-[0.2em] uppercase mt-1 inline-block" style={{ color: '#B08D57' }}>
                       Продано
+                    </span>
+                  )}
+                  {isReserved && (
+                    <span className="font-body text-xs tracking-[0.2em] uppercase mt-1 inline-block" style={{ color: '#9B7CB8' }}>
+                      Забронировано
                     </span>
                   )}
                 </div>

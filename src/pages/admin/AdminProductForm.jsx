@@ -12,9 +12,19 @@ import {
   categories, conditions, categoryFields, categoryGroups,
   knownBrands, specialAttributes, subcategories, shippingOptions,
 } from '../../data/demoProducts'
+import { PRODUCT_STATUS_GROUPS, getStatusesByGroup } from '../../data/productStatuses'
 import { getActiveCategoryList } from '../../lib/categorySettings'
 import { CURRENCIES, FALLBACK_RATES } from '../../lib/CurrencyContext'
 import ImageUploader from '../../components/admin/ImageUploader'
+
+/** Extract plain Instagram username from URL or @handle */
+function extractInstagramHandle(input) {
+  if (!input) return ''
+  let val = input.trim()
+  const urlMatch = val.match(/(?:https?:\/\/)?(?:www\.)?instagram\.com\/([a-zA-Z0-9_.]+)\/?/)
+  if (urlMatch) return urlMatch[1]
+  return val.replace(/^@/, '')
+}
 
 /* ── Empty form ────────────────────────────────────────────────── */
 const EMPTY_FORM = {
@@ -28,7 +38,7 @@ const EMPTY_FORM = {
   era_end: '',
   brand: '',
   image_url: '',
-  status: 'active',
+  status: 'ordered',
   special_attributes: [],
   quantity: 1,
   seller_id: '',
@@ -719,7 +729,7 @@ export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
       shipping: shipping,
       contact_whatsapp: form.contact_whatsapp || null,
       contact_telegram: form.contact_telegram || null,
-      contact_instagram: form.contact_instagram || null,
+      contact_instagram: extractInstagramHandle(form.contact_instagram) || null,
       image_url: images[0]?.url || form.image_url || '',
       images,
       details,
@@ -997,8 +1007,13 @@ export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
                 value={form.status}
                 onChange={handleChange}
               >
-                <option value="active">В наличии</option>
-                <option value="sold">Продано</option>
+                {PRODUCT_STATUS_GROUPS.map(g => (
+                  <optgroup key={g.id} label={`${g.icon} ${g.label}`}>
+                    {getStatusesByGroup(g.id).map(s => (
+                      <option key={s.key} value={s.key}>{s.emoji} {s.label}</option>
+                    ))}
+                  </optgroup>
+                ))}
               </FormSelect>
             </div>
           </Section>
@@ -1103,7 +1118,11 @@ export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
                 label="Instagram"
                 value={form.contact_instagram}
                 onChange={handleChange}
-                placeholder="@username"
+                onBlur={() => {
+                  const cleaned = extractInstagramHandle(form.contact_instagram)
+                  if (cleaned !== form.contact_instagram) setForm((f) => ({ ...f, contact_instagram: cleaned }))
+                }}
+                placeholder="@username или ссылка"
               />
             </div>
           </div>

@@ -4,6 +4,7 @@ import {
   Package, ShoppingCart, Eye, TrendingUp, Tag,
   DollarSign, Heart, BarChart3, MessageSquare, Plus,
   GripVertical, Zap, Clock, Star, ShieldCheck,
+  Receipt, Briefcase, FileSearch, CalendarDays, ArrowRight,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -300,6 +301,9 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {/* ── Business KPIs ──────────────────────────────────────── */}
+      <BusinessKPIs />
+
       {/* Charts panel */}
       <div style={panelStyle}>
         {/* Tab bar — draggable */}
@@ -376,6 +380,178 @@ export default function AdminDashboard() {
       >
         <Plus size={24} />
       </Link>
+    </div>
+  )
+}
+
+/* ── Business KPIs section ───────────────────────────────────── */
+
+function readLS(key, fallback = []) {
+  try {
+    const raw = localStorage.getItem(key)
+    return raw ? JSON.parse(raw) : fallback
+  } catch { return fallback }
+}
+
+const fmtCur = (n) => new Intl.NumberFormat('de-AT', { style: 'currency', currency: 'EUR' }).format(n || 0)
+
+function BusinessKPIs() {
+  const invoices  = readLS('vm_invoices')
+  const expenses  = readLS('vm_expenses')
+  const deals     = readLS('vm_sales_deals')
+  const boards    = readLS('vm_sales_boards')
+  const jobs      = readLS('vm_jobs')
+  const events    = readLS('vm_events')
+  const cvLast    = readLS('vm_cv_last', null)
+
+  // Monthly revenue (paid invoices this month)
+  const now = new Date()
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  const paidThisMonth = invoices
+    .filter((inv) => inv.status === 'Оплачена' && (inv.date || '').startsWith(thisMonth))
+    .reduce((sum, inv) => sum + (inv.items || []).reduce((s, it) => s + (it.qty || 0) * (it.price || 0) * (1 + (it.vat || 0) / 100), 0), 0)
+
+  const openInvoices = invoices.filter((inv) => inv.status === 'Открыта' || inv.status === 'Просрочена').length
+  const monthlyExpenses = expenses
+    .filter((e) => (e.date || '').startsWith(thisMonth))
+    .reduce((sum, e) => sum + (e.amount || 0), 0)
+
+  // Pipeline value (all non-closed deals)
+  const pipelineValue = deals.reduce((sum, d) => sum + (parseFloat(d.value) || 0), 0)
+  const activeDeals = deals.length
+
+  // Jobs
+  const activeJobs = jobs.filter((j) => j.status !== 'Отклонено').length
+
+  // Events upcoming
+  const upcomingEvents = events.filter((e) => new Date(e.datetime) >= now).length
+
+  // Last ATS score
+  const lastATS = cvLast?.overall != null ? cvLast.overall : null
+
+  const bizCards = [
+    {
+      label: 'Выручка (месяц)',
+      value: fmtCur(paidThisMonth),
+      icon: Receipt,
+      color: '#4A7A5C',
+      link: '/admin/accounting',
+    },
+    {
+      label: 'Открытые счета',
+      value: openInvoices,
+      icon: Receipt,
+      color: openInvoices > 0 ? '#C17F3E' : colors.gold,
+      link: '/admin/accounting',
+    },
+    {
+      label: 'Расходы (месяц)',
+      value: fmtCur(monthlyExpenses),
+      icon: DollarSign,
+      color: '#B5736A',
+      link: '/admin/accounting',
+    },
+    {
+      label: 'Pipeline-сумма',
+      value: fmtCur(pipelineValue),
+      icon: TrendingUp,
+      color: colors.gold,
+      link: '/admin/sales',
+    },
+    {
+      label: 'Активные сделки',
+      value: activeDeals,
+      icon: Briefcase,
+      color: colors.gold,
+      link: '/admin/sales',
+    },
+    {
+      label: 'Вакансии',
+      value: activeJobs,
+      icon: Briefcase,
+      color: colors.gold,
+      link: '/admin/jobs',
+    },
+    {
+      label: 'ATS Score',
+      value: lastATS != null ? `${lastATS}%` : '—',
+      icon: FileSearch,
+      color: lastATS >= 70 ? '#4A7A5C' : lastATS >= 40 ? '#C17F3E' : colors.gold,
+      link: '/admin/cv-analyzer',
+    },
+    {
+      label: 'События',
+      value: upcomingEvents,
+      icon: CalendarDays,
+      color: colors.gold,
+      link: '/admin/events',
+    },
+  ]
+
+  const quickLinks = [
+    { label: 'Продажи', to: '/admin/sales', icon: TrendingUp },
+    { label: 'Бухгалтерия', to: '/admin/accounting', icon: Receipt },
+    { label: 'Вакансии', to: '/admin/jobs', icon: Briefcase },
+    { label: 'CV Анализатор', to: '/admin/cv-analyzer', icon: FileSearch },
+    { label: 'События', to: '/admin/events', icon: CalendarDays },
+  ]
+
+  return (
+    <div style={panelStyle} className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-sans text-sm font-medium flex items-center gap-2" style={{ color: alpha.ink70 }}>
+          <Briefcase size={16} style={{ color: colors.gold }} />
+          Бизнес
+        </h2>
+        <div className="flex gap-1">
+          {quickLinks.map((ql) => (
+            <Link
+              key={ql.to}
+              to={ql.to}
+              className="flex items-center gap-1 px-2.5 py-1 font-sans text-[10px] uppercase tracking-wider transition-colors"
+              style={{ color: alpha.ink40, borderRadius: '2px' }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = alpha.gold08; e.currentTarget.style.color = colors.gold }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = alpha.ink40 }}
+            >
+              <ql.icon size={10} />
+              {ql.label}
+              <ArrowRight size={8} />
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {bizCards.map((card, i) => (
+          <Link
+            key={i}
+            to={card.link}
+            className="flex items-center gap-3 p-4 transition-all"
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.6)',
+              border: `1px solid ${alpha.gold12}`,
+              borderRadius: '2px',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = colors.gold; e.currentTarget.style.backgroundColor = alpha.gold08 }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = alpha.gold12; e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.6)' }}
+          >
+            <div
+              className="w-10 h-10 rounded-btn flex items-center justify-center shrink-0"
+              style={{ backgroundColor: `${card.color}15` }}
+            >
+              <card.icon size={18} style={{ color: card.color }} />
+            </div>
+            <div className="min-w-0">
+              <p className="font-sans text-[10px] uppercase tracking-wider truncate" style={{ color: alpha.ink40 }}>
+                {card.label}
+              </p>
+              <p className="font-sans text-xl font-bold" style={{ color: colors.ink }}>
+                {card.value}
+              </p>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   )
 }

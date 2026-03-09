@@ -4,6 +4,7 @@ import { Plus, Edit, Trash2, Eye, Search, Package, X, Star, GripVertical, Check,
 import toast from 'react-hot-toast'
 import { getProducts, deleteProduct, togglePromoted, updateProduct } from '../../lib/api'
 import { categories, specialAttributes } from '../../data/demoProducts'
+import { PRODUCT_STATUSES, PRODUCT_STATUS_GROUPS, getStatusDef, getStatusesByGroup } from '../../data/productStatuses'
 
 /* ── Shared style tokens (light) ─────────────────────────────── */
 const colors = {
@@ -45,10 +46,75 @@ const inputStyle = {
 
 const thStyle = { color: alpha.ink30 }
 
-const statusBadge = (status) => ({
-  backgroundColor: status === 'active' ? 'rgba(122, 139, 111, 0.12)' : alpha.ink05,
-  color: status === 'active' ? '#5A6B3C' : alpha.ink40,
-})
+const statusBadge = (status) => {
+  const def = getStatusDef(status)
+  if (!def) return { backgroundColor: alpha.ink05, color: alpha.ink40 }
+  return { backgroundColor: def.bg, color: def.color }
+}
+
+/* ── Pipeline bar ─────────────────────────────────────────────── */
+function PipelineBar({ products }) {
+  const total = products.length
+  if (total === 0) return null
+  const counts = {}
+  products.forEach(p => { counts[p.status] = (counts[p.status] || 0) + 1 })
+  const active = PRODUCT_STATUSES.filter(s => counts[s.key])
+  return (
+    <div className="mb-4">
+      <div className="flex h-2.5 rounded-sm overflow-hidden" style={{ backgroundColor: alpha.ink05 }}>
+        {active.map(s => (
+          <div
+            key={s.key}
+            title={`${s.label}: ${counts[s.key]}`}
+            style={{ width: `${(counts[s.key] / total) * 100}%`, backgroundColor: s.color, minWidth: '2px' }}
+          />
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+        {active.map(s => (
+          <span key={s.key} className="flex items-center gap-1 font-sans text-[10px]" style={{ color: s.color }}>
+            {s.emoji} {s.label}: {counts[s.key]}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── Status dropdown (inline) ─────────────────────────────────── */
+function StatusDropdown({ current, onSelect, onClose }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose() }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [onClose])
+  return (
+    <div
+      ref={ref}
+      className="absolute z-50 mt-1 left-0 py-1 shadow-lg max-h-64 overflow-y-auto"
+      style={{ ...panelStyle, minWidth: '200px', backgroundColor: '#fff' }}
+    >
+      {PRODUCT_STATUS_GROUPS.map(g => (
+        <div key={g.id}>
+          <div className="px-3 py-1 font-sans text-[10px] uppercase tracking-wider" style={{ color: alpha.ink30 }}>
+            {g.icon} {g.label}
+          </div>
+          {getStatusesByGroup(g.id).map(s => (
+            <button
+              key={s.key}
+              onClick={() => onSelect(s.key)}
+              className="flex items-center gap-2 w-full px-3 py-1.5 text-left font-sans text-xs transition-colors hover:bg-[rgba(176,141,87,0.06)]"
+              style={{ color: s.key === current ? s.color : colors.ink, fontWeight: s.key === current ? 600 : 400 }}
+            >
+              <span>{s.emoji}</span> {s.label}
+            </button>
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
 
 /* ── Skeleton loader ─────────────────────────────────────────── */
 function ProductsSkeleton() {
@@ -201,7 +267,7 @@ function SpecialAttributesDropdown({ value = [], onChange, onClose }) {
 }
 
 /* ── Product table row ───────────────────────────────────────── */
-function ProductRow({ product, onDelete, onTogglePromote, onInlineEdit, isDragging, onDragStart, onDragOver, onDragEnd }) {
+function ProductRow({ product, onDelete, onTogglePromote, onInlineEdit, isDragging, onDragStart, onDragOver, onDragEnd, statusDropdownId, onStatusDropdown }) {
   const categoryName = categories.find((c) => c.id === product.category)?.name || product.category
   const [editField, setEditField] = useState(null)
   const [editValue, setEditValue] = useState('')
@@ -348,19 +414,25 @@ function ProductRow({ product, onDelete, onTogglePromote, onInlineEdit, isDraggi
         )}
       </td>
 
-      {/* Status — click to toggle */}
-      <td className="px-4 py-3 hidden sm:table-cell">
+      {/* Status — click to open dropdown */}
+      <td className="px-4 py-3 hidden sm:table-cell relative">
         <button
-          onClick={() => {
-            const newStatus = product.status === 'active' ? 'sold' : 'active'
-            onInlineEdit(product.id, 'status', newStatus)
-          }}
-          className="inline-flex px-2 py-1 rounded-full font-body text-xs cursor-pointer transition-all hover:scale-105"
+          onClick={() => onStatusDropdown(product.id)}
+          className="inline-flex items-center gap-1 px-2 py-1 rounded-full font-body text-xs cursor-pointer transition-all hover:scale-105"
           style={statusBadge(product.status)}
           title="Клик для смены статуса"
         >
-          {product.status === 'active' ? 'В наличии' : 'Продано'}
+          <span>{getStatusDef(product.status)?.emoji}</span>
+          {getStatusDef(product.status)?.label || product.status}
+          <ChevronDown size={10} style={{ opacity: 0.5 }} />
         </button>
+        {statusDropdownId === product.id && (
+          <StatusDropdown
+            current={product.status}
+            onSelect={(s) => { onInlineEdit(product.id, 'status', s); onStatusDropdown(null) }}
+            onClose={() => onStatusDropdown(null)}
+          />
+        )}
       </td>
 
       {/* Special Attributes — dropdown */}
@@ -461,6 +533,9 @@ export default function AdminProducts() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('')
   const [dragIdx, setDragIdx] = useState(null)
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusDropdownId, setStatusDropdownId] = useState(null)
+  const [sortByStatus, setSortByStatus] = useState(null) // 'asc' | 'desc' | null
   const debounceRef = useRef(null)
 
   const load = useCallback(async (searchVal, filterVal) => {
@@ -533,7 +608,7 @@ export default function AdminProducts() {
     }
 
     const label = field === 'status'
-      ? (value === 'active' ? 'В наличии' : 'Продано')
+      ? (getStatusDef(value)?.label || value)
       : field === 'special_attributes'
         ? 'Особенности обновлены'
         : 'Сохранено'
@@ -630,47 +705,108 @@ export default function AdminProducts() {
         </select>
       </div>
 
+      {/* Status filter tabs */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setStatusFilter('all')}
+          className="px-3 py-1.5 font-body text-xs rounded-sm transition-colors"
+          style={{
+            backgroundColor: statusFilter === 'all' ? alpha.gold12 : alpha.ink05,
+            color: statusFilter === 'all' ? colors.gold : alpha.ink40,
+            fontWeight: statusFilter === 'all' ? 600 : 400,
+          }}
+        >
+          Все ({products.length})
+        </button>
+        {PRODUCT_STATUS_GROUPS.map(g => {
+          const count = products.filter(p => {
+            const def = getStatusDef(p.status)
+            return def?.group === g.id
+          }).length
+          return (
+            <button
+              key={g.id}
+              onClick={() => setStatusFilter(g.id)}
+              className="px-3 py-1.5 font-body text-xs rounded-sm transition-colors"
+              style={{
+                backgroundColor: statusFilter === g.id ? `${g.color}18` : alpha.ink05,
+                color: statusFilter === g.id ? g.color : alpha.ink40,
+                fontWeight: statusFilter === g.id ? 600 : 400,
+              }}
+            >
+              {g.icon} {g.label} ({count})
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Pipeline bar */}
+      {!loading && products.length > 0 && <PipelineBar products={products} />}
+
       {/* Products table / skeleton / empty */}
-      {loading ? (
-        <ProductsSkeleton />
-      ) : products.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div style={panelStyle} className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr style={{ borderBottom: `1px solid ${alpha.gold10}` }}>
-                  {TABLE_COLUMNS.map((col) => (
-                    <th
-                      key={col.label || 'drag'}
-                      className={`text-${col.align} px-4 py-3 font-body text-xs uppercase tracking-wider ${col.className}`}
-                      style={thStyle}
-                    >
-                      {col.label}
-                    </th>
+      {(() => {
+        // Apply status filter + sort
+        let displayed = products
+        if (statusFilter !== 'all') {
+          displayed = displayed.filter(p => {
+            const def = getStatusDef(p.status)
+            return def?.group === statusFilter
+          })
+        }
+        if (sortByStatus) {
+          displayed = [...displayed].sort((a, b) => {
+            const sa = getStatusDef(a.status)?.sort || 0
+            const sb = getStatusDef(b.status)?.sort || 0
+            return sortByStatus === 'asc' ? sa - sb : sb - sa
+          })
+        }
+
+        if (loading) return <ProductsSkeleton />
+        if (displayed.length === 0) return <EmptyState />
+
+        return (
+          <div style={panelStyle} className="overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr style={{ borderBottom: `1px solid ${alpha.gold10}` }}>
+                    {TABLE_COLUMNS.map((col) => (
+                      <th
+                        key={col.label || 'drag'}
+                        className={`text-${col.align} px-4 py-3 font-body text-xs uppercase tracking-wider ${col.className}`}
+                        style={col.label === 'Статус' ? { ...thStyle, cursor: 'pointer', userSelect: 'none' } : thStyle}
+                        onClick={col.label === 'Статус' ? () => setSortByStatus(prev => prev === 'asc' ? 'desc' : prev === 'desc' ? null : 'asc') : undefined}
+                      >
+                        {col.label}
+                        {col.label === 'Статус' && sortByStatus && (
+                          <span className="ml-1">{sortByStatus === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayed.map((product, idx) => (
+                    <ProductRow
+                      key={product.id}
+                      product={product}
+                      onDelete={handleDelete}
+                      onTogglePromote={handleTogglePromote}
+                      onInlineEdit={handleInlineEdit}
+                      isDragging={dragIdx === idx}
+                      onDragStart={() => handleDragStart(idx)}
+                      onDragOver={(e) => handleDragOver(e, idx)}
+                      onDragEnd={handleDragEnd}
+                      statusDropdownId={statusDropdownId}
+                      onStatusDropdown={setStatusDropdownId}
+                    />
                   ))}
-                </tr>
-              </thead>
-              <tbody>
-                {products.map((product, idx) => (
-                  <ProductRow
-                    key={product.id}
-                    product={product}
-                    onDelete={handleDelete}
-                    onTogglePromote={handleTogglePromote}
-                    onInlineEdit={handleInlineEdit}
-                    isDragging={dragIdx === idx}
-                    onDragStart={() => handleDragStart(idx)}
-                    onDragOver={(e) => handleDragOver(e, idx)}
-                    onDragEnd={handleDragEnd}
-                  />
-                ))}
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </div>
   )
 }

@@ -32,6 +32,13 @@ const AdminBulkImport = lazy(() => import('./pages/admin/AdminBulkImport'))
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'))
 const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'))
 
+// Business & HR modules
+const AdminAccounting = lazy(() => import('./pages/admin/AdminAccounting'))
+const AdminSales = lazy(() => import('./pages/admin/AdminSales'))
+const AdminJobs = lazy(() => import('./pages/admin/AdminJobs'))
+const AdminCVAnalyzer = lazy(() => import('./pages/admin/AdminCVAnalyzer'))
+const AdminEvents = lazy(() => import('./pages/admin/AdminEvents'))
+
 const AgentLayout = lazy(() => import('./components/agent/AgentLayout'))
 const AgentDashboard = lazy(() => import('./pages/agent/AgentDashboard'))
 const AgentWorkspace = lazy(() => import('./pages/agent/AgentWorkspace'))
@@ -157,6 +164,11 @@ export default function App() {
                   <Route path="calculator" element={<AdminCalculator />} />
                   <Route path="categories" element={<AdminCategories />} />
                   <Route path="users" element={<AdminUsers />} />
+                  <Route path="accounting" element={<AdminAccounting />} />
+                  <Route path="sales" element={<AdminSales />} />
+                  <Route path="jobs" element={<AdminJobs />} />
+                  <Route path="cv-analyzer" element={<AdminCVAnalyzer />} />
+                  <Route path="events" element={<AdminEvents />} />
                 </Route>
 
                 <Route path="/agent" element={<AgentRoute><AgentLayout /></AgentRoute>}>

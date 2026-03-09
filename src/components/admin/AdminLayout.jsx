@@ -17,6 +17,12 @@ import {
   Upload,
   Users,
   BarChart3,
+  Briefcase,
+  TrendingUp,
+  Receipt,
+  UserSearch,
+  FileSearch,
+  CalendarDays,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 
@@ -37,6 +43,25 @@ const SIDEBAR_LINKS = [
   { to: '/admin/categories', icon: Layers, label: 'Категории' },
   { to: '/admin/users', icon: Users, label: 'Пользователи' },
   { to: '/admin/calculator', icon: Calculator, label: 'Калькулятор' },
+  {
+    id: 'business',
+    icon: Briefcase,
+    label: 'Бизнес',
+    children: [
+      { to: '/admin/sales', icon: TrendingUp, label: 'Продажи' },
+      { to: '/admin/accounting', icon: Receipt, label: 'Бухгалтерия' },
+      { to: '/admin/jobs', icon: UserSearch, label: 'Вакансии' },
+    ],
+  },
+  {
+    id: 'hr',
+    icon: Users,
+    label: 'HR & Команда',
+    children: [
+      { to: '/admin/cv-analyzer', icon: FileSearch, label: 'CV Анализатор' },
+      { to: '/admin/events', icon: CalendarDays, label: 'События' },
+    ],
+  },
 ]
 
 const COLORS = {

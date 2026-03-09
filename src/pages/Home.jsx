@@ -13,6 +13,7 @@ import {
   Coffee,
 } from 'lucide-react'
 import { getProducts, getCategoryCounts } from '../lib/api'
+import { PUBLIC_VISIBLE_STATUSES } from '../data/productStatuses'
 import { categoryGroups, categories, formatEra } from '../data/demoProducts'
 import ProductCard from '../components/public/ProductCard'
 import VintageQuiz from '../components/public/VintageQuiz'
@@ -415,11 +416,11 @@ export default function Home() {
           getProducts({ category: 'ceramics', limit: 8 }),
         ])
         setProducts(
-          (prodResult.data || []).filter((p) => p.status !== 'sold'),
+          (prodResult.data || []).filter((p) => PUBLIC_VISIBLE_STATUSES.includes(p.status)),
         )
         setCategoryCounts(countResult.data || {})
-        setJewelryProducts((jwResult.data || []).filter((p) => p.status !== 'sold'))
-        setCeramicsProducts((crResult.data || []).filter((p) => p.status !== 'sold'))
+        setJewelryProducts((jwResult.data || []).filter((p) => PUBLIC_VISIBLE_STATUSES.includes(p.status)))
+        setCeramicsProducts((crResult.data || []).filter((p) => PUBLIC_VISIBLE_STATUSES.includes(p.status)))
       } catch (e) {
         console.error('Home load error:', e)
       }

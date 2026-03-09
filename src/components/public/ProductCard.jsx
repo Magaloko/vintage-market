@@ -2,6 +2,7 @@ import { memo, useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { Star, TrendingUp, Flame, Sparkles } from 'lucide-react'
 import { categories, conditions, specialAttributes, formatEra } from '../../data/demoProducts'
+import { FINAL_STATUSES } from '../../data/productStatuses'
 import { useCurrency } from '../../lib/CurrencyContext'
 import { useTheme } from '../../lib/ThemeContext'
 import FavoriteButton from './FavoriteButton'
@@ -125,7 +126,8 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
     : (product.image_url ? [product.image_url] : [])
   const imageUrl = allImages[activeImageIdx] || allImages[0]
   const imageCount = allImages.length
-  const isSold = product.status === 'sold'
+  const isSold = FINAL_STATUSES.includes(product.status)
+  const isReserved = product.status === 'reserved'
   const isShop = category?.group === 'shops'
   const isRental = category?.group === 'realestate' && product.details?.rent_or_buy === 'Аренда'
   const isNew = !isSold && product.created_at && (Date.now() - new Date(product.created_at).getTime()) < SEVEN_DAYS
@@ -195,7 +197,7 @@ function ProductCard({ product, showCompare = false, isBestseller = false, isPop
           <SpecialBadges attrs={product.special_attributes} />
         )}
 
-        {isSold ? <SoldBadge /> : isNew && <NewBadge />}
+        {isSold ? <SoldBadge /> : isReserved ? <ReservedBadge /> : isNew && <NewBadge />}
 
         <ProductBadges isPromoted={product.is_promoted} isBestseller={isBestseller} isPopular={isPopular} />
 
@@ -363,6 +365,22 @@ function SoldBadge() {
       }}
     >
       Продано
+    </div>
+  )
+}
+
+function ReservedBadge() {
+  return (
+    <div
+      className="absolute top-3 left-3 px-3 py-1 font-body text-[10px] tracking-[0.2em] uppercase z-10"
+      style={{
+        backgroundColor: 'rgba(155, 124, 184, 0.85)',
+        color: '#fff',
+        backdropFilter: 'blur(4px)',
+        borderRadius: '1px',
+      }}
+    >
+      Забронировано
     </div>
   )
 }
