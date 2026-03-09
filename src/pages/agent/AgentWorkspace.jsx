@@ -198,7 +198,7 @@ function TicketListPanel({ tickets, selectedId, onSelect, filter, setFilter, sea
               }}
             >
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: st.color }} />
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${t.status === 'new' ? 'animate-pulse' : ''}`} style={{ backgroundColor: st.color }} />
                 <span className="font-sans text-sm font-medium truncate" style={{ color: C.ink }}>
                   {t.name}
                 </span>
@@ -235,6 +235,8 @@ function ConversationPanel({ ticket, notes, onSendNote, onStatusChange, userId }
   const [text, setText] = useState('')
   const [isInternal, setIsInternal] = useState(false)
   const [macroOpen, setMacroOpen] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [statusLoading, setStatusLoading] = useState(null)
   const scrollRef = useRef(null)
 
   useEffect(() => {
@@ -258,9 +260,11 @@ function ConversationPanel({ ticket, notes, onSendNote, onStatusChange, userId }
   const actions = ACTION_BUTTONS[ticket.status] || []
 
   const handleSend = async () => {
-    if (!text.trim()) return
+    if (!text.trim() || sending) return
+    setSending(true)
     await onSendNote(ticket.id, text.trim(), isInternal)
     setText('')
+    setSending(false)
   }
 
   const handleKeyDown = (e) => {
@@ -268,9 +272,8 @@ function ConversationPanel({ ticket, notes, onSendNote, onStatusChange, userId }
   }
 
   const applyMacro = (template) => {
-    setText(template)
+    setText(prev => prev ? prev + '\n\n' + template : template)
     setMacroOpen(false)
-    setIsInternal(false)
   }
 
   return (
@@ -288,21 +291,27 @@ function ConversationPanel({ ticket, notes, onSendNote, onStatusChange, userId }
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          {actions.map(a => (
-            <button
-              key={a.to}
-              onClick={() => onStatusChange(ticket.id, a.to)}
-              className="px-2 py-1 font-sans text-[10px] tracking-wider uppercase transition-colors"
-              style={{
-                backgroundColor: a.to === 'solved' ? 'rgba(74, 122, 92, 0.1)' : C.ink05,
-                color: a.to === 'solved' ? '#4A7A5C' : C.ink40,
-                borderRadius: '2px',
-                border: `1px solid ${a.to === 'solved' ? 'rgba(74, 122, 92, 0.2)' : C.ink10}`,
-              }}
-            >
-              {a.label}
-            </button>
-          ))}
+          {actions.map(a => {
+            const isLoading = statusLoading === a.to
+            return (
+              <button
+                key={a.to}
+                onClick={async () => { setStatusLoading(a.to); await onStatusChange(ticket.id, a.to); setStatusLoading(null) }}
+                disabled={!!statusLoading}
+                className="px-2 py-1 font-sans text-[10px] tracking-wider uppercase transition-colors flex items-center gap-1"
+                style={{
+                  backgroundColor: a.to === 'solved' ? 'rgba(74, 122, 92, 0.1)' : C.ink05,
+                  color: a.to === 'solved' ? '#4A7A5C' : C.ink40,
+                  borderRadius: '2px',
+                  border: `1px solid ${a.to === 'solved' ? 'rgba(74, 122, 92, 0.2)' : C.ink10}`,
+                  opacity: statusLoading && !isLoading ? 0.4 : 1,
+                }}
+              >
+                {isLoading && <div className="w-2.5 h-2.5 border border-current border-t-transparent rounded-full animate-spin" />}
+                {a.label}
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -416,21 +425,27 @@ function ConversationPanel({ ticket, notes, onSendNote, onStatusChange, userId }
               onKeyDown={handleKeyDown}
               placeholder={isInternal ? 'Внутренняя заметка...' : 'Ответ клиенту...'}
               rows={2}
+              disabled={sending}
               className="flex-1 px-3 py-2 font-sans text-sm outline-none resize-none"
               style={{
                 backgroundColor: isInternal ? C.internalBg : C.ink03,
                 border: `1px solid ${isInternal ? C.internalBorder : C.ink10}`,
                 borderRadius: '2px',
                 color: C.ink,
+                opacity: sending ? 0.6 : 1,
               }}
             />
             <button
               onClick={handleSend}
-              disabled={!text.trim()}
+              disabled={!text.trim() || sending}
               className="self-end px-3 py-2 transition-opacity disabled:opacity-30"
               style={{ backgroundColor: isInternal ? C.gold : C.accent, borderRadius: '2px' }}
             >
-              <Send size={14} style={{ color: '#fff' }} />
+              {sending ? (
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Send size={14} style={{ color: '#fff' }} />
+              )}
             </button>
           </div>
           <p className="font-sans text-[10px] mt-1" style={{ color: C.ink20 }}>Ctrl+Enter для отправки</p>
@@ -673,7 +688,7 @@ export default function AgentWorkspace() {
       }}
     >
       {/* Left: Ticket list — hidden on mobile when detail is shown */}
-      <div className={`w-72 flex-shrink-0 ${mobileView === 'detail' ? 'hidden lg:flex lg:flex-col' : 'flex flex-col flex-1 lg:flex-none'}`}>
+      <div className={`w-72 md:w-56 lg:w-72 flex-shrink-0 ${mobileView === 'detail' ? 'hidden lg:flex lg:flex-col' : 'flex flex-col flex-1 lg:flex-none'}`}>
         <TicketListPanel
           tickets={tickets}
           selectedId={selectedId}

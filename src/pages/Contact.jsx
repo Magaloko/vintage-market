@@ -70,6 +70,16 @@ export default function Contact() {
   })
   const [sending, setSending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [touched, setTouched] = useState({})
+
+  const emailRegex = /\S+@\S+\.\S+/
+  const errors = {
+    name: touched.name && !form.name.trim() ? 'Введите имя' : null,
+    email: touched.email ? (!form.email.trim() ? 'Введите email' : !emailRegex.test(form.email) ? 'Неверный формат email' : null) : null,
+    message: touched.message && !form.message.trim() ? 'Введите сообщение' : null,
+  }
+  const isValid = form.name.trim() && form.email.trim() && emailRegex.test(form.email) && form.message.trim()
+  const handleBlur = (field) => setTouched(prev => ({ ...prev, [field]: true }))
 
   /* ---------- Handlers ---------- */
 
@@ -274,7 +284,7 @@ export default function Contact() {
           {/* Right: contact form */}
           <div className="vintage-card p-8">
             {sent ? (
-              <div className="text-center py-12">
+              <div className="text-center py-12 animate-fade-in">
                 <CheckCircle size={48} className="mx-auto mb-4" style={{ color: '#B08D57' }} />
                 <h3
                   className="font-display text-2xl italic mb-3"
@@ -285,7 +295,10 @@ export default function Contact() {
                 <p className="font-body" style={{ color: 'rgba(44, 36, 32, 0.5)' }}>
                   Ваше сообщение получено. Мы свяжемся с вами в ближайшее время.
                 </p>
-                <button onClick={() => setSent(false)} className="btn-secondary mt-6">
+                <p className="font-body text-xs mt-2" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>
+                  Мы ответим в течение 8 рабочих часов
+                </p>
+                <button onClick={() => { setSent(false); setTouched({}) }} className="btn-secondary mt-6">
                   Написать ещё
                 </button>
               </div>
@@ -313,9 +326,11 @@ export default function Contact() {
                         value={form.name}
                         required
                         onChange={(e) => updateField('name', e.target.value)}
+                        onBlur={() => handleBlur('name')}
                         className="gdt-input"
                         placeholder="Ваше имя"
                       />
+                      {errors.name && <p className="font-body text-[11px] mt-1" style={{ color: 'rgba(181, 115, 106, 0.8)' }}>{errors.name}</p>}
                     </div>
                     <div>
                       <label
@@ -346,9 +361,11 @@ export default function Contact() {
                       value={form.email}
                       required
                       onChange={(e) => updateField('email', e.target.value)}
+                      onBlur={() => handleBlur('email')}
                       className="gdt-input"
                       placeholder="email@example.com"
                     />
+                    {errors.email && <p className="font-body text-[11px] mt-1" style={{ color: 'rgba(181, 115, 106, 0.8)' }}>{errors.email}</p>}
                   </div>
 
                   <div>
@@ -363,14 +380,16 @@ export default function Contact() {
                       required
                       rows={5}
                       onChange={(e) => updateField('message', e.target.value)}
+                      onBlur={() => handleBlur('message')}
                       className="gdt-input resize-none"
                       placeholder="Ваш вопрос или пожелание..."
                     />
+                    {errors.message && <p className="font-body text-[11px] mt-1" style={{ color: 'rgba(181, 115, 106, 0.8)' }}>{errors.message}</p>}
                   </div>
 
                   <button
                     type="submit"
-                    disabled={sending}
+                    disabled={sending || !isValid}
                     className="btn-primary w-full justify-center disabled:opacity-50"
                   >
                     {sending ? (

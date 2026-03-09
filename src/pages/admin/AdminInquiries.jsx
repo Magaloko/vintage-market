@@ -172,11 +172,11 @@ function SLABadge({ inq }) {
 
   return (
     <span
-      className="font-body text-[9px] px-1.5 py-0.5 flex items-center gap-0.5 flex-shrink-0"
-      style={{ backgroundColor: slaStyle.bg, color: slaStyle.color, borderRadius: '1px' }}
+      className="font-body text-[11px] font-medium px-2 py-1 flex items-center gap-1 flex-shrink-0"
+      style={{ backgroundColor: slaStyle.bg, color: slaStyle.color, borderRadius: '2px' }}
       title={`Время ожидания: ${formatHours(frtHours)}`}
     >
-      <Icon size={8} />
+      <Icon size={12} />
       {formatHours(frtHours)}
     </span>
   )
@@ -435,7 +435,7 @@ function StatusPipeline({ currentStatus }) {
 }
 
 /* ── Ticket actions ───────────────────────────────────────────── */
-function TicketActions({ status, onTransition }) {
+function TicketActions({ status, onTransition, loadingAction }) {
   const actions = ACTION_BUTTONS[status] || []
   if (actions.length === 0) return null
 
@@ -443,16 +443,23 @@ function TicketActions({ status, onTransition }) {
     <div className="flex flex-wrap items-center gap-2">
       {actions.map(({ target, label, icon: Icon, style }) => {
         const s = BTN_STYLES[style]
+        const isLoading = loadingAction === target
         return (
           <button
             key={target}
             onClick={() => onTransition(target)}
+            disabled={!!loadingAction}
             className="flex items-center gap-1.5 px-3 py-1.5 font-body text-xs transition-all"
-            style={{ backgroundColor: s.bg, color: s.color, borderRadius: '2px' }}
-            onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.8' }}
-            onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
+            style={{ backgroundColor: s.bg, color: s.color, borderRadius: '2px', opacity: loadingAction && !isLoading ? 0.4 : 1 }}
+            onMouseEnter={(e) => { if (!loadingAction) e.currentTarget.style.opacity = '0.8' }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = loadingAction && !isLoading ? '0.4' : '1' }}
           >
-            <Icon size={12} /> {label}
+            {isLoading ? (
+              <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Icon size={12} />
+            )}
+            {label}
           </button>
         )
       })}
@@ -467,9 +474,22 @@ function NotesSection({ inquiryId }) {
   const [text, setText] = useState('')
   const [saving, setSaving] = useState(false)
   const [open, setOpen] = useState(false)
+  const [autoChecked, setAutoChecked] = useState(false)
 
+  // Auto-check for notes on mount — open if notes exist
   useEffect(() => {
-    if (!open) return
+    if (autoChecked) return
+    setAutoChecked(true)
+    getInquiryNotes(inquiryId).then(({ data }) => {
+      setNotes(data || [])
+      setLoading(false)
+      if ((data || []).length > 0) setOpen(true)
+    })
+  }, [inquiryId, autoChecked])
+
+  // Reload when manually opened (if not already loaded)
+  useEffect(() => {
+    if (!open || !autoChecked) return
     getInquiryNotes(inquiryId).then(({ data }) => {
       setNotes(data || [])
       setLoading(false)
@@ -652,6 +672,20 @@ function HoverLink({ href, to, children }) {
 function TicketDetail({ inq, onStatusChange, onDelete, onCSAT, agents, onAssign }) {
   const isClosed = inq.status === 'closed'
   const sla = computeSLA(inq)
+  const [actionLoading, setActionLoading] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleTransition = async (target) => {
+    setActionLoading(target)
+    await onStatusChange(inq.id, target)
+    setActionLoading(null)
+  }
+
+  const handleDelete = async () => {
+    setDeleting(true)
+    await onDelete(inq.id)
+    setDeleting(false)
+  }
 
   return (
     <div className="px-4 pb-4 pt-2" style={{ borderTop: `1px solid ${alpha.ink05}` }}>
@@ -726,17 +760,23 @@ function TicketDetail({ inq, onStatusChange, onDelete, onCSAT, agents, onAssign 
 
       {/* Action buttons */}
       <div className="flex items-center gap-2 flex-wrap mt-3">
-        <TicketActions status={inq.status} onTransition={(target) => onStatusChange(inq.id, target)} />
+        <TicketActions status={inq.status} onTransition={handleTransition} loadingAction={actionLoading} />
 
         {!isClosed && (
           <button
-            onClick={() => onDelete(inq.id)}
+            onClick={handleDelete}
+            disabled={deleting}
             className="flex items-center gap-1.5 px-3 py-1.5 font-body text-xs transition-all ml-auto"
-            style={{ color: alpha.red60 }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#B5736A' }}
+            style={{ color: alpha.red60, opacity: deleting ? 0.4 : 1 }}
+            onMouseEnter={(e) => { if (!deleting) e.currentTarget.style.color = '#B5736A' }}
             onMouseLeave={(e) => { e.currentTarget.style.color = alpha.red60 }}
           >
-            <Trash2 size={12} /> Удалить
+            {deleting ? (
+              <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Trash2 size={12} />
+            )}
+            {deleting ? 'Удаление...' : 'Удалить'}
           </button>
         )}
       </div>
@@ -875,7 +915,8 @@ export default function AdminInquiries() {
       } : i
     ))
     const label = OBZOR_STATUSES[newStatus]?.label || newStatus
-    toast.success(`→ ${label}`)
+    const inq = inquiries.find(i => i.id === id)
+    toast.success(`${inq?.name || 'Тикет'}: → ${label}`)
   }
 
   /* CSAT rating */
@@ -945,7 +986,7 @@ export default function AdminInquiries() {
 
       {/* Filter tabs */}
       <div
-        className="flex flex-wrap gap-1 mb-6 p-1"
+        className="flex flex-wrap gap-1 mb-6 p-1 overflow-x-auto"
         style={{ backgroundColor: alpha.ink03, borderRadius: '2px' }}
       >
         {FILTER_TABS.map((tab) => {
@@ -954,7 +995,7 @@ export default function AdminInquiries() {
             <button
               key={tab.id}
               onClick={() => setFilter(tab.id)}
-              className="px-3 py-2 font-body text-xs transition-all"
+              className="px-2 py-1.5 sm:px-3 sm:py-2 font-body text-xs transition-all whitespace-nowrap"
               style={{
                 backgroundColor: filter === tab.id ? alpha.gold15 : 'transparent',
                 color: filter === tab.id ? colors.gold : alpha.ink30,

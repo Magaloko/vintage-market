@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { MessageSquare, CheckCircle, Mail, Phone } from 'lucide-react'
+import { MessageSquare, CheckCircle, Mail, Phone, Send, ChevronDown, ChevronRight, StickyNote } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useAuth } from '../../lib/AuthContext'
-import { getShopInquiries, updateTicketStatus } from '../../lib/api'
+import { getShopInquiries, updateTicketStatus, addInquiryNote, getInquiryNotes } from '../../lib/api'
 
 // -- Constants ----------------------------------------------------------------
 
@@ -56,6 +56,125 @@ function formatDate(dateString) {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+/* ── Conversation history (public notes only) ─────────────────── */
+function SellerNotesHistory({ inquiryId }) {
+  const [notes, setNotes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    setLoading(true)
+    getInquiryNotes(inquiryId).then(({ data }) => {
+      // Sellers only see public (non-internal) notes
+      setNotes((data || []).filter(n => !n.is_internal))
+      setLoading(false)
+    })
+  }, [inquiryId, open])
+
+  return (
+    <div className="mt-3">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 font-body text-xs transition-colors"
+        style={{ color: TEXT_MUTED }}
+      >
+        <StickyNote size={12} />
+        Переписка {notes.length > 0 ? `(${notes.length})` : ''}
+        {open ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+      </button>
+
+      {open && (
+        <div className="mt-2 space-y-2">
+          {loading ? (
+            <div className="h-6 animate-pulse" style={{ backgroundColor: TEXT_FAINT, borderRadius: '2px' }} />
+          ) : notes.length === 0 ? (
+            <p className="font-body text-[10px]" style={{ color: TEXT_GHOST }}>Нет сообщений</p>
+          ) : (
+            notes.map(note => (
+              <div key={note.id} className="p-2.5" style={{ backgroundColor: 'rgba(240, 230, 214, 0.04)', borderRadius: '2px' }}>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-body text-[10px] font-medium" style={{ color: TEXT_MUTED }}>
+                    {note.author}
+                  </span>
+                  <span className="font-body text-[9px]" style={{ color: TEXT_GHOST }}>
+                    {formatDate(note.created_at)}
+                  </span>
+                </div>
+                <p className="font-body text-xs leading-relaxed whitespace-pre-wrap" style={{ color: 'rgba(240, 230, 214, 0.6)' }}>
+                  {note.content}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Seller reply section ──────────────────────────────────────── */
+function SellerReplySection({ inquiryId, onNoteSent }) {
+  const [text, setText] = useState('')
+  const [sending, setSending] = useState(false)
+
+  const handleSend = async () => {
+    if (!text.trim() || sending) return
+    setSending(true)
+    const { error } = await addInquiryNote(inquiryId, text.trim(), false, 'seller')
+    setSending(false)
+    if (error) { toast.error('Ошибка отправки'); return }
+    setText('')
+    toast.success('Ответ отправлен')
+    if (onNoteSent) onNoteSent()
+  }
+
+  return (
+    <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(240, 230, 214, 0.05)' }}>
+      <label className="font-body text-[10px] tracking-wider uppercase mb-2 block" style={{ color: TEXT_MUTED }}>
+        Ответ клиенту
+      </label>
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSend() }}
+        rows={2}
+        disabled={sending}
+        placeholder="Напишите ответ..."
+        className="w-full font-body text-xs px-3 py-2 outline-none resize-none"
+        style={{
+          backgroundColor: 'rgba(240, 230, 214, 0.04)',
+          border: '1px solid rgba(240, 230, 214, 0.08)',
+          borderRadius: '2px',
+          color: TEXT,
+          opacity: sending ? 0.6 : 1,
+        }}
+      />
+      <div className="flex items-center justify-between mt-2">
+        <span className="font-body text-[10px]" style={{ color: TEXT_GHOST }}>Ctrl+Enter</span>
+        <button
+          onClick={handleSend}
+          disabled={sending || !text.trim()}
+          className="flex items-center gap-1.5 px-3 py-1.5 font-body text-xs transition-all"
+          style={{
+            backgroundColor: 'rgba(122, 139, 111, 0.15)',
+            color: GREEN,
+            borderRadius: '2px',
+            opacity: sending || !text.trim() ? 0.4 : 1,
+          }}
+        >
+          {sending ? (
+            <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <Send size={12} />
+          )}
+          {sending ? 'Отправка...' : 'Отправить'}
+        </button>
+      </div>
+    </div>
+  )
 }
 
 function InquiryRow({ inquiry, isExpanded, onToggle, onMarkReplied }) {
@@ -133,13 +252,22 @@ function InquiryRow({ inquiry, isExpanded, onToggle, onMarkReplied }) {
             </p>
           </div>
 
+          {/* Conversation history */}
+          <SellerNotesHistory inquiryId={inquiry.id} />
+
+          {/* Reply section */}
+          {!['solved', 'closed', 'replied'].includes(inquiry.status) && (
+            <SellerReplySection inquiryId={inquiry.id} />
+          )}
+
+          {/* Quick-close button */}
           {!['solved', 'closed', 'replied'].includes(inquiry.status) && (
             <button
               onClick={onMarkReplied}
-              className="flex items-center gap-1.5 px-3 py-1.5 font-body text-xs"
+              className="flex items-center gap-1.5 px-3 py-1.5 font-body text-xs mt-3"
               style={{ backgroundColor: 'rgba(122, 139, 111, 0.15)', color: GREEN, borderRadius: '2px' }}
             >
-              <CheckCircle size={12} /> Ответили
+              <CheckCircle size={12} /> Закрыть как решённый
             </button>
           )}
         </div>
