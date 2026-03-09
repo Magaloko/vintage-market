@@ -116,6 +116,51 @@ function ExpandableSection({ title, children, defaultOpen = false }) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Crypto address row with copy                                       */
+/* ------------------------------------------------------------------ */
+
+function CryptoAddress({ label, address, color }) {
+  const [copied, setCopied] = useState(false)
+  const short = `${address.slice(0, 8)}...${address.slice(-6)}`
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(address)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  return (
+    <div
+      className="flex items-center gap-2.5 px-3 py-2.5 rounded-sm"
+      style={{ backgroundColor: `${color}08`, border: `1px solid ${color}20` }}
+    >
+      <div
+        className="w-7 h-7 rounded-sm flex items-center justify-center flex-shrink-0"
+        style={{ backgroundColor: color }}
+      >
+        <span className="font-display text-[9px] font-bold text-white">
+          {label.includes('BTC') ? '₿' : label.includes('ETH') ? 'Ξ' : '$'}
+        </span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-body text-sm font-medium" style={{ color: '#2C2420' }}>{label}</p>
+        <p className="font-body text-[10px] truncate" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>{short}</p>
+      </div>
+      <button
+        onClick={handleCopy}
+        className="font-body text-[10px] px-2 py-1 rounded-sm transition-all"
+        style={{
+          backgroundColor: copied ? 'rgba(122, 139, 111, 0.1)' : 'rgba(44, 36, 32, 0.06)',
+          color: copied ? '#7A8B6F' : 'rgba(44, 36, 32, 0.5)',
+        }}
+      >
+        {copied ? 'Скопировано' : 'Копировать'}
+      </button>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -128,6 +173,7 @@ export default function ProductPage() {
   const [loading, setLoading] = useState(true)
   const [avgPrice, setAvgPrice] = useState(null)
   const [linkedProducts, setLinkedProducts] = useState([])
+  const [qrModalOpen, setQrModalOpen] = useState(false)
 
   /* ---------- Load product + secondary data ---------- */
 
@@ -696,14 +742,87 @@ export default function ProductPage() {
                 </>
               )}
 
+              {/* Payment methods */}
+              {(siteConfig.kaspiLink || Object.values(siteConfig.crypto || {}).some(Boolean)) && (
+                <>
+                  <div className="h-px" style={{ backgroundColor: 'rgba(44, 36, 32, 0.08)' }} />
+                  <div>
+                    <p className="font-body text-[10px] tracking-[0.2em] uppercase mb-3" style={{ color: 'rgba(44, 36, 32, 0.3)' }}>
+                      Способы оплаты
+                    </p>
+                    <div className="space-y-2">
+                      {siteConfig.kaspiLink && (
+                        <a
+                          href={siteConfig.kaspiLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-sm transition-all duration-200"
+                          style={{ backgroundColor: 'rgba(240, 68, 56, 0.06)', border: '1px solid rgba(240, 68, 56, 0.15)' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(240, 68, 56, 0.12)' }}
+                          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(240, 68, 56, 0.06)' }}
+                        >
+                          <div className="w-7 h-7 rounded-sm flex items-center justify-center" style={{ backgroundColor: '#F04438' }}>
+                            <span className="font-display text-[10px] font-bold text-white">K</span>
+                          </div>
+                          <div>
+                            <p className="font-body text-sm font-medium" style={{ color: '#2C2420' }}>Kaspi.kz</p>
+                            <p className="font-body text-[10px]" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>Перевод через Kaspi</p>
+                          </div>
+                        </a>
+                      )}
+                      {siteConfig.crypto?.btc && (
+                        <CryptoAddress label="Bitcoin (BTC)" address={siteConfig.crypto.btc} color="#F7931A" />
+                      )}
+                      {siteConfig.crypto?.eth && (
+                        <CryptoAddress label="Ethereum (ETH)" address={siteConfig.crypto.eth} color="#627EEA" />
+                      )}
+                      {siteConfig.crypto?.usdt_trc20 && (
+                        <CryptoAddress label="USDT (TRC-20)" address={siteConfig.crypto.usdt_trc20} color="#26A17B" />
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+
               {/* QR */}
               <div className="h-px" style={{ backgroundColor: 'rgba(44, 36, 32, 0.08)' }} />
-              <div className="flex items-center gap-3">
-                <QRCodeSVG value={window.location.href} size={44} level="M" fgColor="#2C2420" bgColor="#FAFAF8" />
-                <p className="font-body text-[10px]" style={{ color: 'rgba(44, 36, 32, 0.3)' }}>
-                  Отсканируйте для быстрого доступа
-                </p>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setQrModalOpen(true)}
+                  className="flex-shrink-0 transition-transform duration-200 hover:scale-110 cursor-zoom-in"
+                  title="Нажмите для увеличения"
+                >
+                  <QRCodeSVG value={window.location.href} size={80} level="M" fgColor="#2C2420" bgColor="#FAFAF8" />
+                </button>
+                <div>
+                  <p className="font-body text-xs" style={{ color: 'rgba(44, 36, 32, 0.5)' }}>
+                    QR-код товара
+                  </p>
+                  <p className="font-body text-[10px]" style={{ color: 'rgba(44, 36, 32, 0.3)' }}>
+                    Нажмите для увеличения
+                  </p>
+                </div>
               </div>
+
+              {/* QR Modal */}
+              {qrModalOpen && (
+                <div
+                  className="fixed inset-0 z-[9999] flex items-center justify-center"
+                  style={{ backgroundColor: 'rgba(12, 10, 8, 0.8)' }}
+                  onClick={() => setQrModalOpen(false)}
+                >
+                  <div
+                    className="p-8 rounded-sm animate-slide-up"
+                    style={{ backgroundColor: '#FAFAF8' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <QRCodeSVG value={window.location.href} size={280} level="H" fgColor="#2C2420" bgColor="#FAFAF8" />
+                    <p className="text-center font-body text-xs mt-4" style={{ color: 'rgba(44, 36, 32, 0.5)' }}>
+                      Отсканируйте для быстрого доступа
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Price insight & chart — below QR */}
               {avgPrice && !isSold && !isRealEstate && !isShop && (
