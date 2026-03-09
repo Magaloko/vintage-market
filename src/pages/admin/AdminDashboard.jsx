@@ -406,6 +406,7 @@ function BusinessKPIs() {
   const boards    = readLS('vm_sales_boards')
   const jobs      = readLS('vm_jobs')
   const events    = readLS('vm_events')
+  const reviews   = readLS('vm_reviews')
   const cvLast    = readLS('vm_cv_last', null)
 
   // Monthly revenue (paid invoices this month)
@@ -429,6 +430,12 @@ function BusinessKPIs() {
 
   // Events upcoming
   const upcomingEvents = events.filter((e) => new Date(e.datetime) >= now).length
+
+  // Reviews
+  const reviewCount = reviews.length
+  const reviewAvg = reviewCount > 0
+    ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviewCount).toFixed(1)
+    : '—'
 
   // Last ATS score
   const lastATS = cvLast?.overall != null ? cvLast.overall : null
@@ -489,6 +496,13 @@ function BusinessKPIs() {
       icon: CalendarDays,
       color: colors.gold,
       link: '/admin/events',
+    },
+    {
+      label: 'Отзывы',
+      value: `${reviewCount} (⌀${reviewAvg})`,
+      icon: Star,
+      color: '#f59e0b',
+      link: '/admin/reviews',
     },
   ]
 

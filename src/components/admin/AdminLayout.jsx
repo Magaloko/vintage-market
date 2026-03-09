@@ -23,6 +23,7 @@ import {
   UserSearch,
   FileSearch,
   CalendarDays,
+  Star,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 
@@ -60,6 +61,7 @@ const SIDEBAR_LINKS = [
     children: [
       { to: '/admin/cv-analyzer', icon: FileSearch, label: 'CV Анализатор' },
       { to: '/admin/events', icon: CalendarDays, label: 'События' },
+      { to: '/admin/reviews', icon: Star, label: 'Отзывы' },
     ],
   },
 ]

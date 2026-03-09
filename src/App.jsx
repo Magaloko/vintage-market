@@ -38,6 +38,7 @@ const AdminSales = lazy(() => import('./pages/admin/AdminSales'))
 const AdminJobs = lazy(() => import('./pages/admin/AdminJobs'))
 const AdminCVAnalyzer = lazy(() => import('./pages/admin/AdminCVAnalyzer'))
 const AdminEvents = lazy(() => import('./pages/admin/AdminEvents'))
+const AdminReviews = lazy(() => import('./pages/admin/AdminReviews'))
 
 const AgentLayout = lazy(() => import('./components/agent/AgentLayout'))
 const AgentDashboard = lazy(() => import('./pages/agent/AgentDashboard'))
@@ -169,6 +170,7 @@ export default function App() {
                   <Route path="jobs" element={<AdminJobs />} />
                   <Route path="cv-analyzer" element={<AdminCVAnalyzer />} />
                   <Route path="events" element={<AdminEvents />} />
+                  <Route path="reviews" element={<AdminReviews />} />
                 </Route>
 
                 <Route path="/agent" element={<AgentRoute><AgentLayout /></AgentRoute>}>
