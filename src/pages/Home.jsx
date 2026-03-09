@@ -15,6 +15,7 @@ import {
 import { getProducts, getCategoryCounts } from '../lib/api'
 import { categoryGroups, categories, formatEra } from '../data/demoProducts'
 import ProductCard from '../components/public/ProductCard'
+import VintageQuiz from '../components/public/VintageQuiz'
 import { useCurrency } from '../lib/CurrencyContext'
 
 const POPULAR_THRESHOLD = 100
@@ -67,46 +68,6 @@ const COLLECTIONS = [
     images: ['/images/col-fashion-1.jpg', '/images/col-fashion-2.jpg'],
   },
 ]
-
-const QUIZ_STEPS = [
-  {
-    question: 'Какая эпоха вас вдохновляет?',
-    options: [
-      { label: '1920-1940', tag: 'art-deco', desc: 'Арт-деко, гламур, геометрия' },
-      { label: '1950-1960', tag: 'mid-century', desc: 'Модернизм, элегантность, простота' },
-      { label: '1970-1980', tag: 'retro', desc: 'Бохо, диско, свобода' },
-      { label: '1990+', tag: 'modern-vintage', desc: 'Минимализм, ностальгия, Y2K' },
-    ],
-  },
-  {
-    question: 'Что вы ищете?',
-    options: [
-      { label: 'Для дома', tag: 'home', desc: 'Мебель, декор, посуда' },
-      { label: 'Для себя', tag: 'personal', desc: 'Одежда, украшения, аксессуары' },
-      { label: 'Коллекционирование', tag: 'collect', desc: 'Редкости, искусство, книги' },
-      { label: 'Подарок', tag: 'gift', desc: 'Уникальные вещи для близких' },
-    ],
-  },
-  {
-    question: 'Ваш бюджет?',
-    options: [
-      { label: 'До 50€', tag: 'budget-low' },
-      { label: '50-200€', tag: 'budget-mid' },
-      { label: '200-500€', tag: 'budget-high' },
-      { label: '500€+', tag: 'budget-premium' },
-    ],
-  },
-]
-
-const QUIZ_RESULTS = {
-  'art-deco+home': { title: 'Арт-деко интерьер', categories: ['furniture', 'ceramics', 'art'], desc: 'Геометрические формы, золото, чёрный мрамор' },
-  'art-deco+personal': { title: 'Гэтсби стиль', categories: ['jewelry', 'accessories', 'clothing'], desc: 'Блеск, перья, длинные жемчужные нити' },
-  'mid-century+home': { title: 'Скандинавский модерн', categories: ['furniture', 'ceramics'], desc: 'Чистые линии, натуральные материалы' },
-  'mid-century+personal': { title: 'Классическая элегантность', categories: ['clothing', 'accessories'], desc: 'Шанель, Диор, вневременная мода' },
-  'retro+home': { title: 'Бохо-шик', categories: ['furniture', 'art', 'ceramics'], desc: 'Текстуры, паттерны, тёплые тона' },
-  'retro+personal': { title: 'Свободный стиль 70-х', categories: ['clothing', 'vinyl', 'accessories'], desc: 'Замша, бахрома, рок-н-ролл' },
-  default: { title: 'Винтажный микс', categories: ['clothing', 'jewelry', 'furniture', 'ceramics'], desc: 'Лучшее из каждой эпохи' },
-}
 
 const SELLER_STEPS = [
   { num: '01', text: 'Зарегистрируйтесь и создайте профиль магазина' },
@@ -442,11 +403,6 @@ export default function Home() {
   const [slidePaused, setSlidePaused] = useState(false)
   const [activeCollection, setActiveCollection] = useState(0)
 
-  // Quiz: -1 = not started, 0..2 = question index, 3 = results
-  const [quizStep, setQuizStep] = useState(-1)
-  const [quizAnswers, setQuizAnswers] = useState([])
-  const [quizResult, setQuizResult] = useState(null)
-
   /* ---------- Data loading ---------- */
 
   useEffect(() => {
@@ -483,37 +439,17 @@ export default function Home() {
   }, [slidePaused])
 
   useEffect(() => {
-    if (quizStep >= 0) return
     const id = setInterval(
       () => setActiveCollection((prev) => (prev + 1) % COLLECTIONS.length),
       5000,
     )
     return () => clearInterval(id)
-  }, [quizStep])
+  }, [])
 
   /* ---------- Helpers ---------- */
 
   const scrollTo = (id) =>
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-
-  const handleQuizAnswer = (option) => {
-    const answers = [...quizAnswers, option.tag]
-    setQuizAnswers(answers)
-
-    if (quizStep < QUIZ_STEPS.length - 1) {
-      setQuizStep(quizStep + 1)
-    } else {
-      const key = `${answers[0] || 'default'}+${answers[1] || 'home'}`
-      setQuizResult(QUIZ_RESULTS[key] || QUIZ_RESULTS.default)
-      setQuizStep(QUIZ_STEPS.length)
-    }
-  }
-
-  const resetQuiz = () => {
-    setQuizStep(-1)
-    setQuizAnswers([])
-    setQuizResult(null)
-  }
 
   const hasAnyCounts = Object.keys(categoryCounts).length > 0
 
@@ -564,6 +500,9 @@ export default function Home() {
 
   return (
     <div className="page-enter">
+      {/* ═══════════════ VINTAGE QUIZ ═══════════════ */}
+      <VintageQuiz />
+
       {/* ═══════════════ HERO SLIDER ═══════════════ */}
       <section
         className="relative h-screen min-h-[700px] flex items-center justify-center overflow-hidden"
@@ -924,228 +863,6 @@ export default function Home() {
                 </Link>
               )
             })}
-          </div>
-        </div>
-      </section>
-
-      <div className="gdt-divider" />
-
-      {/* ═══════════════ STYLE QUIZ ═══════════════ */}
-      <section id="quiz" className="py-24 relative overflow-hidden" style={{ backgroundColor: '#F7F2EB' }}>
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 2px 2px, #2C2420 1px, transparent 0)',
-            backgroundSize: '40px 40px',
-          }}
-        />
-
-        <div className="max-w-4xl mx-auto px-6 relative z-10">
-          <div className="text-center mb-12">
-            <span
-              className="font-body text-[10px] tracking-[0.5em] uppercase"
-              style={{ color: 'rgba(176, 141, 87, 0.6)' }}
-            >
-              Интерактив
-            </span>
-            <h2
-              className="font-display text-4xl md:text-5xl italic mt-4"
-              style={{ color: '#0C0A08' }}
-            >
-              Найдите свой стиль
-            </h2>
-            <p className="font-display text-lg italic mt-3" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>
-              Пройдите короткий квиз и получите персональные рекомендации
-            </p>
-          </div>
-
-          <div className="max-w-2xl mx-auto">
-            {/* Start screen */}
-            {quizStep === -1 && (
-              <div
-                className="text-center p-12"
-                style={{
-                  backgroundColor: 'rgba(255,255,255,0.5)',
-                  border: '1px solid rgba(176, 141, 87, 0.15)',
-                  borderRadius: '2px',
-                }}
-              >
-                <div
-                  className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-                  style={{
-                    backgroundColor: 'rgba(176, 141, 87, 0.08)',
-                    border: '1px solid rgba(176, 141, 87, 0.15)',
-                  }}
-                >
-                  <Sparkles size={28} style={{ color: '#B08D57' }} />
-                </div>
-                <h3 className="font-display text-2xl italic mb-3" style={{ color: '#0C0A08' }}>
-                  3 вопроса — 30 секунд
-                </h3>
-                <p className="font-body text-sm mb-8" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>
-                  Мы подберём коллекцию специально для вас
-                </p>
-                <button onClick={() => setQuizStep(0)} className="btn-primary">
-                  <Sparkles size={14} className="mr-2" /> Начать квиз
-                </button>
-              </div>
-            )}
-
-            {/* Question */}
-            {quizStep >= 0 && quizStep < QUIZ_STEPS.length && (
-              <div
-                className="p-8 md:p-12"
-                style={{
-                  backgroundColor: 'rgba(255,255,255,0.5)',
-                  border: '1px solid rgba(176, 141, 87, 0.15)',
-                  borderRadius: '2px',
-                }}
-              >
-                {/* Progress bar */}
-                <div className="flex items-center gap-2 mb-8">
-                  {QUIZ_STEPS.map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-1 flex-1 rounded-full transition-all duration-500"
-                      style={{
-                        backgroundColor:
-                          i <= quizStep ? '#B08D57' : 'rgba(176, 141, 87, 0.15)',
-                      }}
-                    />
-                  ))}
-                </div>
-
-                <p
-                  className="font-body text-[10px] tracking-[0.3em] uppercase mb-3"
-                  style={{ color: 'rgba(176, 141, 87, 0.5)' }}
-                >
-                  Вопрос {quizStep + 1} из {QUIZ_STEPS.length}
-                </p>
-
-                <h3 className="font-display text-2xl italic mb-8" style={{ color: '#0C0A08' }}>
-                  {QUIZ_STEPS[quizStep].question}
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {QUIZ_STEPS[quizStep].options.map((opt) => (
-                    <button
-                      key={opt.tag}
-                      onClick={() => handleQuizAnswer(opt)}
-                      className="group p-5 text-left transition-all duration-300"
-                      style={{
-                        backgroundColor: 'rgba(240, 230, 214, 0.3)',
-                        border: '1px solid rgba(176, 141, 87, 0.1)',
-                        borderRadius: '2px',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.4)'
-                        e.currentTarget.style.backgroundColor = 'rgba(176, 141, 87, 0.08)'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.1)'
-                        e.currentTarget.style.backgroundColor = 'rgba(240, 230, 214, 0.3)'
-                      }}
-                    >
-                      <span className="font-display text-lg italic block" style={{ color: '#0C0A08' }}>
-                        {opt.label}
-                      </span>
-                      {opt.desc && (
-                        <span
-                          className="font-body text-xs block mt-1"
-                          style={{ color: 'rgba(44, 36, 32, 0.35)' }}
-                        >
-                          {opt.desc}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Results */}
-            {quizResult && quizStep >= QUIZ_STEPS.length && (
-              <div
-                className="p-8 md:p-12"
-                style={{
-                  backgroundColor: 'rgba(255,255,255,0.5)',
-                  border: '1px solid rgba(176, 141, 87, 0.15)',
-                  borderRadius: '2px',
-                }}
-              >
-                <div className="text-center mb-8">
-                  <div
-                    className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-                    style={{
-                      backgroundColor: 'rgba(176, 141, 87, 0.1)',
-                      border: '1px solid rgba(176, 141, 87, 0.2)',
-                    }}
-                  >
-                    <Star size={24} style={{ color: '#B08D57' }} />
-                  </div>
-                  <p
-                    className="font-body text-[10px] tracking-[0.3em] uppercase mb-2"
-                    style={{ color: 'rgba(176, 141, 87, 0.5)' }}
-                  >
-                    Ваш стиль
-                  </p>
-                  <h3 className="font-display text-3xl italic" style={{ color: '#0C0A08' }}>
-                    {quizResult.title}
-                  </h3>
-                  <p className="font-body text-sm mt-2" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>
-                    {quizResult.desc}
-                  </p>
-                </div>
-
-                <p
-                  className="font-body text-[10px] tracking-[0.2em] uppercase mb-4 text-center"
-                  style={{ color: 'rgba(44, 36, 32, 0.3)' }}
-                >
-                  Рекомендованные категории
-                </p>
-
-                <div className="flex flex-wrap justify-center gap-2 mb-8">
-                  {quizResult.categories.map((catId) => {
-                    const cat = categories.find((c) => c.id === catId)
-                    if (!cat) return null
-                    return (
-                      <Link
-                        key={catId}
-                        to={`/catalog/${catId}`}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 transition-all duration-300"
-                        style={{
-                          backgroundColor: 'rgba(176, 141, 87, 0.08)',
-                          border: '1px solid rgba(176, 141, 87, 0.15)',
-                          borderRadius: '2px',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = '#B08D57'
-                          e.currentTarget.style.backgroundColor = 'rgba(176, 141, 87, 0.15)'
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = 'rgba(176, 141, 87, 0.15)'
-                          e.currentTarget.style.backgroundColor = 'rgba(176, 141, 87, 0.08)'
-                        }}
-                      >
-                        <span className="font-body text-sm" style={{ color: '#0C0A08' }}>
-                          {cat.name}
-                        </span>
-                      </Link>
-                    )
-                  })}
-                </div>
-
-                <div className="flex items-center justify-center gap-4">
-                  <Link to="/catalog" className="btn-primary text-sm py-2.5 px-6">
-                    В каталог <ArrowRight size={12} className="ml-2" />
-                  </Link>
-                  <button onClick={resetQuiz} className="btn-secondary text-sm py-2.5 px-6">
-                    Пройти заново
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </section>
