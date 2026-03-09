@@ -324,7 +324,7 @@ export default function VintageQuiz({ onComplete }) {
   if (phase === 'hidden') {
     return (
       <div
-        className="relative overflow-hidden"
+        className="relative overflow-hidden pt-20"
         style={{ backgroundColor: '#0C0A08' }}
       >
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-4">

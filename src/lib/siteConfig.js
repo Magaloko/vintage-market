@@ -8,8 +8,8 @@ export const siteConfig = {
   phone: '+7 XXX XXX XXXX',
   phoneClean: '+7XXXXXXXXXX',
 
-  whatsapp: '7XXXXXXXXXX',
-  telegram: 'magobelgatto_bot',
+  whatsapp: '436781228875',
+  telegram: 'galeriedutemps_bot',
 
   instagram: 'https://www.instagram.com/galeriedutemps_/',
   facebook: null,

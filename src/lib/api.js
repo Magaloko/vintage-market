@@ -36,6 +36,9 @@ let localReviews = [
 ]
 let localProductReviews = []
 let localPriceHistory = []
+let localUsers = JSON.parse(localStorage.getItem('vintage_demo_users') || '[]')
+let userSeqId = 300
+function persistUsers() { localStorage.setItem('vintage_demo_users', JSON.stringify(localUsers)) }
 
 let nextId = 100
 let inquiryId = 100
@@ -1241,4 +1244,79 @@ export async function getPriceHistory(productId) {
   } catch (e) {
     return { data: [], error: e.message }
   }
+}
+
+// =============================================================================
+// Users / Contacts API
+// =============================================================================
+
+export async function getUsers({ role, status, search } = {}) {
+  if (!isSupabaseConfigured) {
+    let filtered = [...localUsers]
+    if (role) filtered = filtered.filter(u => u.role === role)
+    if (status) filtered = filtered.filter(u => u.status === status)
+    if (search) {
+      const q = search.toLowerCase()
+      filtered = filtered.filter(u =>
+        (u.name || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q)
+      )
+    }
+    return { data: filtered, error: null }
+  }
+  return safeQuery(async () => {
+    let q = supabase.from('user_contacts').select('*')
+    if (role) q = q.eq('role', role)
+    if (status) q = q.eq('status', status)
+    const { data, error } = await q.order('created_at', { ascending: false })
+    return { data, error }
+  })
+}
+
+export async function createUser(user) {
+  if (!isSupabaseConfigured) {
+    const newUser = { ...user, id: String(++userSeqId), created_at: now() }
+    localUsers.unshift(newUser)
+    persistUsers()
+    return { data: newUser, error: null }
+  }
+  return safeQuery(async () => {
+    const { data, error } = await supabase.from('user_contacts').insert([user]).select().single()
+    return { data, error }
+  })
+}
+
+export async function updateUser(id, updates) {
+  if (!isSupabaseConfigured) {
+    const idx = localUsers.findIndex(u => u.id === id)
+    if (idx === -1) return { data: null, error: { message: 'Not found' } }
+    localUsers[idx] = { ...localUsers[idx], ...updates }
+    persistUsers()
+    return { data: localUsers[idx], error: null }
+  }
+  return safeQuery(async () => {
+    const { data, error } = await supabase.from('user_contacts').update(updates).eq('id', id).select().single()
+    return { data, error }
+  })
+}
+
+export async function deleteUser(id) {
+  if (!isSupabaseConfigured) {
+    localUsers = localUsers.filter(u => u.id !== id)
+    persistUsers()
+    return { error: null }
+  }
+  return safeQuery(async () => {
+    const { error } = await supabase.from('user_contacts').delete().eq('id', id)
+    return { error }
+  }, {})
+}
+
+export async function getUsersByRole(...roles) {
+  if (!isSupabaseConfigured) {
+    return { data: localUsers.filter(u => roles.includes(u.role) && u.status === 'active'), error: null }
+  }
+  return safeQuery(async () => {
+    const { data, error } = await supabase.from('user_contacts').select('*').in('role', roles).eq('status', 'active')
+    return { data, error }
+  })
 }

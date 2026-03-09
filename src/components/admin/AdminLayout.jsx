@@ -13,6 +13,7 @@ import {
   Calculator,
   Layers,
   Upload,
+  Users,
 } from 'lucide-react'
 import { useAuth } from '../../lib/AuthContext'
 
@@ -23,6 +24,7 @@ const SIDEBAR_LINKS = [
   { to: '/admin/products/bulk', icon: Upload, label: 'Массовый импорт' },
   { to: '/admin/inquiries', icon: MessageSquare, label: 'Obzor' },
   { to: '/admin/categories', icon: Layers, label: 'Категории' },
+  { to: '/admin/users', icon: Users, label: 'Пользователи' },
   { to: '/admin/calculator', icon: Calculator, label: 'Калькулятор' },
 ]
 

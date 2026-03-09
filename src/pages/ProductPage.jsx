@@ -208,6 +208,10 @@ export default function ProductPage() {
   const showPrice = product.price > 0
   const isSold = product.status === 'sold'
 
+  // Resolve contact: product-level → siteConfig fallback
+  const resolvedWhatsapp = (product.contact_whatsapp || siteConfig.whatsapp || '').replace(/[^\d+]/g, '')
+  const resolvedTelegram = (product.contact_telegram || siteConfig.telegram || '').replace(/@/g, '')
+
   const baseDetails = [
     category && { icon: Tag, label: 'Категория', value: category.name },
     condition && { icon: Award, label: 'Состояние', value: condition.name },
@@ -344,9 +348,9 @@ export default function ProductPage() {
           {/* Mobile CTAs — big and prominent */}
           {!isSold && (
             <div className="space-y-2">
-              {siteConfig.whatsapp && (
+              {resolvedWhatsapp && (
                 <a
-                  href={`https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(siteConfig.messageTemplates.whatsapp(product, formatPrice))}`}
+                  href={`https://wa.me/${resolvedWhatsapp}?text=${encodeURIComponent(siteConfig.messageTemplates.whatsapp(product, formatPrice))}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full py-3.5 font-body text-sm font-medium tracking-wide uppercase rounded-sm transition-all"
@@ -357,9 +361,9 @@ export default function ProductPage() {
                 </a>
               )}
               <div className="flex gap-2">
-                {siteConfig.telegram && (
+                {resolvedTelegram && (
                   <a
-                    href={`https://t.me/${siteConfig.telegram}`}
+                    href={`https://t.me/${resolvedTelegram}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 flex items-center justify-center gap-2 py-3 font-body text-sm tracking-wide rounded-sm"
@@ -521,17 +525,6 @@ export default function ProductPage() {
               </div>
             )}
 
-            {/* Price insight & chart */}
-            {avgPrice && !isSold && !isRealEstate && !isShop && (
-              <div className="pt-4">
-                <PriceInsight price={product.price} avgPrice={avgPrice} />
-              </div>
-            )}
-            {!isShop && (
-              <div className="pt-2">
-                <PriceHistoryChart productId={product.id} />
-              </div>
-            )}
           </div>
 
           {/* ============ RIGHT COLUMN — Sticky Price Card (desktop only) ============ */}
@@ -608,9 +601,9 @@ export default function ProductPage() {
               {/* CTA buttons — PROMINENT */}
               {!isSold && (
                 <div className="space-y-2.5">
-                  {siteConfig.whatsapp && (
+                  {resolvedWhatsapp && (
                     <a
-                      href={`https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(siteConfig.messageTemplates.whatsapp(product, formatPrice))}`}
+                      href={`https://wa.me/${resolvedWhatsapp}?text=${encodeURIComponent(siteConfig.messageTemplates.whatsapp(product, formatPrice))}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 w-full py-4 font-body text-sm font-medium tracking-[0.1em] uppercase transition-all duration-200 rounded-sm"
@@ -624,9 +617,9 @@ export default function ProductPage() {
                   )}
 
                   <div className="flex gap-2">
-                    {siteConfig.telegram && (
+                    {resolvedTelegram && (
                       <a
-                        href={`https://t.me/${siteConfig.telegram}`}
+                        href={`https://t.me/${resolvedTelegram}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex-1 flex items-center justify-center gap-2 py-3 font-body text-sm rounded-sm transition-all"
@@ -708,6 +701,15 @@ export default function ProductPage() {
                   Отсканируйте для быстрого доступа
                 </p>
               </div>
+
+              {/* Price insight & chart — below QR */}
+              {avgPrice && !isSold && !isRealEstate && !isShop && (
+                <>
+                  <div className="h-px" style={{ backgroundColor: 'rgba(44, 36, 32, 0.08)' }} />
+                  <PriceInsight price={product.price} avgPrice={avgPrice} />
+                </>
+              )}
+              {!isShop && <PriceHistoryChart productId={product.id} />}
             </div>
           </div>
         </div>

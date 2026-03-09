@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { QRCodeSVG } from 'qrcode.react'
-import { getProduct, createProduct, updateProduct, getProducts } from '../../lib/api'
+import { getProduct, createProduct, updateProduct, getProducts, getUsersByRole } from '../../lib/api'
 import {
   categories, conditions, categoryFields, categoryGroups,
   knownBrands, specialAttributes, subcategories, shippingOptions,
@@ -31,6 +31,7 @@ const EMPTY_FORM = {
   status: 'active',
   special_attributes: [],
   quantity: 1,
+  seller_id: '',
   contact_whatsapp: '',
   contact_telegram: '',
   contact_instagram: '',
@@ -592,6 +593,12 @@ export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
   const [loadingProduct, setLoadingProduct] = useState(isEditing)
   const [priceCurrency, setPriceCurrency] = useState('EUR')
   const [exchangeRates, setExchangeRates] = useState(FALLBACK_RATES)
+  const [sellers, setSellers] = useState([])
+
+  /* Load sellers/agents */
+  useEffect(() => {
+    getUsersByRole('seller', 'agent').then(({ data }) => { if (data) setSellers(data) })
+  }, [])
 
   /* Load exchange rates */
   useEffect(() => {
@@ -633,6 +640,7 @@ export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
         status:             data.status || 'active',
         special_attributes: data.special_attributes || [],
         quantity:           data.quantity || 1,
+        seller_id:          data.seller_id || '',
         contact_whatsapp:   data.contact_whatsapp || '',
         contact_telegram:   data.contact_telegram || '',
         contact_instagram:  data.contact_instagram || '',
@@ -1014,6 +1022,50 @@ export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
         {/* ════════ 10. KONTAKT ════════ */}
         <Section icon={MessageCircle} title="Контактные данные">
           <div className="space-y-4">
+            {/* Seller / Agent selector */}
+            {sellers.length > 0 && (
+              <div className="mb-2">
+                <label
+                  className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1.5"
+                  style={{ color: 'rgba(44, 36, 32, 0.4)' }}
+                >
+                  Продавец / Агент
+                </label>
+                <select
+                  value={form.seller_id || ''}
+                  onChange={(e) => {
+                    const sel = sellers.find((s) => s.id === e.target.value)
+                    if (sel) {
+                      setForm((prev) => ({
+                        ...prev,
+                        seller_id: sel.id,
+                        contact_whatsapp: sel.contact_whatsapp || '',
+                        contact_telegram: sel.contact_telegram || '',
+                        contact_instagram: sel.contact_instagram || '',
+                      }))
+                    } else {
+                      setForm((prev) => ({
+                        ...prev,
+                        seller_id: '',
+                        contact_whatsapp: '',
+                        contact_telegram: '',
+                        contact_instagram: '',
+                      }))
+                    }
+                  }}
+                  className="gdt-input"
+                >
+                  <option value="">— Не выбран (по умолчанию) —</option>
+                  {sellers.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.role === 'agent' ? 'Агент' : 'Продавец'})
+                      {s.contact_whatsapp ? ` · ${s.contact_whatsapp}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#25D366' }}>
                 <MessageCircle size={14} color="#fff" />
