@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom'
 import {
   Package, ShoppingCart, Eye, TrendingUp, Tag,
   DollarSign, Heart, BarChart3, MessageSquare, Plus,
-  GripVertical,
+  GripVertical, Zap, Clock, Star, ShieldCheck,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, PieChart, Pie,
   Cell, AreaChart, Area,
 } from 'recharts'
-import { getStats } from '../../lib/api'
+import { getStats, getTicketAnalytics, autoCloseTickets } from '../../lib/api'
 import { categories } from '../../data/demoProducts'
 
 /* ── Theme tokens (light) ────────────────────────────────────── */
@@ -141,6 +141,7 @@ function TopProductsList({ title, icon: Icon, items, valueKey, iconColor, emptyT
 /* ── Main component ──────────────────────────────────────────── */
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null)
+  const [ticketStats, setTicketStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [chartOrder, setChartOrder] = useState(() => {
     try {
@@ -159,14 +160,20 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function load() {
       try {
-        const { data } = await getStats()
-        setStats(data)
+        const [statsRes, ticketRes] = await Promise.all([
+          getStats(),
+          getTicketAnalytics(),
+        ])
+        setStats(statsRes.data)
+        setTicketStats(ticketRes.data)
       } catch (e) {
         console.error('Stats load error:', e)
       }
       setLoading(false)
     }
     load()
+    // Auto-close solved tickets (fire-and-forget)
+    autoCloseTickets(4).catch(() => {})
   }, [])
 
   /* Chart tab drag-and-drop reorder */
@@ -200,6 +207,14 @@ export default function AdminDashboard() {
   const totalRevenue   = stats.totalRevenue || 0
   const favCount       = stats.totalFavorites || 0
 
+  // Ticket analytics helpers
+  const fmtHours = (h) => {
+    if (h == null) return '—'
+    if (h < 1) return `${Math.round(h * 60)}м`
+    if (h < 24) return `${Math.round(h)}ч`
+    return `${Math.round(h / 24)}д`
+  }
+
   const statCards = [
     { label: 'Всего товаров', value: stats.total,           icon: Package,      color: colors.gold },
     { label: 'Активные',      value: stats.active,          icon: ShoppingCart,  color: colors.gold },
@@ -215,6 +230,31 @@ export default function AdminDashboard() {
       icon: MessageSquare,
       color: stats.newInquiries > 0 ? colors.goldLight : colors.gold,
       highlight: stats.newInquiries > 0,
+    },
+    // Zendesk-inspired ticket analytics
+    {
+      label: 'Ø Ответ (FRT)',
+      value: fmtHours(ticketStats?.avgFirstReplyHours),
+      icon: Zap,
+      color: ticketStats?.avgFirstReplyHours > 8 ? '#B5736A' : ticketStats?.avgFirstReplyHours > 4 ? '#C17F3E' : '#4A7A5C',
+    },
+    {
+      label: 'Ø Решение',
+      value: fmtHours(ticketStats?.avgResolutionHours),
+      icon: Clock,
+      color: colors.gold,
+    },
+    {
+      label: 'CSAT',
+      value: ticketStats?.avgCsat != null ? `${ticketStats.avgCsat}★` : '—',
+      icon: Star,
+      color: ticketStats?.avgCsat >= 4 ? '#4A7A5C' : ticketStats?.avgCsat >= 3 ? '#C17F3E' : colors.gold,
+    },
+    {
+      label: 'SLA-Rate',
+      value: ticketStats ? `${100 - (ticketStats.slaBreachRate || 0)}%` : '—',
+      icon: ShieldCheck,
+      color: (ticketStats?.slaBreachRate || 0) < 5 ? '#4A7A5C' : (ticketStats?.slaBreachRate || 0) < 15 ? '#C17F3E' : '#B5736A',
     },
   ]
 

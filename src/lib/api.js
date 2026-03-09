@@ -737,21 +737,29 @@ export async function updateTicketStatus(id, newStatus, changedBy = 'admin') {
     })
     current.status = newStatus
     current.updated_at = now()
-    if (newStatus === 'solved') current.resolved_at = now()
+    if (newStatus === 'solved') {
+      current.resolved_at = now()
+      const created = new Date(current.created_at).getTime()
+      current.sla_resolution_hours = Number(((Date.now() - created) / 3600000).toFixed(2))
+    }
     if (newStatus === 'closed') current.closed_at = now()
     return { error: null }
   }
 
   return safeQuery(async () => {
     const { data: current } = await supabase
-      .from('inquiries').select('status').eq('id', id).single()
+      .from('inquiries').select('status, created_at').eq('id', id).single()
     if (!current) return { error: { message: 'Not found' } }
     const allowed = OBZOR_TRANSITIONS[current.status] || []
     if (!allowed.includes(newStatus)) {
       return { error: { message: `Cannot transition from ${current.status} to ${newStatus}` } }
     }
     const updates = { status: newStatus, updated_at: now() }
-    if (newStatus === 'solved') updates.resolved_at = now()
+    if (newStatus === 'solved') {
+      updates.resolved_at = now()
+      const created = new Date(current.created_at).getTime()
+      updates.sla_resolution_hours = Number(((Date.now() - created) / 3600000).toFixed(2))
+    }
     if (newStatus === 'closed') updates.closed_at = now()
     const { error } = await supabase.from('inquiries').update(updates).eq('id', id)
     if (!error) {
@@ -837,6 +845,167 @@ export async function getStatusLog(inquiryId) {
       .order('changed_at', { ascending: false })
     return { data: data || [], error }
   }, { data: [] })
+}
+
+// =============================================================================
+// Obzor — Auto-Close, CSAT, SLA (Zendesk-inspired)
+// =============================================================================
+
+/** Auto-close solved tickets older than `days` days. Fire-and-forget. */
+export async function autoCloseTickets(days = 4) {
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+
+  if (!isSupabaseConfigured) {
+    let closed = 0
+    for (const inq of localInquiries) {
+      if (inq.status === 'solved' && inq.resolved_at && inq.resolved_at < cutoff) {
+        localStatusLog.push({
+          id: String(++noteSeqId), inquiry_id: inq.id,
+          from_status: 'solved', to_status: 'closed',
+          changed_by: 'system_autoclose', changed_at: now(),
+        })
+        inq.status = 'closed'
+        inq.closed_at = now()
+        inq.updated_at = now()
+        closed++
+      }
+    }
+    return { data: { closed }, error: null }
+  }
+
+  return safeQuery(async () => {
+    const { data: tickets } = await supabase
+      .from('inquiries').select('id')
+      .eq('status', 'solved')
+      .lt('resolved_at', cutoff)
+    if (!tickets?.length) return { data: { closed: 0 }, error: null }
+
+    const ids = tickets.map(t => t.id)
+    const { error } = await supabase.from('inquiries')
+      .update({ status: 'closed', closed_at: now(), updated_at: now() })
+      .in('id', ids)
+
+    if (!error) {
+      const logEntries = ids.map(id => ({
+        inquiry_id: id, from_status: 'solved', to_status: 'closed',
+        changed_by: 'system_autoclose',
+      }))
+      supabase.from('inquiry_status_log').insert(logEntries).then(() => {}).catch(() => {})
+    }
+    return { data: { closed: ids.length }, error }
+  }, { data: { closed: 0 } })
+}
+
+/** Record first reply time when agent first responds to a ticket. */
+export async function recordFirstReply(inquiryId) {
+  if (!isSupabaseConfigured) {
+    const inq = localInquiries.find(i => i.id === inquiryId)
+    if (inq && !inq.first_reply_at) {
+      inq.first_reply_at = now()
+      const created = new Date(inq.created_at).getTime()
+      inq.sla_first_reply_hours = Number(((Date.now() - created) / 3600000).toFixed(2))
+    }
+    return { error: null }
+  }
+
+  return safeQuery(async () => {
+    const { data: inq } = await supabase.from('inquiries').select('first_reply_at, created_at').eq('id', inquiryId).single()
+    if (!inq || inq.first_reply_at) return { error: null } // already recorded
+    const hours = Number(((Date.now() - new Date(inq.created_at).getTime()) / 3600000).toFixed(2))
+    const { error } = await supabase.from('inquiries')
+      .update({ first_reply_at: now(), sla_first_reply_hours: hours })
+      .eq('id', inquiryId)
+    return { error }
+  }, {})
+}
+
+/** Submit CSAT rating for a resolved ticket. */
+export async function submitCSAT(inquiryId, rating, comment = '') {
+  if (!isSupabaseConfigured) {
+    const inq = localInquiries.find(i => i.id === inquiryId)
+    if (!inq) return { error: { message: 'Not found' } }
+    inq.csat_rating = Math.max(1, Math.min(5, rating))
+    inq.csat_comment = comment || null
+    inq.csat_at = now()
+    return { error: null }
+  }
+
+  return safeQuery(async () => {
+    const { error } = await supabase.from('inquiries')
+      .update({
+        csat_rating: Math.max(1, Math.min(5, rating)),
+        csat_comment: comment || null,
+        csat_at: now(),
+      })
+      .eq('id', inquiryId)
+    return { error }
+  }, {})
+}
+
+/** Get ticket analytics for dashboard (SLA, CSAT, FRT, resolution). */
+export async function getTicketAnalytics() {
+  if (!isSupabaseConfigured) {
+    const all = localInquiries
+    const solved = all.filter(i => ['solved', 'closed'].includes(i.status))
+    const withFrt = all.filter(i => i.sla_first_reply_hours != null)
+    const withCsat = all.filter(i => i.csat_rating != null)
+    const withResolution = solved.filter(i => i.sla_resolution_hours != null)
+
+    const avgFrt = withFrt.length > 0
+      ? Number((withFrt.reduce((s, i) => s + i.sla_first_reply_hours, 0) / withFrt.length).toFixed(1))
+      : null
+    const avgResolution = withResolution.length > 0
+      ? Number((withResolution.reduce((s, i) => s + i.sla_resolution_hours, 0) / withResolution.length).toFixed(1))
+      : null
+    const avgCsat = withCsat.length > 0
+      ? Number((withCsat.reduce((s, i) => s + i.csat_rating, 0) / withCsat.length).toFixed(1))
+      : null
+    const slaBreachRate = withFrt.length > 0
+      ? Number(((withFrt.filter(i => i.sla_first_reply_hours > 8).length / withFrt.length) * 100).toFixed(1))
+      : 0
+
+    return {
+      data: {
+        totalTickets: all.length,
+        openTickets: all.filter(i => !['solved', 'closed'].includes(i.status)).length,
+        avgFirstReplyHours: avgFrt,
+        avgResolutionHours: avgResolution,
+        avgCsat: avgCsat,
+        csatCount: withCsat.length,
+        slaBreachRate,
+      },
+      error: null,
+    }
+  }
+
+  return safeQuery(async () => {
+    const { data: all } = await supabase.from('inquiries').select('status, sla_first_reply_hours, sla_resolution_hours, csat_rating')
+    if (!all) return { data: null, error: null }
+
+    const solved = all.filter(i => ['solved', 'closed'].includes(i.status))
+    const withFrt = all.filter(i => i.sla_first_reply_hours != null)
+    const withCsat = all.filter(i => i.csat_rating != null)
+    const withResolution = all.filter(i => i.sla_resolution_hours != null)
+
+    const avg = (arr, key) => arr.length > 0
+      ? Number((arr.reduce((s, i) => s + (i[key] || 0), 0) / arr.length).toFixed(1))
+      : null
+
+    return {
+      data: {
+        totalTickets: all.length,
+        openTickets: all.filter(i => !['solved', 'closed'].includes(i.status)).length,
+        avgFirstReplyHours: avg(withFrt, 'sla_first_reply_hours'),
+        avgResolutionHours: avg(withResolution, 'sla_resolution_hours'),
+        avgCsat: avg(withCsat, 'csat_rating'),
+        csatCount: withCsat.length,
+        slaBreachRate: withFrt.length > 0
+          ? Number(((withFrt.filter(i => i.sla_first_reply_hours > 8).length / withFrt.length) * 100).toFixed(1))
+          : 0,
+      },
+      error: null,
+    }
+  })
 }
 
 // =============================================================================

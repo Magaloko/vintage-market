@@ -1,16 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   MessageSquare, Trash2, Mail, Phone, ExternalLink,
   Sparkles, CircleDot, Clock, PauseCircle, CheckCircle2, Lock,
   StickyNote, History, ChevronDown, ChevronRight, Send,
+  Zap, Star, FileText, AlertTriangle,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import {
   getInquiries, updateTicketStatus, deleteInquiry,
   addInquiryNote, getInquiryNotes, getStatusLog,
+  autoCloseTickets, recordFirstReply, submitCSAT,
   OBZOR_TRANSITIONS,
 } from '../../lib/api'
+import { ticketMacros } from '../../data/demoProducts'
 
 /* ── Theme tokens (light) ────────────────────────────────────── */
 const colors = {
@@ -113,6 +116,252 @@ function normalizeStatus(status) {
   if (status === 'read') return 'open'
   if (status === 'replied') return 'solved'
   return status
+}
+
+/* ── SLA Badge computation ───────────────────────────────────── */
+function computeSLA(inq) {
+  const created = new Date(inq.created_at).getTime()
+  const resolved = inq.resolved_at ? new Date(inq.resolved_at).getTime() : null
+  const norm = normalizeStatus(inq.status)
+  const isFinal = ['solved', 'closed'].includes(norm)
+
+  // First Reply Time
+  let frtHours = inq.sla_first_reply_hours
+  if (frtHours == null && !isFinal) {
+    frtHours = (Date.now() - created) / 3600000
+  }
+
+  // Resolution Time
+  let resHours = inq.sla_resolution_hours
+  if (resHours == null && isFinal && resolved) {
+    resHours = (resolved - created) / 3600000
+  } else if (resHours == null && !isFinal) {
+    resHours = (Date.now() - created) / 3600000
+  }
+
+  // SLA levels: green < 4h, yellow 4-8h, red > 8h (for FRT)
+  let frtLevel = 'green'
+  if (frtHours != null) {
+    if (frtHours > 8) frtLevel = 'red'
+    else if (frtHours > 4) frtLevel = 'yellow'
+  }
+
+  return { frtHours, resHours, frtLevel, isFinal }
+}
+
+const SLA_COLORS = {
+  green:  { color: '#4A7A5C', bg: 'rgba(74, 122, 92, 0.1)' },
+  yellow: { color: '#C17F3E', bg: 'rgba(193, 127, 62, 0.1)' },
+  red:    { color: '#B5736A', bg: 'rgba(181, 115, 106, 0.1)' },
+}
+
+function formatHours(h) {
+  if (h == null) return '—'
+  if (h < 1) return `${Math.round(h * 60)}м`
+  if (h < 24) return `${Math.round(h)}ч`
+  return `${Math.round(h / 24)}д`
+}
+
+/* ── SLA Badge component ─────────────────────────────────────── */
+function SLABadge({ inq }) {
+  const { frtHours, frtLevel, isFinal } = computeSLA(inq)
+  if (isFinal) return null
+
+  const slaStyle = SLA_COLORS[frtLevel]
+  const Icon = frtLevel === 'red' ? AlertTriangle : frtLevel === 'yellow' ? Clock : Zap
+
+  return (
+    <span
+      className="font-body text-[9px] px-1.5 py-0.5 flex items-center gap-0.5 flex-shrink-0"
+      style={{ backgroundColor: slaStyle.bg, color: slaStyle.color, borderRadius: '1px' }}
+      title={`Время ожидания: ${formatHours(frtHours)}`}
+    >
+      <Icon size={8} />
+      {formatHours(frtHours)}
+    </span>
+  )
+}
+
+/* ── CSAT Stars ──────────────────────────────────────────────── */
+function CSATStars({ rating, size = 12 }) {
+  return (
+    <span className="inline-flex gap-0.5">
+      {[1, 2, 3, 4, 5].map(i => (
+        <Star
+          key={i}
+          size={size}
+          fill={i <= rating ? '#B08D57' : 'transparent'}
+          style={{ color: i <= rating ? '#B08D57' : alpha.ink15 }}
+        />
+      ))}
+    </span>
+  )
+}
+
+/* ── CSAT inline rating ──────────────────────────────────────── */
+function CSATSection({ inq, onRate }) {
+  const [hover, setHover] = useState(0)
+
+  if (inq.csat_rating) {
+    return (
+      <div className="flex items-center gap-2 mt-2">
+        <span className="font-body text-[10px]" style={{ color: alpha.ink30 }}>CSAT:</span>
+        <CSATStars rating={inq.csat_rating} />
+        {inq.csat_comment && (
+          <span className="font-body text-[10px] italic" style={{ color: alpha.ink30 }}>
+            — {inq.csat_comment}
+          </span>
+        )}
+      </div>
+    )
+  }
+
+  if (!['solved', 'closed'].includes(normalizeStatus(inq.status))) return null
+
+  return (
+    <div className="flex items-center gap-2 mt-2">
+      <span className="font-body text-[10px]" style={{ color: alpha.ink30 }}>Оценка:</span>
+      <span className="inline-flex gap-0.5 cursor-pointer">
+        {[1, 2, 3, 4, 5].map(i => (
+          <Star
+            key={i}
+            size={14}
+            fill={i <= hover ? '#B08D57' : 'transparent'}
+            style={{ color: i <= hover ? '#B08D57' : alpha.ink20, cursor: 'pointer' }}
+            onMouseEnter={() => setHover(i)}
+            onMouseLeave={() => setHover(0)}
+            onClick={() => onRate(inq.id, i)}
+          />
+        ))}
+      </span>
+    </div>
+  )
+}
+
+/* ── Macro dropdown ──────────────────────────────────────────── */
+function MacroDropdown({ onSelect }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 px-3 py-2 font-body text-xs transition-all"
+        style={{
+          backgroundColor: alpha.ink05,
+          color: alpha.ink40,
+          borderRadius: '2px',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = alpha.ink08 }}
+        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = alpha.ink05 }}
+      >
+        <FileText size={12} />
+        Макрос
+        <ChevronDown size={10} />
+      </button>
+
+      {open && (
+        <div
+          className="absolute bottom-full left-0 mb-1 w-64 py-1 shadow-lg z-50"
+          style={{
+            backgroundColor: '#FFFFFF',
+            border: `1px solid ${alpha.gold12}`,
+            borderRadius: '4px',
+          }}
+        >
+          {ticketMacros.map(macro => (
+            <button
+              key={macro.id}
+              onClick={() => { onSelect(macro.template); setOpen(false) }}
+              className="w-full text-left px-3 py-2 font-body text-xs transition-colors"
+              style={{ color: alpha.ink60 }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = alpha.gold10 }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+            >
+              <span className="font-medium" style={{ color: colors.ink }}>{macro.name}</span>
+              <p className="text-[10px] mt-0.5 truncate" style={{ color: alpha.ink30 }}>
+                {macro.template.slice(0, 60)}...
+              </p>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Reply section (textarea + macros + send) ────────────────── */
+function ReplySection({ inquiryId, onNoteSent }) {
+  const [text, setText] = useState('')
+  const [sending, setSending] = useState(false)
+
+  const handleMacro = (template) => {
+    setText(prev => prev ? prev + '\n\n' + template : template)
+  }
+
+  const handleSend = async () => {
+    if (!text.trim()) return
+    setSending(true)
+    const { error } = await addInquiryNote(inquiryId, text.trim(), false, 'admin')
+    setSending(false)
+    if (error) { toast.error('Ошибка отправки'); return }
+    // Record first reply time
+    recordFirstReply(inquiryId).catch(() => {})
+    setText('')
+    toast.success('Ответ отправлен')
+    if (onNoteSent) onNoteSent()
+  }
+
+  return (
+    <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${alpha.ink05}` }}>
+      <label className="font-body text-[10px] tracking-wider uppercase mb-2 block" style={{ color: alpha.ink30 }}>
+        Ответ клиенту
+      </label>
+      <textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        rows={3}
+        placeholder="Напишите ответ или выберите макрос..."
+        className="w-full font-body text-xs px-3 py-2 outline-none resize-none"
+        style={{
+          backgroundColor: 'rgba(247, 242, 235, 0.8)',
+          border: `1px solid ${alpha.gold12}`,
+          borderRadius: '2px',
+          color: colors.ink,
+        }}
+        onFocus={(e) => { e.target.style.borderColor = colors.gold }}
+        onBlur={(e) => { e.target.style.borderColor = alpha.gold12 }}
+      />
+      <div className="flex items-center gap-2 mt-2">
+        <MacroDropdown onSelect={handleMacro} />
+        <div className="flex-1" />
+        <button
+          onClick={handleSend}
+          disabled={sending || !text.trim()}
+          className="flex items-center gap-1.5 px-4 py-2 font-body text-xs transition-all"
+          style={{
+            backgroundColor: alpha.gold15,
+            color: colors.gold,
+            borderRadius: '2px',
+            opacity: sending || !text.trim() ? 0.4 : 1,
+          }}
+          onMouseEnter={(e) => { if (!sending && text.trim()) e.currentTarget.style.opacity = '0.8' }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = sending || !text.trim() ? '0.4' : '1' }}
+        >
+          <Send size={12} /> {sending ? 'Отправка...' : 'Отправить'}
+        </button>
+      </div>
+    </div>
+  )
 }
 
 /* ── Skeleton ─────────────────────────────────────────────────── */
@@ -283,7 +532,7 @@ function NotesSection({ inquiryId }) {
                 <input
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  placeholder="Добавить заметку..."
+                  placeholder="Внутренняя заметка..."
                   className="flex-1 font-body text-xs px-3 py-2 outline-none"
                   style={{
                     backgroundColor: 'rgba(247, 242, 235, 0.8)',
@@ -369,6 +618,11 @@ function StatusHistory({ inquiryId }) {
                       {to.label}
                     </span>
                   )}
+                  {entry.changed_by === 'system_autoclose' && (
+                    <span className="font-body text-[8px] px-1 py-0.5" style={{ backgroundColor: alpha.ink05, color: alpha.ink20, borderRadius: '1px' }}>
+                      авто
+                    </span>
+                  )}
                 </div>
               )
             })
@@ -395,12 +649,13 @@ function HoverLink({ href, to, children }) {
 }
 
 /* ── Ticket detail (expanded) ─────────────────────────────────── */
-function TicketDetail({ inq, onStatusChange, onDelete }) {
+function TicketDetail({ inq, onStatusChange, onDelete, onCSAT }) {
   const isClosed = inq.status === 'closed'
+  const sla = computeSLA(inq)
 
   return (
     <div className="px-4 pb-4 pt-2" style={{ borderTop: `1px solid ${alpha.ink05}` }}>
-      {/* Contact info */}
+      {/* Contact info + SLA */}
       <div className="flex flex-wrap gap-4 mb-3">
         <HoverLink href={`mailto:${inq.email}`}>
           <Mail size={12} /> {inq.email}
@@ -415,6 +670,20 @@ function TicketDetail({ inq, onStatusChange, onDelete }) {
             <ExternalLink size={12} /> {inq.product_title || 'Товар'}
           </HoverLink>
         )}
+
+        {/* SLA detail */}
+        <div className="flex items-center gap-3 ml-auto">
+          {sla.frtHours != null && (
+            <span className="font-body text-[10px]" style={{ color: SLA_COLORS[sla.frtLevel].color }}>
+              Ответ: {formatHours(sla.frtHours)}
+            </span>
+          )}
+          {sla.resHours != null && (
+            <span className="font-body text-[10px]" style={{ color: alpha.ink30 }}>
+              Решение: {formatHours(sla.resHours)}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Status pipeline */}
@@ -427,8 +696,11 @@ function TicketDetail({ inq, onStatusChange, onDelete }) {
         </p>
       </div>
 
+      {/* CSAT */}
+      <CSATSection inq={inq} onRate={onCSAT} />
+
       {/* Action buttons */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap mt-3">
         <TicketActions status={inq.status} onTransition={(target) => onStatusChange(inq.id, target)} />
 
         {!isClosed && (
@@ -444,6 +716,11 @@ function TicketDetail({ inq, onStatusChange, onDelete }) {
         )}
       </div>
 
+      {/* Reply section with macros */}
+      {!isClosed && (
+        <ReplySection inquiryId={inq.id} />
+      )}
+
       {/* Notes + History */}
       <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${alpha.ink05}` }}>
         <NotesSection inquiryId={inq.id} />
@@ -454,7 +731,7 @@ function TicketDetail({ inq, onStatusChange, onDelete }) {
 }
 
 /* ── Single ticket row ────────────────────────────────────────── */
-function TicketRow({ inq, isExpanded, onToggle, onStatusChange, onDelete }) {
+function TicketRow({ inq, isExpanded, onToggle, onStatusChange, onDelete, onCSAT }) {
   const status = OBZOR_STATUSES[inq.status] || OBZOR_STATUSES.new
   const StatusIcon = status.icon
 
@@ -483,11 +760,16 @@ function TicketRow({ inq, isExpanded, onToggle, onStatusChange, onDelete }) {
                 {inq.product_title}
               </span>
             )}
+            {inq.csat_rating && (
+              <CSATStars rating={inq.csat_rating} size={10} />
+            )}
           </div>
           <p className="font-body text-xs truncate mt-1" style={{ color: alpha.ink30 }}>
             {inq.message}
           </p>
         </div>
+
+        <SLABadge inq={inq} />
 
         <span className="font-body text-[10px] flex-shrink-0" style={{ color: alpha.ink20 }}>
           {formatDate(inq.created_at)}
@@ -503,7 +785,7 @@ function TicketRow({ inq, isExpanded, onToggle, onStatusChange, onDelete }) {
       </button>
 
       {isExpanded && (
-        <TicketDetail inq={inq} onStatusChange={onStatusChange} onDelete={onDelete} />
+        <TicketDetail inq={inq} onStatusChange={onStatusChange} onDelete={onDelete} onCSAT={onCSAT} />
       )}
     </div>
   )
@@ -516,7 +798,15 @@ export default function AdminInquiries() {
   const [filter, setFilter] = useState('all')
   const [expandedId, setExpandedId] = useState(null)
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+    // Auto-close solved tickets older than 4 days
+    autoCloseTickets(4).then(({ data }) => {
+      if (data?.closed > 0) {
+        toast(`${data.closed} тикет(ов) автозакрыто`, { icon: '🔒' })
+      }
+    }).catch(() => {})
+  }, [])
 
   async function load() {
     setLoading(true)
@@ -532,7 +822,6 @@ export default function AdminInquiries() {
 
   /* Count active (not solved/closed) */
   const activeCount = inquiries.filter(i => !['solved', 'closed'].includes(normalizeStatus(i.status))).length
-  const newCount = inquiries.filter(i => i.status === 'new').length
 
   /* Status change with transition validation */
   const handleStatusChange = async (id, newStatus) => {
@@ -542,10 +831,26 @@ export default function AdminInquiries() {
       return
     }
     setInquiries((prev) => prev.map((i) =>
-      i.id === id ? { ...i, status: newStatus, updated_at: new Date().toISOString() } : i
+      i.id === id ? {
+        ...i,
+        status: newStatus,
+        updated_at: new Date().toISOString(),
+        ...(newStatus === 'solved' ? { resolved_at: new Date().toISOString() } : {}),
+        ...(newStatus === 'closed' ? { closed_at: new Date().toISOString() } : {}),
+      } : i
     ))
     const label = OBZOR_STATUSES[newStatus]?.label || newStatus
     toast.success(`→ ${label}`)
+  }
+
+  /* CSAT rating */
+  const handleCSAT = async (id, rating) => {
+    const { error } = await submitCSAT(id, rating)
+    if (error) { toast.error('Ошибка'); return }
+    setInquiries((prev) => prev.map((i) =>
+      i.id === id ? { ...i, csat_rating: rating, csat_at: new Date().toISOString() } : i
+    ))
+    toast.success('Оценка сохранена')
   }
 
   const handleDelete = async (id) => {
@@ -589,7 +894,7 @@ export default function AdminInquiries() {
             )}
           </h1>
           <p className="font-body text-xs mt-1" style={{ color: alpha.ink30 }}>
-            Система управления запросами
+            Система управления запросами — автозакрытие через 4 дня
           </p>
         </div>
       </div>
@@ -638,6 +943,7 @@ export default function AdminInquiries() {
               onToggle={toggleExpand}
               onStatusChange={handleStatusChange}
               onDelete={handleDelete}
+              onCSAT={handleCSAT}
             />
           ))}
         </div>

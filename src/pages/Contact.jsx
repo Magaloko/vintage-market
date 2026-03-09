@@ -1,9 +1,61 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Mail, MapPin, Phone, Send, MessageCircle, CheckCircle } from 'lucide-react'
+import { Mail, MapPin, Phone, Send, MessageCircle, CheckCircle, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { createInquiry } from '../lib/api'
 import { siteConfig } from '../lib/siteConfig'
+import { businessHours } from '../data/demoProducts'
+
+/* ── Business Hours Widget ────────────────────────────────────── */
+function BusinessHoursWidget() {
+  const isOpen = useMemo(() => {
+    const now = new Date()
+    // Convert to Almaty time (UTC+6)
+    const utcHours = now.getUTCHours()
+    const almatyHours = (utcHours + businessHours.utcOffset) % 24
+    const day = now.getUTCDay() // 0=Sun, 1=Mon, ... 6=Sat
+
+    // Mon–Fri (1–5), 09:00–17:00
+    return day >= 1 && day <= 5 && almatyHours >= 9 && almatyHours < 17
+  }, [])
+
+  return (
+    <div
+      className="p-4 mb-10"
+      style={{
+        backgroundColor: isOpen ? 'rgba(74, 122, 92, 0.06)' : 'rgba(44, 36, 32, 0.03)',
+        border: `1px solid ${isOpen ? 'rgba(74, 122, 92, 0.15)' : 'rgba(44, 36, 32, 0.08)'}`,
+        borderRadius: '2px',
+      }}
+    >
+      <div className="flex items-center gap-3 mb-2">
+        <div
+          className="w-2.5 h-2.5 rounded-full"
+          style={{ backgroundColor: isOpen ? '#4A7A5C' : 'rgba(44, 36, 32, 0.2)' }}
+        />
+        <span
+          className="font-body text-sm font-medium"
+          style={{ color: isOpen ? '#4A7A5C' : 'rgba(44, 36, 32, 0.4)' }}
+        >
+          {isOpen ? 'Сейчас работаем' : 'Закрыто'}
+        </span>
+      </div>
+      <div className="flex items-center gap-2 ml-5">
+        <Clock size={14} style={{ color: 'rgba(44, 36, 32, 0.3)' }} />
+        <div>
+          {businessHours.schedule.map((s, i) => (
+            <p key={i} className="font-body text-xs" style={{ color: 'rgba(44, 36, 32, 0.5)' }}>
+              {s.day}: {s.hours}
+            </p>
+          ))}
+        </div>
+      </div>
+      <p className="font-body text-[10px] mt-2 ml-5" style={{ color: 'rgba(44, 36, 32, 0.3)' }}>
+        Ответ в течение 8 часов в рабочее время
+      </p>
+    </div>
+  )
+}
 
 export default function Contact() {
   const [searchParams] = useSearchParams()
@@ -177,6 +229,9 @@ export default function Contact() {
                 </a>
               )}
             </div>
+
+            {/* Business Hours Widget */}
+            <BusinessHoursWidget />
 
             {/* Classic contact info */}
             <div className="space-y-5">
