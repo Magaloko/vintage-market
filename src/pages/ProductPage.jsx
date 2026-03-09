@@ -427,58 +427,76 @@ export default function ProductPage() {
 
   return (
     <div className="page-enter">
-      {/* Breadcrumbs */}
-      <div className="max-w-7xl mx-auto px-6 pt-6">
-        <div
-          className="flex items-center gap-2 font-sans text-xs"
-          style={{ color: 'rgba(44, 36, 32, 0.35)' }}
-        >
-          <Link
-            to="/catalog"
-            className="flex items-center gap-1 transition-colors"
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#2C2420')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(44, 36, 32, 0.35)')}
-          >
-            <ArrowLeft size={14} />
-            Каталог
-          </Link>
+      {/* ═══════ Product Title Bar (below header) ═══════ */}
+      <div
+        style={{
+          backgroundColor: 'rgba(12, 10, 8, 0.95)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(176, 141, 87, 0.1)',
+        }}
+      >
+        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-14">
+          {/* Left: breadcrumbs + title */}
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              to="/catalog"
+              className="flex items-center gap-1 shrink-0 transition-colors"
+              style={{ color: 'rgba(240, 230, 214, 0.4)' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#F0E6D6')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(240, 230, 214, 0.4)')}
+            >
+              <ArrowLeft size={14} />
+            </Link>
 
-          {category && (
-            <>
-              <span>/</span>
+            {category && (
               <Link
                 to={`/catalog/${category.id}`}
-                className="transition-colors"
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#2C2420')}
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.color = 'rgba(44, 36, 32, 0.35)')
-                }
+                className="hidden sm:block shrink-0 font-body text-[10px] tracking-[0.15em] uppercase transition-colors"
+                style={{ color: 'rgba(176, 141, 87, 0.5)' }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#B08D57')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(176, 141, 87, 0.5)')}
               >
                 {category.name}
               </Link>
-            </>
-          )}
+            )}
 
-          {product.subcategory && (() => {
-            const subcatList = subcategories[product.category] || []
-            const subcat = subcatList.find(s => s.id === product.subcategory)
-            if (!subcat) return null
-            return (
-              <>
-                <span>/</span>
-                <span className="transition-colors" style={{ color: 'rgba(44, 36, 32, 0.45)' }}>
-                  {subcat.name}
-                </span>
-              </>
-            )
-          })()}
-          <span>/</span>
-          <span
-            className="truncate max-w-[200px]"
-            style={{ color: 'rgba(44, 36, 32, 0.55)' }}
-          >
-            {product.title}
-          </span>
+            {category && (
+              <span className="hidden sm:block font-body text-[10px]" style={{ color: 'rgba(240, 230, 214, 0.15)' }}>
+                /
+              </span>
+            )}
+
+            <h1
+              className="font-display text-lg md:text-xl italic truncate"
+              style={{ color: '#F0E6D6' }}
+            >
+              {product.title}
+            </h1>
+          </div>
+
+          {/* Right: actions (like, compare, share) */}
+          <div className="flex items-center gap-2 shrink-0 ml-4">
+            <FavoriteButton product={product} size="md" variant="dark" />
+            <CompareButton product={product} size="md" variant="dark" />
+            <button
+              onClick={handleShare}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
+              style={{
+                backgroundColor: 'rgba(176, 141, 87, 0.1)',
+                color: 'rgba(240, 230, 214, 0.5)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(176, 141, 87, 0.2)'
+                e.currentTarget.style.color = '#F0E6D6'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(176, 141, 87, 0.1)'
+                e.currentTarget.style.color = 'rgba(240, 230, 214, 0.5)'
+              }}
+            >
+              <Share2 size={18} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -508,30 +526,6 @@ export default function ProductPage() {
                 </span>
               </div>
             )}
-
-            {/* Title + actions */}
-            <div className="flex items-start justify-between gap-4">
-              <h1
-                className="font-display text-3xl md:text-4xl leading-tight"
-                style={{ color: '#0C0A08' }}
-              >
-                {product.title}
-              </h1>
-              <div className="flex items-center gap-2 shrink-0 mt-1">
-                <FavoriteButton product={product} size="md" />
-                <CompareButton product={product} size="md" />
-                <button
-                  onClick={handleShare}
-                  className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
-                  style={{
-                    backgroundColor: 'rgba(44, 36, 32, 0.06)',
-                    color: 'rgba(44, 36, 32, 0.35)',
-                  }}
-                >
-                  <Share2 size={18} />
-                </button>
-              </div>
-            </div>
 
 
             {/* Price — Vintage Tag */}
