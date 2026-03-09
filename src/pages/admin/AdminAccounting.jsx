@@ -201,7 +201,7 @@ function InvoiceModal({ invoice, customers, onSave, onClose }) {
       }))
       toast.success(`${prod.title || prod.name}`)
     } else if (productId) {
-      toast.error('\u0422\u043e\u0432\u0430\u0440 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d')
+      toast.error('Товар не найден')
     }
   }
 
@@ -273,7 +273,7 @@ function InvoiceModal({ invoice, customers, onSave, onClose }) {
                       value={line.productId || ''}
                       onChange={(e) => { updateLine(i, 'productId', e.target.value); if (e.target.value) linkProduct(i, e.target.value) }}
                     >
-                      <option value="">\u2014 \u0422\u043e\u0432\u0430\u0440 (\u043e\u043f\u0446\u0438\u043e\u043d\u0430\u043b\u044c\u043d\u043e) \u2014</option>
+                      <option value="">— Товар (опционально) —</option>
                       {products.map((p) => <option key={p.id} value={p.id}>{p.title || p.name} &mdash; {fmtCur(p.price)}</option>)}
                     </select>
                     <input
@@ -283,11 +283,11 @@ function InvoiceModal({ invoice, customers, onSave, onClose }) {
                       onChange={(e) => updateLine(i, 'productId', e.target.value)}
                       onBlur={(e) => { if (e.target.value) linkProduct(i, e.target.value) }}
                     />
-                    <button onClick={() => removeLine(i)} className="p-1 shrink-0" title="\u0423\u0434\u0430\u043b\u0438\u0442\u044c"><Trash2 size={13} style={{ color: '#B5736A' }} /></button>
+                    <button onClick={() => removeLine(i)} className="p-1 shrink-0" title="Удалить"><Trash2 size={13} style={{ color: '#B5736A' }} /></button>
                   </div>
                   {/* Standard fields */}
                   <div className="grid grid-cols-12 gap-2 items-end">
-                    <input className="gdt-input col-span-5 text-xs" placeholder="\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435" value={line.desc} onChange={(e) => updateLine(i, 'desc', e.target.value)} />
+                    <input className="gdt-input col-span-5 text-xs" placeholder="Описание" value={line.desc} onChange={(e) => updateLine(i, 'desc', e.target.value)} />
                     <input className="gdt-input col-span-2 text-xs text-right" type="number" min="1" value={line.qty} onChange={(e) => updateLine(i, 'qty', e.target.value)} />
                     <input className="gdt-input col-span-2 text-xs text-right" type="number" step="0.01" value={line.unitPrice} onChange={(e) => updateLine(i, 'unitPrice', e.target.value)} />
                     <select className="gdt-input col-span-2 text-xs" value={line.vat} onChange={(e) => updateLine(i, 'vat', e.target.value)}>

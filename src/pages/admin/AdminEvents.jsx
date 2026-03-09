@@ -13,39 +13,39 @@ const FAINT = 'rgba(44, 36, 32, 0.15)'
 const panelStyle = { backgroundColor: 'rgba(255,255,255,0.85)', border: '1px solid rgba(176,141,87,0.12)', borderRadius: '2px' }
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
-const fmtDate = (d) => d ? new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' }) : '\u2014'
+const fmtDate = (d) => d ? new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'
 const fmtTime = (d) => d ? new Date(d).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }) : ''
 
 const CATEGORIES = [
-  { key: 'exhibition', label: '\u0412\u044b\u0441\u0442\u0430\u0432\u043a\u0430', emoji: '\ud83c\udfdb\ufe0f', color: '#B08D57', group: 'business' },
-  { key: 'fair', label: '\u042f\u0440\u043c\u0430\u0440\u043a\u0430', emoji: '\ud83c\udfaa', color: '#C17F3E', group: 'business' },
-  { key: 'conference', label: '\u041a\u043e\u043d\u0444\u0435\u0440\u0435\u043d\u0446\u0438\u044f', emoji: '\ud83c\udf99\ufe0f', color: '#7A5C8B', group: 'business' },
-  { key: 'workshop', label: '\u0412\u043e\u0440\u043a\u0448\u043e\u043f', emoji: '\ud83d\udee0\ufe0f', color: '#5A7A8B', group: 'business' },
-  { key: 'meeting', label: '\u0412\u0441\u0442\u0440\u0435\u0447\u0430', emoji: '\ud83d\udc65', color: '#3b82f6', group: 'general' },
-  { key: 'party', label: '\u0412\u0435\u0447\u0435\u0440\u0438\u043d\u043a\u0430', emoji: '\ud83c\udf89', color: '#8b5cf6', group: 'general' },
-  { key: 'family', label: '\u0421\u0435\u043c\u044c\u044f', emoji: '\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66', color: '#ec4899', group: 'general' },
-  { key: 'hobby', label: '\u0425\u043e\u0431\u0431\u0438', emoji: '\ud83c\udfae', color: '#06b6d4', group: 'general' },
-  { key: 'sport', label: '\u0421\u043f\u043e\u0440\u0442', emoji: '\u26bd', color: '#f59e0b', group: 'general' },
-  { key: 'delivery', label: '\u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430', emoji: '\ud83d\udce6', color: '#5A6B3C', group: 'logistics' },
+  { key: 'exhibition', label: 'Выставка', emoji: '🏛️', color: '#B08D57', group: 'business' },
+  { key: 'fair', label: 'Ярмарка', emoji: '🎪', color: '#C17F3E', group: 'business' },
+  { key: 'conference', label: 'Конференция', emoji: '🎙️', color: '#7A5C8B', group: 'business' },
+  { key: 'workshop', label: 'Воркшоп', emoji: '🛠️', color: '#5A7A8B', group: 'business' },
+  { key: 'meeting', label: 'Встреча', emoji: '👥', color: '#3b82f6', group: 'general' },
+  { key: 'party', label: 'Вечеринка', emoji: '🎉', color: '#8b5cf6', group: 'general' },
+  { key: 'family', label: 'Семья', emoji: '👨‍👩‍👧‍👦', color: '#ec4899', group: 'general' },
+  { key: 'hobby', label: 'Хобби', emoji: '🎮', color: '#06b6d4', group: 'general' },
+  { key: 'sport', label: 'Спорт', emoji: '⚽', color: '#f59e0b', group: 'general' },
+  { key: 'delivery', label: 'Доставка', emoji: '📦', color: '#5A6B3C', group: 'logistics' },
 ]
 
 const CATEGORY_GROUPS = [
-  { key: 'business', label: '\u0411\u0438\u0437\u043d\u0435\u0441', emoji: '\ud83d\udcbc' },
-  { key: 'general', label: '\u041e\u0431\u0449\u0435\u0435', emoji: '\ud83d\udcc5' },
-  { key: 'logistics', label: '\u041b\u043e\u0433\u0438\u0441\u0442\u0438\u043a\u0430', emoji: '\ud83d\ude9a' },
+  { key: 'business', label: 'Бизнес', emoji: '💼' },
+  { key: 'general', label: 'Общее', emoji: '📅' },
+  { key: 'logistics', label: 'Логистика', emoji: '🚚' },
 ]
 
 const RSVP = [
-  { key: 'yes', label: '\u0414\u0430', icon: Check, color: '#7A8B6F' },
-  { key: 'maybe', label: '\u0412\u043e\u0437\u043c\u043e\u0436\u043d\u043e', icon: HelpCircle, color: '#f59e0b' },
-  { key: 'no', label: '\u041d\u0435\u0442', icon: XCircle, color: '#B5736A' },
+  { key: 'yes', label: 'Да', icon: Check, color: '#7A8B6F' },
+  { key: 'maybe', label: 'Возможно', icon: HelpCircle, color: '#f59e0b' },
+  { key: 'no', label: 'Нет', icon: XCircle, color: '#B5736A' },
 ]
 
 const MONTH_NAMES = [
-  '\u042f\u043d\u0432\u0430\u0440\u044c', '\u0424\u0435\u0432\u0440\u0430\u043b\u044c', '\u041c\u0430\u0440\u0442', '\u0410\u043f\u0440\u0435\u043b\u044c', '\u041c\u0430\u0439', '\u0418\u044e\u043d\u044c',
-  '\u0418\u044e\u043b\u044c', '\u0410\u0432\u0433\u0443\u0441\u0442', '\u0421\u0435\u043d\u0442\u044f\u0431\u0440\u044c', '\u041e\u043a\u0442\u044f\u0431\u0440\u044c', '\u041d\u043e\u044f\u0431\u0440\u044c', '\u0414\u0435\u043a\u0430\u0431\u0440\u044c',
+  'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+  'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь',
 ]
-const WEEKDAYS = ['\u041f\u043d', '\u0412\u0442', '\u0421\u0440', '\u0427\u0442', '\u041f\u0442', '\u0421\u0431', '\u0412\u0441']
+const WEEKDAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
 /* ── Cross-module events ──────────────────────────────────── */
 
@@ -57,8 +57,8 @@ function getCrossModuleEvents() {
     deals.forEach((d) => {
       if (d.closeDate) {
         cross.push({
-          id: `deal_${d.id}`, title: `\ud83d\udcb0 ${d.title || d.company}`, datetime: d.closeDate,
-          category: '_deal', source: 'sales', color: '#C17F3E', emoji: '\ud83d\udcb0', readonly: true,
+          id: `deal_${d.id}`, title: `💰 ${d.title || d.company}`, datetime: d.closeDate,
+          category: '_deal', source: 'sales', color: '#C17F3E', emoji: '💰', readonly: true,
         })
       }
     })
@@ -69,8 +69,8 @@ function getCrossModuleEvents() {
     jobs.forEach((j) => {
       if (j.interviewDate) {
         cross.push({
-          id: `job_${j.id}`, title: `\ud83d\udcbc ${j.position || j.company}`, datetime: j.interviewDate,
-          category: '_job', source: 'jobs', color: '#5A7A8B', emoji: '\ud83d\udcbc', readonly: true,
+          id: `job_${j.id}`, title: `💼 ${j.position || j.company}`, datetime: j.interviewDate,
+          category: '_job', source: 'jobs', color: '#5A7A8B', emoji: '💼', readonly: true,
         })
       }
     })
@@ -79,10 +79,10 @@ function getCrossModuleEvents() {
   try {
     const invoices = JSON.parse(localStorage.getItem('vm_invoices') || '[]')
     invoices.forEach((inv) => {
-      if (inv.dueDate && (inv.status === '\u041e\u0442\u043a\u0440\u044b\u0442\u0430' || inv.status === '\u041f\u0440\u043e\u0441\u0440\u043e\u0447\u0435\u043d\u0430')) {
+      if (inv.dueDate && (inv.status === 'open' || inv.status === 'overdue')) {
         cross.push({
-          id: `inv_${inv.id}`, title: `\ud83d\udcc4 ${inv.number || 'Rechnung'}: ${inv.client || ''}`, datetime: inv.dueDate,
-          category: '_invoice', source: 'accounting', color: '#B5736A', emoji: '\ud83d\udcc4', readonly: true,
+          id: `inv_${inv.id}`, title: `📄 ${inv.number || 'Rechnung'}: ${inv.client || ''}`, datetime: inv.dueDate,
+          category: '_invoice', source: 'accounting', color: '#B5736A', emoji: '📄', readonly: true,
         })
       }
     })
@@ -93,8 +93,8 @@ function getCrossModuleEvents() {
     prods.forEach((p) => {
       if (p.expectedDate) {
         cross.push({
-          id: `prod_${p.id}`, title: `\ud83d\udce6 ${p.name}`, datetime: p.expectedDate,
-          category: '_delivery', source: 'products', color: '#5A6B3C', emoji: '\ud83d\udce6', readonly: true,
+          id: `prod_${p.id}`, title: `📦 ${p.name}`, datetime: p.expectedDate,
+          category: '_delivery', source: 'products', color: '#5A6B3C', emoji: '📦', readonly: true,
         })
       }
     })
@@ -181,7 +181,7 @@ function CalendarView({ events, crossEvents, onEventClick, onDayClick }) {
             <ChevronRight size={14} style={{ color: MUTED }} />
           </button>
           <button onClick={goToday} className="ml-2 px-3 py-1 font-body text-[10px] tracking-wider uppercase" style={{ border: `1px solid ${GOLD}`, color: GOLD, borderRadius: '2px' }}>
-            \u0421\u0435\u0433\u043e\u0434\u043d\u044f
+            Сегодня
           </button>
         </div>
       </div>
@@ -248,7 +248,7 @@ function CalendarView({ events, crossEvents, onEventClick, onDayClick }) {
                       title={ev.title}
                     >
                       <span>{ev.emoji || cat?.emoji}</span>
-                      <span className="truncate">{ev.title.replace(/^[\ud83c-\ud83e][\udc00-\udfff]\ufe0f?\s*/, '')}</span>
+                      <span className="truncate">{ev.title.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]\s*/u, '')}</span>
                     </div>
                   )
                 })}
@@ -265,13 +265,13 @@ function CalendarView({ events, crossEvents, onEventClick, onDayClick }) {
       {selectedDay && selectedEvents.length > 0 && (
         <div className="mt-4 p-4" style={panelStyle}>
           <p className="font-body text-[10px] tracking-[0.2em] uppercase mb-3" style={{ color: MUTED }}>
-            {selectedDay.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })} \u2014 {selectedEvents.length} \u0441\u043e\u0431\u044b\u0442\u0438\u0439
+            {selectedDay.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })} — {selectedEvents.length} событий
           </p>
           <div className="space-y-2">
             {selectedEvents.map((ev) => {
               const cat = CATEGORIES.find((c) => c.key === ev.category)
               const evColor = ev.color || cat?.color || GOLD
-              const sourceLabels = { sales: '\ud83d\udcb0 \u0421\u0434\u0435\u043b\u043a\u0430', jobs: '\ud83d\udcbc \u0412\u0430\u043a\u0430\u043d\u0441\u0438\u044f', products: '\ud83d\udce6 \u0414\u043e\u0441\u0442\u0430\u0432\u043a\u0430' }
+              const sourceLabels = { sales: '💰 Сделка', jobs: '💼 Вакансия', products: '📦 Доставка', accounting: '📄 Счёт' }
               return (
                 <div
                   key={ev.id}
@@ -285,10 +285,10 @@ function CalendarView({ events, crossEvents, onEventClick, onDayClick }) {
                 >
                   <span className="text-lg">{ev.emoji || cat?.emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="font-body text-sm truncate" style={{ color: INK }}>{ev.title.replace(/^[\ud83c-\ud83e][\udc00-\udfff]\ufe0f?\s*/, '')}</p>
+                    <p className="font-body text-sm truncate" style={{ color: INK }}>{ev.title.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]\s*/u, '')}</p>
                     <p className="font-body text-[10px]" style={{ color: MUTED }}>
                       {fmtTime(ev.datetime)}
-                      {ev.location && ` \u00b7 ${ev.location}`}
+                      {ev.location && ` · ${ev.location}`}
                       {ev.source && (
                         <span className="ml-2 px-1.5 py-0.5 rounded-sm" style={{ backgroundColor: `${evColor}12`, color: evColor }}>
                           {sourceLabels[ev.source] || ev.source}
@@ -297,7 +297,7 @@ function CalendarView({ events, crossEvents, onEventClick, onDayClick }) {
                     </p>
                   </div>
                   {ev.members?.length > 0 && (
-                    <span className="font-body text-[10px]" style={{ color: MUTED }}>{ev.members.length} \u0443\u0447.</span>
+                    <span className="font-body text-[10px]" style={{ color: MUTED }}>{ev.members.length} уч.</span>
                   )}
                 </div>
               )
@@ -343,7 +343,7 @@ function EventModal({ event, onSave, onClose, initialDate }) {
   const removeMember = (id) => setForm((f) => ({ ...f, members: f.members.filter((m) => m.id !== id) }))
 
   const handleSave = () => {
-    if (!form.title.trim()) return toast.error('\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043d\u0430\u0437\u0432\u0430\u043d\u0438\u0435')
+    if (!form.title.trim()) return toast.error('Введите название')
     onSave({ ...form, updatedAt: new Date().toISOString() })
   }
 
@@ -351,17 +351,17 @@ function EventModal({ event, onSave, onClose, initialDate }) {
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }} onClick={onClose}>
       <div className="w-full max-w-md my-8 p-6" style={{ ...panelStyle, backgroundColor: '#FFF' }} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-xl italic" style={{ color: INK }}>{isEdit ? '\u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c' : '\u041d\u043e\u0432\u043e\u0435 \u0441\u043e\u0431\u044b\u0442\u0438\u0435'}</h2>
+          <h2 className="font-display text-xl italic" style={{ color: INK }}>{isEdit ? 'Редактировать' : 'Новое событие'}</h2>
           <button onClick={onClose}><X size={18} style={{ color: FAINT }} /></button>
         </div>
 
         <div className="space-y-3">
           <div>
-            <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>\u041d\u0430\u0437\u0432\u0430\u043d\u0438\u0435 *</label>
-            <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Vintage Market \u0432\u044b\u0441\u0442\u0430\u0432\u043a\u0430..." className="gdt-input" />
+            <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>Название *</label>
+            <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Vintage Market выставка..." className="gdt-input" />
           </div>
           <div>
-            <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>\u041a\u0430\u0442\u0435\u0433\u043e\u0440\u0438\u044f</label>
+            <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>Категория</label>
             <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="gdt-input">
               {CATEGORY_GROUPS.map((g) => (
                 <optgroup key={g.key} label={`${g.emoji} ${g.label}`}>
@@ -374,38 +374,38 @@ function EventModal({ event, onSave, onClose, initialDate }) {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>\u041d\u0430\u0447\u0430\u043b\u043e</label>
+              <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>Начало</label>
               <input type="datetime-local" value={form.datetime} onChange={(e) => setForm({ ...form, datetime: e.target.value })} className="gdt-input text-sm" />
             </div>
             <div>
-              <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>\u041a\u043e\u043d\u0435\u0446 <span style={{ color: FAINT }}>(\u043e\u043f\u0446\u0438\u043e\u043d\u0430\u043b\u044c\u043d\u043e)</span></label>
+              <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>Конец <span style={{ color: FAINT }}>(опционально)</span></label>
               <input type="datetime-local" value={form.endDatetime} onChange={(e) => setForm({ ...form, endDatetime: e.target.value })} className="gdt-input text-sm" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>\u041c\u0435\u0441\u0442\u043e</label>
-              <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="\u0410\u0434\u0440\u0435\u0441, \u0412\u044b\u0441\u0442\u0430\u0432\u043a\u0430 \u0446\u0435\u043d\u0442\u0440..." className="gdt-input" />
+              <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>Место</label>
+              <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} placeholder="Адрес, Выставка центр..." className="gdt-input" />
             </div>
             <div>
-              <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>\u0411\u044e\u0434\u0436\u0435\u0442</label>
-              <input value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} placeholder="1000\u20ac" className="gdt-input" />
+              <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>Бюджет</label>
+              <input value={form.budget} onChange={(e) => setForm({ ...form, budget: e.target.value })} placeholder="1000€" className="gdt-input" />
             </div>
           </div>
           <div>
-            <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>\u041e\u043f\u0438\u0441\u0430\u043d\u0438\u0435</label>
+            <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>Описание</label>
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} className="gdt-input resize-none" />
           </div>
 
           {/* Members */}
           <div>
-            <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>\u0423\u0447\u0430\u0441\u0442\u043d\u0438\u043a\u0438</label>
+            <label className="font-body text-[10px] tracking-[0.2em] uppercase block mb-1" style={{ color: 'rgba(44,36,32,0.4)' }}>Участники</label>
             <div className="flex gap-2 mb-2">
               <input
                 value={memberName}
                 onChange={(e) => setMemberName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addMember())}
-                placeholder="\u0418\u043c\u044f \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a\u0430"
+                placeholder="Имя участника"
                 className="gdt-input flex-1 text-sm"
               />
               <button onClick={addMember} className="px-3 py-1 font-body text-xs" style={{ backgroundColor: GOLD, color: '#fff', borderRadius: '2px' }}>+</button>
@@ -425,10 +425,10 @@ function EventModal({ event, onSave, onClose, initialDate }) {
 
         <div className="flex gap-3 mt-6">
           <button onClick={handleSave} className="flex-1 py-2.5 font-body text-xs tracking-wider uppercase" style={{ backgroundColor: GOLD, color: '#fff', borderRadius: '2px' }}>
-            \u0421\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c
+            Сохранить
           </button>
           <button onClick={onClose} className="px-6 py-2.5 font-body text-xs tracking-wider uppercase" style={{ border: '1px solid rgba(44,36,32,0.15)', color: MUTED, borderRadius: '2px' }}>
-            \u041e\u0442\u043c\u0435\u043d\u0430
+            Отмена
           </button>
         </div>
       </div>
@@ -464,11 +464,11 @@ function EventDetail({ event, onClose, onEdit, onRsvp, comments, onComment }) {
             </div>
             <p className="font-body text-xs" style={{ color: MUTED }}>
               {fmtDate(event.datetime)} {fmtTime(event.datetime)}
-              {event.endDatetime && ` \u2014 ${fmtDate(event.endDatetime)} ${fmtTime(event.endDatetime)}`}
-              {' \u00b7 '}{event.location || '\u041c\u0435\u0441\u0442\u043e \u043d\u0435 \u0443\u043a\u0430\u0437\u0430\u043d\u043e'}
+              {event.endDatetime && ` — ${fmtDate(event.endDatetime)} ${fmtTime(event.endDatetime)}`}
+              {' · '}{event.location || 'Место не указано'}
             </p>
             {event.budget && (
-              <p className="font-body text-xs mt-0.5" style={{ color: GOLD }}>\u0411\u044e\u0434\u0436\u0435\u0442: {event.budget}</p>
+              <p className="font-body text-xs mt-0.5" style={{ color: GOLD }}>Бюджет: {event.budget}</p>
             )}
           </div>
           <button onClick={onClose}><X size={18} style={{ color: FAINT }} /></button>
@@ -483,7 +483,7 @@ function EventDetail({ event, onClose, onEdit, onRsvp, comments, onComment }) {
         {/* RSVP */}
         {event.members.length > 0 && (
           <div className="mb-4">
-            <p className="font-body text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: 'rgba(44,36,32,0.4)' }}>RSVP ({event.members.length} \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a\u043e\u0432)</p>
+            <p className="font-body text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: 'rgba(44,36,32,0.4)' }}>RSVP ({event.members.length} участников)</p>
             <div className="flex gap-2 mb-2">
               {rsvpCounts.map((r) => (
                 <span key={r.key} className="flex items-center gap-1 px-2 py-0.5 font-body text-[10px] rounded-sm" style={{ backgroundColor: `${r.color}15`, color: r.color }}>
@@ -520,7 +520,7 @@ function EventDetail({ event, onClose, onEdit, onRsvp, comments, onComment }) {
         {/* Comments */}
         <div className="mb-4">
           <p className="font-body text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: 'rgba(44,36,32,0.4)' }}>
-            <MessageSquare size={10} className="inline mr-1" /> \u041a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u0438 ({comments.length})
+            <MessageSquare size={10} className="inline mr-1" /> Комментарии ({comments.length})
           </p>
           {comments.length > 0 && (
             <div className="space-y-2 mb-2 max-h-40 overflow-y-auto">
@@ -540,19 +540,19 @@ function EventDetail({ event, onClose, onEdit, onRsvp, comments, onComment }) {
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && addComment()}
-              placeholder="\u041a\u043e\u043c\u043c\u0435\u043d\u0442\u0430\u0440\u0438\u0439..."
+              placeholder="Комментарий..."
               className="gdt-input flex-1 text-sm"
             />
-            <button onClick={addComment} className="px-3 py-1.5 font-body text-xs" style={{ backgroundColor: GOLD, color: '#fff', borderRadius: '2px' }}>\u2191</button>
+            <button onClick={addComment} className="px-3 py-1.5 font-body text-xs" style={{ backgroundColor: GOLD, color: '#fff', borderRadius: '2px' }}>↑</button>
           </div>
         </div>
 
         <div className="flex gap-3">
           <button onClick={() => onEdit(event)} className="flex items-center gap-2 px-4 py-2.5 font-body text-xs tracking-wider uppercase" style={{ border: `1px solid ${GOLD}`, color: GOLD, borderRadius: '2px' }}>
-            <Edit size={12} /> \u0420\u0435\u0434\u0430\u043a\u0442\u0438\u0440\u043e\u0432\u0430\u0442\u044c
+            <Edit size={12} /> Редактировать
           </button>
           <button onClick={onClose} className="px-6 py-2.5 font-body text-xs tracking-wider uppercase" style={{ border: '1px solid rgba(44,36,32,0.15)', color: MUTED, borderRadius: '2px' }}>
-            \u0417\u0430\u043a\u0440\u044b\u0442\u044c
+            Закрыть
           </button>
         </div>
       </div>
@@ -602,13 +602,13 @@ export default function AdminEvents() {
     })
     setModal(null)
     setNewEventDate(null)
-    toast.success('\u0421\u043e\u0431\u044b\u0442\u0438\u0435 \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u043e')
+    toast.success('Событие сохранено')
   }
 
   const handleDelete = (ev) => {
-    if (!window.confirm(`\u0423\u0434\u0430\u043b\u0438\u0442\u044c "${ev.title}"?`)) return
+    if (!window.confirm(`Удалить "${ev.title}"?`)) return
     setEvents((prev) => prev.filter((e) => e.id !== ev.id))
-    toast.success('\u0423\u0434\u0430\u043b\u0435\u043d\u043e')
+    toast.success('Удалено')
   }
 
   const handleRsvp = (eventId, memberId, status) => {
@@ -640,9 +640,9 @@ export default function AdminEvents() {
             <CalendarDays size={20} style={{ color: GOLD }} />
           </div>
           <div>
-            <h1 className="font-display text-2xl italic" style={{ color: INK }}>\u0421\u043e\u0431\u044b\u0442\u0438\u044f</h1>
+            <h1 className="font-display text-2xl italic" style={{ color: INK }}>События</h1>
             <p className="font-body text-sm mt-0.5" style={{ color: MUTED }}>
-              {events.length} \u0441\u043e\u0431\u044b\u0442\u0438\u0439 \u00b7 {upcoming} \u043f\u0440\u0435\u0434\u0441\u0442\u043e\u044f\u0449\u0438\u0445 \u00b7 {businessCount} \u0431\u0438\u0437\u043d\u0435\u0441
+              {events.length} событий · {upcoming} предстоящих · {businessCount} бизнес
             </p>
           </div>
         </div>
@@ -654,18 +654,18 @@ export default function AdminEvents() {
               className="flex items-center gap-1.5 px-3 py-1.5 font-body text-xs"
               style={{ backgroundColor: view === 'calendar' ? 'rgba(176,141,87,0.12)' : 'transparent', color: view === 'calendar' ? GOLD : MUTED }}
             >
-              <LayoutGrid size={12} /> \u041a\u0430\u043b\u0435\u043d\u0434\u0430\u0440\u044c
+              <LayoutGrid size={12} /> Календарь
             </button>
             <button
               onClick={() => setView('list')}
               className="flex items-center gap-1.5 px-3 py-1.5 font-body text-xs"
               style={{ backgroundColor: view === 'list' ? 'rgba(176,141,87,0.12)' : 'transparent', color: view === 'list' ? GOLD : MUTED }}
             >
-              <List size={12} /> \u0421\u043f\u0438\u0441\u043e\u043a
+              <List size={12} /> Список
             </button>
           </div>
           <button onClick={() => setModal('new')} className="flex items-center gap-2 px-4 py-2 font-body text-xs tracking-wider uppercase" style={{ backgroundColor: GOLD, color: '#fff', borderRadius: '2px' }}>
-            <Plus size={14} /> \u0421\u043e\u0431\u044b\u0442\u0438\u0435
+            <Plus size={14} /> Событие
           </button>
         </div>
       </div>
@@ -673,7 +673,7 @@ export default function AdminEvents() {
       {/* Cross-module toggle + Category Filter */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex gap-1.5 overflow-x-auto">
-          {[{ key: 'all', emoji: '\ud83d\udccb', label: '\u0412\u0441\u0435' }, ...CATEGORIES].map((c) => (
+          {[{ key: 'all', emoji: '📋', label: 'Все' }, ...CATEGORIES].map((c) => (
             <button
               key={c.key}
               onClick={() => setCatFilter(c.key)}
@@ -690,7 +690,7 @@ export default function AdminEvents() {
         </div>
         <label className="flex items-center gap-1.5 cursor-pointer font-body text-[10px]" style={{ color: MUTED }}>
           <input type="checkbox" checked={showCrossModule} onChange={(e) => setShowCrossModule(e.target.checked)} className="accent-[#B08D57]" />
-          \u041c\u043e\u0434\u0443\u043b\u0438
+          Модули
         </label>
       </div>
 
@@ -724,7 +724,7 @@ export default function AdminEvents() {
           {filtered.length === 0 ? (
             <div style={panelStyle} className="p-10 text-center">
               <CalendarDays size={32} className="mx-auto mb-3" style={{ color: FAINT }} />
-              <p className="font-body text-sm" style={{ color: FAINT }}>\u041d\u0435\u0442 \u0441\u043e\u0431\u044b\u0442\u0438\u0439</p>
+              <p className="font-body text-sm" style={{ color: FAINT }}>Нет событий</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -750,15 +750,15 @@ export default function AdminEvents() {
                     </div>
                     <p className="font-body text-xs" style={{ color: MUTED }}>
                       {fmtDate(ev.datetime)} {fmtTime(ev.datetime)}
-                      {ev.endDatetime && ` \u2014 ${fmtDate(ev.endDatetime)}`}
+                      {ev.endDatetime && ` — ${fmtDate(ev.endDatetime)}`}
                     </p>
                     {ev.location && <p className="font-body text-[10px] mt-0.5" style={{ color: FAINT }}>{ev.location}</p>}
                     <div className="flex items-center gap-2 mt-2">
                       {ev.members.length > 0 && (
                         <>
-                          <span className="font-body text-[10px]" style={{ color: MUTED }}>{ev.members.length} \u0443\u0447\u0430\u0441\u0442\u043d\u0438\u043a\u043e\u0432</span>
+                          <span className="font-body text-[10px]" style={{ color: MUTED }}>{ev.members.length} участников</span>
                           <span className="font-body text-[10px]" style={{ color: '#7A8B6F' }}>
-                            \u2713{ev.members.filter((m) => m.status === 'yes').length}
+                            ✓{ev.members.filter((m) => m.status === 'yes').length}
                           </span>
                         </>
                       )}
@@ -778,14 +778,14 @@ export default function AdminEvents() {
       {showCrossModule && crossEvents.length > 0 && view === 'list' && (
         <div className="mt-6">
           <p className="font-body text-[10px] tracking-[0.2em] uppercase mb-3" style={{ color: MUTED }}>
-            \ud83d\udd17 \u0421\u043e\u0431\u044b\u0442\u0438\u044f \u0438\u0437 \u0434\u0440\u0443\u0433\u0438\u0445 \u043c\u043e\u0434\u0443\u043b\u0435\u0439 ({crossEvents.length})
+            🔗 События из других модулей ({crossEvents.length})
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
             {crossEvents.sort((a, b) => new Date(a.datetime) - new Date(b.datetime)).map((ev) => (
               <div key={ev.id} className="flex items-center gap-3 p-3" style={{ ...panelStyle, borderLeft: `3px solid ${ev.color}` }}>
                 <span className="text-lg">{ev.emoji}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="font-body text-sm truncate" style={{ color: INK }}>{ev.title.replace(/^[\ud83c-\ud83e][\udc00-\udfff]\ufe0f?\s*/, '')}</p>
+                  <p className="font-body text-sm truncate" style={{ color: INK }}>{ev.title.replace(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}]\s*/u, '')}</p>
                   <p className="font-body text-[10px]" style={{ color: MUTED }}>{fmtDate(ev.datetime)} {fmtTime(ev.datetime)}</p>
                 </div>
                 <span className="font-body text-[8px] tracking-wider uppercase px-1.5 py-0.5 rounded-sm" style={{ backgroundColor: `${ev.color}12`, color: ev.color }}>
