@@ -681,6 +681,14 @@ export const OBZOR_TRANSITIONS = {
   replied:  ['open', 'closed'],
 }
 
+/** Fire-and-forget Telegram notification via Edge Function. */
+function notifyTelegram(type, record) {
+  if (!isSupabaseConfigured) return
+  supabase.functions.invoke('telegram-notify', { body: { type, record } })
+    .then(({ error }) => { if (error) console.warn('Telegram notify error:', error) })
+    .catch((e) => console.warn('Telegram notify failed:', e))
+}
+
 export async function createInquiry({ name, email, phone, message, product_id, product_title }) {
   const inquiry = {
     name, email,
@@ -702,6 +710,7 @@ export async function createInquiry({ name, email, phone, message, product_id, p
   return safeQuery(async () => {
     const { data, error } = await supabase.from('inquiries').insert([inquiry]).select().single()
     if (error) return { data: null, error }
+    notifyTelegram('new_inquiry', data)
     return { data, error: null }
   })
 }
@@ -767,6 +776,10 @@ export async function updateTicketStatus(id, newStatus, changedBy = 'admin') {
         inquiry_id: id, from_status: current.status,
         to_status: newStatus, changed_by: changedBy,
       }]).then(() => {}).catch(() => {})
+      notifyTelegram('status_change', {
+        inquiry_id: id, from_status: current.status,
+        new_status: newStatus, changed_by: changedBy,
+      })
     }
     return { error }
   }, {})
@@ -804,6 +817,13 @@ export async function addInquiryNote(inquiryId, content, isInternal = true, auth
     const { data, error } = await supabase.from('inquiry_notes').insert([note]).select().single()
     if (!error) {
       await supabase.from('inquiries').update({ updated_at: now() }).eq('id', inquiryId)
+      if (!isInternal) {
+        const { data: inq } = await supabase.from('inquiries').select('name').eq('id', inquiryId).single()
+        notifyTelegram('admin_reply', {
+          inquiry_id: inquiryId, inquiry_name: inq?.name,
+          content, author,
+        })
+      }
     }
     return { data, error }
   })
