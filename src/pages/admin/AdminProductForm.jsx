@@ -1006,6 +1006,9 @@ export default function AdminProductForm({ sellerShopId, sellerMode } = {}) {
             onChange={handleChange}
             placeholder="Подробное описание товара..."
           />
+          <p className="font-body mt-1" style={{ fontSize: '10px', color: 'rgba(44, 36, 32, 0.35)' }}>
+            Форматирование: **жирный**, *курсив*, ## заголовок, - список
+          </p>
         </Section>
 
         {/* ════════ 10. KONTAKT ════════ */}

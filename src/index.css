@@ -188,6 +188,39 @@
   }
 }
 
+/* Thumbnail slider — hide scrollbar */
+.thumbnail-slider::-webkit-scrollbar { display: none; }
+.thumbnail-slider { scrollbar-width: none; -ms-overflow-style: none; }
+
+/* Markdown description rendering */
+.vintage-description h1,
+.vintage-description h2,
+.vintage-description h3 {
+  font-family: 'Cormorant Garamond', 'Garamond', serif;
+  color: #2C2420;
+  margin-top: 0.8em;
+  margin-bottom: 0.4em;
+}
+.vintage-description h1 { font-size: 1.4rem; font-style: italic; }
+.vintage-description h2 { font-size: 1.25rem; font-style: italic; }
+.vintage-description h3 { font-size: 1.1rem; }
+.vintage-description strong { color: #2C2420; font-weight: 600; }
+.vintage-description em { font-style: italic; }
+.vintage-description ul,
+.vintage-description ol {
+  padding-left: 1.5rem;
+  margin: 0.5em 0;
+}
+.vintage-description li { margin-bottom: 0.25em; }
+.vintage-description li::marker { color: rgba(176, 141, 87, 0.5); }
+.vintage-description p { margin-bottom: 0.6em; }
+.vintage-description p:last-child { margin-bottom: 0; }
+.vintage-description a {
+  color: #B08D57;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background-color: #F7F2EB; }

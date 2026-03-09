@@ -34,6 +34,8 @@ import PriceHistoryChart from '../components/public/PriceHistoryChart'
 import SimilarProducts from '../components/public/SimilarProducts'
 import ProductCard from '../components/public/ProductCard'
 import ProductReviews from '../components/public/ProductReviews'
+import VintagePriceTag from '../components/public/VintagePriceTag'
+import InlineDescriptionEditor from '../components/public/InlineDescriptionEditor'
 import { siteConfig } from '../lib/siteConfig'
 import { useCurrency } from '../lib/CurrencyContext'
 
@@ -532,28 +534,14 @@ export default function ProductPage() {
             </div>
 
 
-            {/* Price */}
+            {/* Price — Vintage Tag */}
             {showPrice && (
-              <div className="flex items-center gap-4">
-                <span
-                  className={`font-sans text-3xl font-bold ${product.status === 'sold' ? 'line-through' : ''}`}
-                  style={{
-                    color: product.status === 'sold' ? 'rgba(44, 36, 32, 0.3)' : '#0C0A08',
-                  }}
-                >
-                  {isRealEstate && product.details?.rent_or_buy === 'Аренда'
-                    ? `${formatPrice(product.price)} / мес.`
-                    : formatPrice(product.price)}
-                </span>
-                {product.status === 'sold' && (
-                  <span
-                    className="font-sans text-sm tracking-widest uppercase"
-                    style={{ color: '#B08D57' }}
-                  >
-                    Продано
-                  </span>
-                )}
-              </div>
+              <VintagePriceTag
+                price={product.price}
+                isSold={product.status === 'sold'}
+                isRental={isRealEstate && product.details?.rent_or_buy === 'Аренда'}
+                formatPrice={formatPrice}
+              />
             )}
 
             {/* Quantity */}
@@ -612,13 +600,12 @@ export default function ProductPage() {
             {/* Divider */}
             <div className="w-12 h-px" style={{ backgroundColor: '#B08D57' }} />
 
-            {/* Description */}
-            <p
-              className="font-body text-lg leading-relaxed"
-              style={{ color: 'rgba(44, 36, 32, 0.6)' }}
-            >
-              {product.description}
-            </p>
+            {/* Description — Inline editable with markdown */}
+            <InlineDescriptionEditor
+              productId={product.id}
+              description={product.description}
+              onUpdate={(newDesc) => setProduct((prev) => ({ ...prev, description: newDesc }))}
+            />
 
             {/* Condition meter */}
             {product.condition && <ConditionMeter conditionId={product.condition} />}

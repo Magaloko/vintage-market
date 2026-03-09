@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react'
 
 const OVERLAY_BG = 'rgba(14, 26, 43, 0.4)'
@@ -42,78 +42,31 @@ export default function ImageGallery({ images = [], title = '' }) {
 
   return (
     <div>
-      {/* Gallery: vertical thumbnails + main image */}
-      <div className={hasMultiple ? 'flex gap-3' : ''}>
-        {/* Vertical thumbnail strip (left side) */}
+      {/* Main image */}
+      <div className="relative group">
+        <MainImage
+          src={getImageSrc(current)}
+          alt={getImageAlt(current, `${title} — фото ${activeIndex + 1}`)}
+          onZoom={() => setLightboxOpen(true)}
+        />
+
         {hasMultiple && (
-          <div className="hidden sm:flex flex-col gap-2 shrink-0">
-            {images.map((img, idx) => {
-              const isActive = idx === activeIndex
-              return (
-                <button
-                  key={idx}
-                  onClick={() => setActiveIndex(idx)}
-                  className="w-16 h-16 lg:w-[72px] lg:h-[72px] overflow-hidden rounded transition-all duration-200"
-                  style={{
-                    border: isActive ? '2px solid #B08D57' : '2px solid transparent',
-                    opacity: isActive ? 1 : 0.5,
-                  }}
-                  onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.opacity = '0.8' }}
-                  onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.opacity = '0.5' }}
-                >
-                  <img
-                    src={getImageSrc(img)}
-                    alt={getImageAlt(img, `Миниатюра ${idx + 1}`)}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              )
-            })}
-          </div>
+          <>
+            <NavButton direction="prev" onClick={goPrev} disabled={isFirst} />
+            <NavButton direction="next" onClick={goNext} disabled={isLast} />
+            <ImageCounter current={activeIndex + 1} total={images.length} />
+          </>
         )}
-
-        {/* Main image */}
-        <div className="relative group flex-1 min-w-0">
-          <MainImage
-            src={getImageSrc(current)}
-            alt={getImageAlt(current, `${title} — фото ${activeIndex + 1}`)}
-            onZoom={() => setLightboxOpen(true)}
-          />
-
-          {hasMultiple && (
-            <>
-              <NavButton direction="prev" onClick={goPrev} disabled={isFirst} />
-              <NavButton direction="next" onClick={goNext} disabled={isLast} />
-              <ImageCounter current={activeIndex + 1} total={images.length} />
-            </>
-          )}
-        </div>
       </div>
 
-      {/* Horizontal thumbnail strip (mobile only) */}
+      {/* Thumbnail slider below main image */}
       {hasMultiple && (
-        <div className="flex sm:hidden gap-2 mt-3 overflow-x-auto pb-2">
-          {images.map((img, idx) => {
-            const isActive = idx === activeIndex
-            return (
-              <button
-                key={idx}
-                onClick={() => setActiveIndex(idx)}
-                className="flex-shrink-0 w-16 h-16 overflow-hidden rounded transition-all"
-                style={{
-                  border: isActive ? '2px solid #B08D57' : '2px solid transparent',
-                  opacity: isActive ? 1 : 0.5,
-                }}
-              >
-                <img
-                  src={getImageSrc(img)}
-                  alt={getImageAlt(img, `Миниатюра ${idx + 1}`)}
-                  className="w-full h-full object-cover"
-                />
-              </button>
-            )
-          })}
-        </div>
+        <ThumbnailSlider
+          images={images}
+          activeIndex={activeIndex}
+          onSelect={setActiveIndex}
+          title={title}
+        />
       )}
 
       {/* Lightbox */}
@@ -133,6 +86,64 @@ export default function ImageGallery({ images = [], title = '' }) {
     </div>
   )
 }
+
+/* ------------------------------------------------------------------ */
+/*  Thumbnail Slider                                                    */
+/* ------------------------------------------------------------------ */
+
+function ThumbnailSlider({ images, activeIndex, onSelect, title }) {
+  const sliderRef = useRef(null)
+
+  useEffect(() => {
+    const container = sliderRef.current
+    if (!container) return
+    const el = container.children[activeIndex]
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+    }
+  }, [activeIndex])
+
+  return (
+    <div
+      ref={sliderRef}
+      className="thumbnail-slider flex gap-2 mt-3 pb-2 overflow-x-auto"
+      style={{
+        scrollSnapType: 'x mandatory',
+        WebkitOverflowScrolling: 'touch',
+      }}
+    >
+      {images.map((img, idx) => {
+        const isActive = idx === activeIndex
+        return (
+          <button
+            key={idx}
+            onClick={() => onSelect(idx)}
+            className="flex-shrink-0 overflow-hidden rounded transition-all duration-200"
+            style={{
+              scrollSnapAlign: 'center',
+              width: '72px',
+              height: '72px',
+              border: isActive ? '2px solid #B08D57' : '2px solid transparent',
+              opacity: isActive ? 1 : 0.55,
+            }}
+            onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.opacity = '0.8' }}
+            onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.opacity = '0.55' }}
+          >
+            <img
+              src={getImageSrc(img)}
+              alt={getImageAlt(img, `${title} — миниатюра ${idx + 1}`)}
+              className="w-full h-full object-cover"
+            />
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main Image                                                          */
+/* ------------------------------------------------------------------ */
 
 function MainImage({ src, alt, onZoom }) {
   return (
@@ -155,6 +166,10 @@ function MainImage({ src, alt, onZoom }) {
     </div>
   )
 }
+
+/* ------------------------------------------------------------------ */
+/*  Navigation                                                          */
+/* ------------------------------------------------------------------ */
 
 function NavButton({ direction, onClick, disabled }) {
   const isLeft = direction === 'prev'
@@ -183,6 +198,10 @@ function ImageCounter({ current, total }) {
     </div>
   )
 }
+
+/* ------------------------------------------------------------------ */
+/*  Lightbox                                                            */
+/* ------------------------------------------------------------------ */
 
 function Lightbox({ images, activeIndex, title, onClose, onPrev, onNext, onSelect, isFirst, isLast }) {
   const current = images[activeIndex] || images[0]
