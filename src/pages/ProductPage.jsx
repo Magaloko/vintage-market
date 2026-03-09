@@ -52,7 +52,7 @@ const FIELD_ICONS = {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Condition badge                                                    */
+/*  Condition meter                                                    */
 /* ------------------------------------------------------------------ */
 
 const CONDITION_LEVELS = [
@@ -79,9 +79,7 @@ function ConditionMeter({ conditionId }) {
           <div
             key={i}
             className="h-1 flex-1 rounded-sm"
-            style={{
-              backgroundColor: i < condInfo.level ? color : 'rgba(44, 36, 32, 0.08)',
-            }}
+            style={{ backgroundColor: i < condInfo.level ? color : 'rgba(44, 36, 32, 0.08)' }}
           />
         ))}
       </div>
@@ -101,9 +99,9 @@ function ExpandableSection({ title, children, defaultOpen = false }) {
     <div style={{ borderBottom: '1px solid rgba(44, 36, 32, 0.08)' }}>
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between py-4 text-left"
+        className="w-full flex items-center justify-between py-3.5 text-left"
       >
-        <h3 className="font-display text-lg" style={{ color: '#2C2420' }}>
+        <h3 className="font-display text-base md:text-lg" style={{ color: '#2C2420' }}>
           {title}
         </h3>
         {open
@@ -111,7 +109,7 @@ function ExpandableSection({ title, children, defaultOpen = false }) {
           : <ChevronDown size={18} style={{ color: 'rgba(44, 36, 32, 0.3)' }} />
         }
       </button>
-      {open && <div className="pb-5">{children}</div>}
+      {open && <div className="pb-4">{children}</div>}
     </div>
   )
 }
@@ -165,25 +163,25 @@ export default function ProductPage() {
     })()
 
     window.scrollTo(0, 0)
-    return () => {
-      mounted = false
-    }
+    return () => { mounted = false }
   }, [id, navigate])
 
   /* ---------- Loading skeleton ---------- */
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 animate-pulse">
-        <div className="h-6 rounded w-1/3 mb-6" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }} />
-        <div className="h-10 rounded w-2/3 mb-8" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }} />
-        <div className="aspect-[16/7] mb-8" style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)' }} />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+      <div className="pt-24 md:pt-28 animate-pulse">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+          <div className="h-5 rounded w-1/4 mb-4" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }} />
+          <div className="h-9 rounded w-2/3 mx-auto mb-6" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }} />
+        </div>
+        <div className="max-w-[100vw] aspect-[2.5/1] mb-6" style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)' }} />
+        <div className="max-w-7xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-4">
-            <div className="h-6 rounded w-1/2" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }} />
-            <div className="h-24 rounded" style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)' }} />
+            <div className="h-6 rounded w-1/3" style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)' }} />
+            <div className="h-20 rounded" style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)' }} />
           </div>
-          <div className="h-64 rounded" style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)' }} />
+          <div className="h-72 rounded" style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)' }} />
         </div>
       </div>
     )
@@ -210,7 +208,6 @@ export default function ProductPage() {
   const showPrice = product.price > 0
   const isSold = product.status === 'sold'
 
-  // Build detail rows
   const baseDetails = [
     category && { icon: Tag, label: 'Категория', value: category.name },
     condition && { icon: Award, label: 'Состояние', value: condition.name },
@@ -230,7 +227,6 @@ export default function ProductPage() {
 
   const allDetails = [...baseDetails, ...customDetails]
 
-  // Special attributes
   const specialAttrs = (product.special_attributes || [])
     .map(aid => specialAttributes.find(a => a.id === aid))
     .filter(Boolean)
@@ -253,74 +249,148 @@ export default function ProductPage() {
   /* ---------- Render ---------- */
 
   return (
-    <div className="page-enter" style={{ backgroundColor: '#fff' }}>
-      {/* -------- Breadcrumbs -------- */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 pt-5 pb-2">
-        <nav
-          className="flex items-center gap-2 font-sans text-xs flex-wrap"
-          style={{ color: 'rgba(44, 36, 32, 0.35)' }}
-        >
-          <Link
-            to="/catalog"
-            className="transition-colors hover:text-[#2C2420]"
+    <div className="page-enter" style={{ backgroundColor: '#fff', minHeight: '100vh' }}>
+
+      {/* ======== BREADCRUMBS — below fixed header ======== */}
+      <div className="pt-24 md:pt-28">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 pb-1">
+          <nav
+            className="flex items-center gap-1.5 font-sans text-[11px] md:text-xs flex-wrap"
+            style={{ color: 'rgba(44, 36, 32, 0.35)' }}
           >
-            Каталог
-          </Link>
-
-          {category && (
-            <>
-              <span style={{ color: 'rgba(44, 36, 32, 0.2)' }}>/</span>
-              <Link
-                to={`/catalog/${category.id}`}
-                className="transition-colors hover:text-[#2C2420]"
-              >
-                {category.name}
-              </Link>
-            </>
-          )}
-
-          {product.subcategory && (() => {
-            const subcatList = subcategories[product.category] || []
-            const subcat = subcatList.find(s => s.id === product.subcategory)
-            if (!subcat) return null
-            return (
+            <Link to="/catalog" className="transition-colors hover:text-[#2C2420]">Каталог</Link>
+            {category && (
               <>
                 <span style={{ color: 'rgba(44, 36, 32, 0.2)' }}>/</span>
-                <span style={{ color: 'rgba(44, 36, 32, 0.4)' }}>{subcat.name}</span>
+                <Link to={`/catalog/${category.id}`} className="transition-colors hover:text-[#2C2420]">{category.name}</Link>
               </>
-            )
-          })()}
-        </nav>
+            )}
+            {product.subcategory && (() => {
+              const subcatList = subcategories[product.category] || []
+              const subcat = subcatList.find(s => s.id === product.subcategory)
+              if (!subcat) return null
+              return (
+                <>
+                  <span style={{ color: 'rgba(44, 36, 32, 0.2)' }}>/</span>
+                  <span style={{ color: 'rgba(44, 36, 32, 0.4)' }}>{subcat.name}</span>
+                </>
+              )
+            })()}
+          </nav>
+        </div>
       </div>
 
-      {/* -------- Product title (above gallery, like Pamono) -------- */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 pb-5">
+      {/* ======== TITLE — centered, clearly visible ======== */}
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-4">
         <h1
-          className="font-display text-2xl md:text-3xl lg:text-4xl text-center"
-          style={{ color: '#0C0A08', lineHeight: 1.3 }}
+          className="font-display text-xl md:text-2xl lg:text-3xl text-center leading-tight"
+          style={{ color: '#0C0A08' }}
         >
           {product.title}
         </h1>
         {product.brand && (
-          <p className="text-center mt-1 font-body text-sm" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>
+          <p className="text-center mt-0.5 font-body text-xs md:text-sm" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>
             {product.brand}
           </p>
         )}
       </div>
 
-      {/* -------- Full-width image gallery -------- */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6">
-        <ImageGallery images={images} title={product.title} />
+      {/* ======== GALLERY — full width, edge-to-edge ======== */}
+      <div className="w-full">
+        <div className="max-w-[1400px] mx-auto">
+          <ImageGallery images={images} title={product.title} />
+        </div>
       </div>
 
-      {/* -------- Two-column layout: Info (left) + Price card (right) -------- */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-14">
+      {/* ======== MOBILE: Price + CTA strip (visible before scroll on mobile) ======== */}
+      <div className="lg:hidden">
+        <div
+          className="mx-4 mt-4 p-4 space-y-3"
+          style={{ backgroundColor: '#FAFAF8', border: '1px solid rgba(44, 36, 32, 0.08)' }}
+        >
+          {/* Price — large and prominent */}
+          {showPrice && (
+            <div className="flex items-center justify-between">
+              <p className={`font-display text-3xl md:text-4xl ${isSold ? 'line-through' : ''}`} style={{ color: isSold ? 'rgba(44, 36, 32, 0.2)' : '#0C0A08', fontWeight: 500 }}>
+                {displayPrice}
+              </p>
+              <div className="flex items-center gap-1.5">
+                <FavoriteButton product={product} size="sm" />
+                <CompareButton product={product} size="sm" />
+                <button
+                  onClick={handleShare}
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)', color: 'rgba(44, 36, 32, 0.4)' }}
+                >
+                  <Share2 size={14} />
+                </button>
+              </div>
+            </div>
+          )}
+          {isSold && (
+            <span className="font-body text-xs tracking-[0.2em] uppercase" style={{ color: '#B08D57' }}>Продано</span>
+          )}
+
+          {/* Availability */}
+          {product.quantity > 0 && !isSold && (
+            <div className="flex items-center gap-1.5">
+              <Check size={13} style={{ color: '#7A8B6F' }} />
+              <span className="font-body text-xs" style={{ color: '#7A8B6F' }}>
+                В наличии{product.quantity > 1 ? ` — ${product.quantity} шт.` : ''}
+              </span>
+            </div>
+          )}
+
+          {/* Mobile CTAs — big and prominent */}
+          {!isSold && (
+            <div className="space-y-2">
+              {siteConfig.whatsapp && (
+                <a
+                  href={`https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(siteConfig.messageTemplates.whatsapp(product, formatPrice))}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-3.5 font-body text-sm font-medium tracking-wide uppercase rounded-sm transition-all"
+                  style={{ backgroundColor: '#25D366', color: '#fff' }}
+                >
+                  <MessageCircle size={16} />
+                  Написать в WhatsApp
+                </a>
+              )}
+              <div className="flex gap-2">
+                {siteConfig.telegram && (
+                  <a
+                    href={`https://t.me/${siteConfig.telegram}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 flex items-center justify-center gap-2 py-3 font-body text-sm tracking-wide rounded-sm"
+                    style={{ backgroundColor: '#26A3EE', color: '#fff' }}
+                  >
+                    <SendIcon size={14} />
+                    Telegram
+                  </a>
+                )}
+                <Link
+                  to={`/contact?product=${product.id}&title=${encodeURIComponent(product.title)}`}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 font-body text-sm tracking-wide rounded-sm"
+                  style={{ backgroundColor: 'rgba(44, 36, 32, 0.08)', color: '#2C2420' }}
+                >
+                  <Mail size={14} />
+                  {isShop ? 'Написать' : isRealEstate ? 'Запрос' : 'Написать'}
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ======== TWO-COLUMN LAYOUT: Info (left) + Price card (right) ======== */}
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-10">
 
           {/* ============ LEFT COLUMN — Product Info ============ */}
-          <div className="lg:col-span-2 space-y-0">
+          <div className="lg:col-span-2">
 
-            {/* Description section */}
+            {/* Description */}
             <ExpandableSection title="Описание" defaultOpen={true}>
               <InlineDescriptionEditor
                 productId={product.id}
@@ -329,18 +399,14 @@ export default function ProductPage() {
               />
             </ExpandableSection>
 
-            {/* Details grid section */}
+            {/* Details */}
             {allDetails.length > 0 && (
               <ExpandableSection title="Характеристики" defaultOpen={true}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-8">
-                  {allDetails.map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid rgba(44, 36, 32, 0.05)' }}>
-                      <span className="font-body text-sm" style={{ color: 'rgba(44, 36, 32, 0.5)' }}>
-                        {label}
-                      </span>
-                      <span className="font-body text-sm font-medium" style={{ color: '#2C2420' }}>
-                        {value}
-                      </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-6">
+                  {allDetails.map(({ label, value }) => (
+                    <div key={label} className="flex items-center justify-between py-1.5" style={{ borderBottom: '1px solid rgba(44, 36, 32, 0.05)' }}>
+                      <span className="font-body text-sm" style={{ color: 'rgba(44, 36, 32, 0.5)' }}>{label}</span>
+                      <span className="font-body text-sm font-medium" style={{ color: '#2C2420' }}>{value}</span>
                     </div>
                   ))}
                 </div>
@@ -361,13 +427,10 @@ export default function ProductPage() {
                   {specialAttrs.map((attr) => (
                     <div
                       key={attr.id}
-                      className="inline-flex items-center gap-2 px-3 py-2 rounded-sm"
-                      style={{
-                        backgroundColor: `${attr.color}10`,
-                        border: `1px solid ${attr.color}20`,
-                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm"
+                      style={{ backgroundColor: `${attr.color}10`, border: `1px solid ${attr.color}20` }}
                     >
-                      <span style={{ fontSize: '14px', color: attr.color }}>{attr.icon}</span>
+                      <span style={{ fontSize: '13px', color: attr.color }}>{attr.icon}</span>
                       <span className="font-body text-sm" style={{ color: attr.color }}>{attr.label}</span>
                     </div>
                   ))}
@@ -375,25 +438,25 @@ export default function ProductPage() {
               </ExpandableSection>
             )}
 
-            {/* Authenticity section for jewelry/ceramics */}
+            {/* Authenticity — jewelry */}
             {(product.category === 'jewelry' && (product.details?.hallmark || product.details?.material || product.details?.weight_grams)) && (
               <ExpandableSection title="Подлинность">
                 <div className="flex flex-wrap gap-6">
                   {product.details.hallmark && (
                     <div>
-                      <p className="font-body text-[10px] tracking-wider uppercase mb-1" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>Проба</p>
+                      <p className="font-body text-[10px] tracking-wider uppercase mb-0.5" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>Проба</p>
                       <p className="font-body text-sm font-medium" style={{ color: '#B08D57' }}>{product.details.hallmark}</p>
                     </div>
                   )}
                   {product.details.material && (
                     <div>
-                      <p className="font-body text-[10px] tracking-wider uppercase mb-1" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>Материал</p>
+                      <p className="font-body text-[10px] tracking-wider uppercase mb-0.5" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>Материал</p>
                       <p className="font-body text-sm font-medium" style={{ color: '#2C2420' }}>{product.details.material}</p>
                     </div>
                   )}
                   {product.details.weight_grams && (
                     <div>
-                      <p className="font-body text-[10px] tracking-wider uppercase mb-1" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>Вес</p>
+                      <p className="font-body text-[10px] tracking-wider uppercase mb-0.5" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>Вес</p>
                       <p className="font-body text-sm font-medium" style={{ color: '#2C2420' }}>{product.details.weight_grams} г</p>
                     </div>
                   )}
@@ -401,18 +464,19 @@ export default function ProductPage() {
               </ExpandableSection>
             )}
 
+            {/* Provenance — ceramics */}
             {(product.category === 'ceramics' && (product.details?.manufacturer || product.details?.material)) && (
               <ExpandableSection title="Происхождение">
                 <div className="flex flex-wrap gap-6">
                   {product.details.manufacturer && (
                     <div>
-                      <p className="font-body text-[10px] tracking-wider uppercase mb-1" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>Мануфактура</p>
+                      <p className="font-body text-[10px] tracking-wider uppercase mb-0.5" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>Мануфактура</p>
                       <p className="font-body text-sm font-medium" style={{ color: '#B08D57' }}>{product.details.manufacturer}</p>
                     </div>
                   )}
                   {product.details.material && (
                     <div>
-                      <p className="font-body text-[10px] tracking-wider uppercase mb-1" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>Материал</p>
+                      <p className="font-body text-[10px] tracking-wider uppercase mb-0.5" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>Материал</p>
                       <p className="font-body text-sm font-medium" style={{ color: '#2C2420' }}>{product.details.material}</p>
                     </div>
                   )}
@@ -420,19 +484,18 @@ export default function ProductPage() {
               </ExpandableSection>
             )}
 
-            {/* Shipping info */}
+            {/* Shipping */}
             {product.shipping?.length > 0 && (
               <ExpandableSection title="Доставка">
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {product.shipping.map((s) => {
                     const opt = shippingOptions.find(o => o.id === s.id)
                     if (!opt) return null
                     return (
-                      <div key={s.id} className="flex items-center gap-3">
+                      <div key={s.id} className="flex items-center gap-2">
                         <Truck size={14} style={{ color: 'rgba(44, 36, 32, 0.3)' }} />
                         <span className="font-body text-sm" style={{ color: '#2C2420' }}>{opt.name}</span>
                         {s.price && <span className="font-body text-xs" style={{ color: 'rgba(44, 36, 32, 0.4)' }}>— {s.price}</span>}
-                        {s.note && <span className="font-body text-xs italic" style={{ color: 'rgba(44, 36, 32, 0.35)' }}>({s.note})</span>}
                       </div>
                     )
                   })}
@@ -442,62 +505,57 @@ export default function ProductPage() {
 
             {/* Hashtags */}
             {product.hashtags?.length > 0 && (
-              <div className="pt-5 pb-4" style={{ borderBottom: '1px solid rgba(44, 36, 32, 0.08)' }}>
-                <div className="flex flex-wrap gap-2">
+              <div className="py-3" style={{ borderBottom: '1px solid rgba(44, 36, 32, 0.08)' }}>
+                <div className="flex flex-wrap gap-1.5">
                   {product.hashtags.map((tag) => (
                     <Link
                       key={tag}
                       to={`/catalog?search=%23${encodeURIComponent(tag)}`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 font-body text-xs rounded-full transition-all duration-200"
-                      style={{
-                        backgroundColor: 'rgba(44, 36, 32, 0.04)',
-                        color: 'rgba(44, 36, 32, 0.45)',
-                        border: '1px solid rgba(44, 36, 32, 0.08)',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(44, 36, 32, 0.08)'
-                        e.currentTarget.style.color = '#2C2420'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = 'rgba(44, 36, 32, 0.04)'
-                        e.currentTarget.style.color = 'rgba(44, 36, 32, 0.45)'
-                      }}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 font-body text-[11px] rounded-full transition-colors"
+                      style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)', color: 'rgba(44, 36, 32, 0.45)' }}
                     >
-                      <Hash size={10} />
-                      {tag}
+                      <Hash size={9} />{tag}
                     </Link>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Price insight & chart (below details on left) */}
+            {/* Price insight & chart */}
             {avgPrice && !isSold && !isRealEstate && !isShop && (
-              <div className="pt-5">
+              <div className="pt-4">
                 <PriceInsight price={product.price} avgPrice={avgPrice} />
               </div>
             )}
             {!isShop && (
-              <div className="pt-3">
+              <div className="pt-2">
                 <PriceHistoryChart productId={product.id} />
               </div>
             )}
           </div>
 
-          {/* ============ RIGHT COLUMN — Sticky Price Card ============ */}
-          <div className="lg:col-span-1">
+          {/* ============ RIGHT COLUMN — Sticky Price Card (desktop only) ============ */}
+          <div className="hidden lg:block lg:col-span-1">
             <div
-              className="sticky top-6 space-y-5"
+              className="sticky top-24 space-y-4"
               style={{
-                backgroundColor: '#fff',
+                backgroundColor: '#FAFAF8',
                 border: '1px solid rgba(44, 36, 32, 0.1)',
-                padding: '24px',
+                padding: '20px',
               }}
             >
-              {/* Price */}
+              {/* Price — BIG and prominent */}
               {showPrice && (
                 <div>
-                  <p className={`font-display text-3xl ${isSold ? 'line-through' : ''}`} style={{ color: isSold ? 'rgba(44, 36, 32, 0.25)' : '#0C0A08' }}>
+                  <p
+                    className={`font-display ${isSold ? 'line-through' : ''}`}
+                    style={{
+                      color: isSold ? 'rgba(44, 36, 32, 0.2)' : '#0C0A08',
+                      fontSize: '2.25rem',
+                      fontWeight: 500,
+                      lineHeight: 1.2,
+                    }}
+                  >
                     {displayPrice}
                   </p>
                   {isSold && (
@@ -508,29 +566,25 @@ export default function ProductPage() {
                 </div>
               )}
 
-              {/* Action row: Favorite + Compare + Share */}
+              {/* Actions row */}
               <div className="flex items-center gap-2">
                 <FavoriteButton product={product} size="md" />
                 <CompareButton product={product} size="md" />
                 <button
                   onClick={handleShare}
                   className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
-                  style={{
-                    backgroundColor: 'rgba(44, 36, 32, 0.05)',
-                    color: 'rgba(44, 36, 32, 0.35)',
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(44, 36, 32, 0.1)' }}
-                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(44, 36, 32, 0.05)' }}
+                  style={{ backgroundColor: 'rgba(44, 36, 32, 0.06)', color: 'rgba(44, 36, 32, 0.35)' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(44, 36, 32, 0.12)' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(44, 36, 32, 0.06)' }}
                 >
                   <Share2 size={16} />
                 </button>
               </div>
 
-              {/* Separator */}
               <div className="h-px" style={{ backgroundColor: 'rgba(44, 36, 32, 0.08)' }} />
 
               {/* Availability */}
-              {product.quantity > 0 && (
+              {product.quantity > 0 && !isSold && (
                 <div className="flex items-center gap-2">
                   <Check size={14} style={{ color: '#7A8B6F' }} />
                   <span className="font-body text-sm" style={{ color: '#7A8B6F' }}>
@@ -549,20 +603,18 @@ export default function ProductPage() {
                 </div>
               )}
 
-              {/* Separator */}
               <div className="h-px" style={{ backgroundColor: 'rgba(44, 36, 32, 0.08)' }} />
 
-              {/* CTA buttons */}
+              {/* CTA buttons — PROMINENT */}
               {!isSold && (
-                <div className="space-y-3">
-                  {/* Primary CTA — WhatsApp */}
+                <div className="space-y-2.5">
                   {siteConfig.whatsapp && (
                     <a
                       href={`https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(siteConfig.messageTemplates.whatsapp(product, formatPrice))}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-3 w-full py-3.5 font-body text-sm tracking-[0.1em] uppercase transition-all duration-300"
-                      style={{ backgroundColor: '#25D366', color: '#fff', borderRadius: '2px' }}
+                      className="flex items-center justify-center gap-2 w-full py-4 font-body text-sm font-medium tracking-[0.1em] uppercase transition-all duration-200 rounded-sm"
+                      style={{ backgroundColor: '#25D366', color: '#fff' }}
                       onMouseEnter={(e) => (e.currentTarget.style.boxShadow = '0 4px 20px rgba(37, 211, 102, 0.3)')}
                       onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
                     >
@@ -571,22 +623,16 @@ export default function ProductPage() {
                     </a>
                   )}
 
-                  {/* Secondary CTAs */}
                   <div className="flex gap-2">
                     {siteConfig.telegram && (
                       <a
                         href={`https://t.me/${siteConfig.telegram}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 flex items-center justify-center gap-2 py-3 font-body text-sm tracking-wide transition-all duration-300"
-                        style={{
-                          backgroundColor: 'rgba(38, 163, 238, 0.08)',
-                          color: '#26A3EE',
-                          border: '1px solid rgba(38, 163, 238, 0.15)',
-                          borderRadius: '2px',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#26A3EE'; e.currentTarget.style.color = '#fff' }}
-                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(38, 163, 238, 0.08)'; e.currentTarget.style.color = '#26A3EE' }}
+                        className="flex-1 flex items-center justify-center gap-2 py-3 font-body text-sm rounded-sm transition-all"
+                        style={{ backgroundColor: '#26A3EE', color: '#fff' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                        onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
                       >
                         <SendIcon size={14} />
                         Telegram
@@ -594,29 +640,23 @@ export default function ProductPage() {
                     )}
                     <Link
                       to={`/contact?product=${product.id}&title=${encodeURIComponent(product.title)}`}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 font-body text-sm tracking-wide transition-all duration-300"
-                      style={{
-                        backgroundColor: 'rgba(44, 36, 32, 0.04)',
-                        color: 'rgba(44, 36, 32, 0.6)',
-                        border: '1px solid rgba(44, 36, 32, 0.1)',
-                        borderRadius: '2px',
-                      }}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(44, 36, 32, 0.08)'; e.currentTarget.style.color = '#2C2420' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(44, 36, 32, 0.04)'; e.currentTarget.style.color = 'rgba(44, 36, 32, 0.6)' }}
+                      className="flex-1 flex items-center justify-center gap-2 py-3 font-body text-sm rounded-sm transition-all"
+                      style={{ backgroundColor: '#2C2420', color: '#F7F2EB' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.9')}
+                      onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
                     >
                       <Mail size={14} />
-                      {isShop ? 'Написать' : isRealEstate ? 'Запрос' : 'Форма'}
+                      {isShop ? 'Написать' : isRealEstate ? 'Запрос' : 'Написать'}
                     </Link>
                   </div>
 
-                  {/* Phone */}
                   {siteConfig.phone && (
                     <a
                       href={`tel:${siteConfig.phoneClean}`}
                       className="flex items-center justify-center gap-2 w-full py-2 font-body text-xs transition-colors"
-                      style={{ color: 'rgba(44, 36, 32, 0.35)' }}
+                      style={{ color: 'rgba(44, 36, 32, 0.4)' }}
                       onMouseEnter={(e) => (e.currentTarget.style.color = '#0C0A08')}
-                      onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(44, 36, 32, 0.35)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(44, 36, 32, 0.4)')}
                     >
                       <Phone size={12} />
                       {siteConfig.phone}
@@ -625,7 +665,7 @@ export default function ProductPage() {
                 </div>
               )}
 
-              {/* Product-specific seller contacts */}
+              {/* Seller contacts */}
               {(product.contact_whatsapp || product.contact_telegram || product.contact_instagram) && (
                 <>
                   <div className="h-px" style={{ backgroundColor: 'rgba(44, 36, 32, 0.08)' }} />
@@ -633,38 +673,26 @@ export default function ProductPage() {
                     <p className="font-body text-[10px] tracking-[0.2em] uppercase mb-2" style={{ color: 'rgba(44, 36, 32, 0.3)' }}>
                       Контакт продавца
                     </p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5">
                       {product.contact_whatsapp && (
-                        <a
-                          href={`https://wa.me/${product.contact_whatsapp.replace(/[^\d+]/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-2 font-body text-xs rounded transition-opacity hover:opacity-80"
-                          style={{ backgroundColor: '#25D366', color: '#fff' }}
-                        >
-                          <MessageCircle size={12} /> WhatsApp
+                        <a href={`https://wa.me/${product.contact_whatsapp.replace(/[^\d+]/g, '')}`} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 font-body text-xs rounded transition-opacity hover:opacity-80"
+                          style={{ backgroundColor: '#25D366', color: '#fff' }}>
+                          <MessageCircle size={11} /> WhatsApp
                         </a>
                       )}
                       {product.contact_telegram && (
-                        <a
-                          href={product.contact_telegram.startsWith('http') ? product.contact_telegram : `https://t.me/${product.contact_telegram.replace('@', '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-2 font-body text-xs rounded transition-opacity hover:opacity-80"
-                          style={{ backgroundColor: '#26A3EE', color: '#fff' }}
-                        >
-                          <SendIcon size={12} /> Telegram
+                        <a href={product.contact_telegram.startsWith('http') ? product.contact_telegram : `https://t.me/${product.contact_telegram.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 font-body text-xs rounded transition-opacity hover:opacity-80"
+                          style={{ backgroundColor: '#26A3EE', color: '#fff' }}>
+                          <SendIcon size={11} /> Telegram
                         </a>
                       )}
                       {product.contact_instagram && (
-                        <a
-                          href={`https://instagram.com/${product.contact_instagram.replace('@', '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-2 font-body text-xs rounded transition-opacity hover:opacity-80"
-                          style={{ background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)', color: '#fff' }}
-                        >
-                          <Instagram size={12} /> Instagram
+                        <a href={`https://instagram.com/${product.contact_instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 font-body text-xs rounded transition-opacity hover:opacity-80"
+                          style={{ background: 'linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888)', color: '#fff' }}>
+                          <Instagram size={11} /> Instagram
                         </a>
                       )}
                     </div>
@@ -672,16 +700,10 @@ export default function ProductPage() {
                 </>
               )}
 
-              {/* QR Code at bottom of price card */}
+              {/* QR */}
               <div className="h-px" style={{ backgroundColor: 'rgba(44, 36, 32, 0.08)' }} />
               <div className="flex items-center gap-3">
-                <QRCodeSVG
-                  value={window.location.href}
-                  size={48}
-                  level="M"
-                  fgColor="#2C2420"
-                  bgColor="#ffffff"
-                />
+                <QRCodeSVG value={window.location.href} size={44} level="M" fgColor="#2C2420" bgColor="#FAFAF8" />
                 <p className="font-body text-[10px]" style={{ color: 'rgba(44, 36, 32, 0.3)' }}>
                   Отсканируйте для быстрого доступа
                 </p>
@@ -691,16 +713,16 @@ export default function ProductPage() {
         </div>
       </div>
 
-      {/* -------- Linked products -------- */}
+      {/* ======== Linked products ======== */}
       {linkedProducts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 md:px-6 pb-12">
-          <div className="pt-10" style={{ borderTop: '1px solid rgba(44, 36, 32, 0.08)' }}>
-            <h2 className="font-display text-2xl mb-8" style={{ color: '#0C0A08' }}>
+        <section className="max-w-7xl mx-auto px-4 md:px-6 pb-10">
+          <div className="pt-8" style={{ borderTop: '1px solid rgba(44, 36, 32, 0.08)' }}>
+            <h2 className="font-display text-xl md:text-2xl mb-6" style={{ color: '#0C0A08' }}>
               Рекомендуемые товары
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {linkedProducts.map((p, i) => (
-                <div key={p.id} className="animate-slide-up" style={{ animationDelay: `${i * 80}ms` }}>
+                <div key={p.id} className="animate-slide-up" style={{ animationDelay: `${i * 60}ms` }}>
                   <ProductCard product={p} />
                 </div>
               ))}
@@ -709,13 +731,13 @@ export default function ProductPage() {
         </section>
       )}
 
-      {/* -------- Similar products -------- */}
+      {/* ======== Similar products ======== */}
       <div className="max-w-7xl mx-auto px-4 md:px-6">
         {!isShop && <SimilarProducts currentProduct={product} />}
       </div>
 
-      {/* -------- Reviews -------- */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 pb-12">
+      {/* ======== Reviews ======== */}
+      <div className="max-w-7xl mx-auto px-4 md:px-6 pb-10">
         {!isShop && <ProductReviews productId={product.id} />}
       </div>
     </div>

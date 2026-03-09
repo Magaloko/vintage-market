@@ -1,8 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react'
 
-const EMPTY_BG = 'rgba(44, 36, 32, 0.04)'
-
 function getImageSrc(img) {
   return img?.url || img
 }
@@ -23,7 +21,7 @@ export default function ImageGallery({ images = [], title = '' }) {
   const goPrev = useCallback(() => goTo(activeIndex - 1), [goTo, activeIndex])
   const goNext = useCallback(() => goTo(activeIndex + 1), [goTo, activeIndex])
 
-  // Scroll the slider to show the active image
+  // Scroll slider to active image
   useEffect(() => {
     const container = sliderRef.current
     if (!container) return
@@ -35,7 +33,10 @@ export default function ImageGallery({ images = [], title = '' }) {
 
   if (!images.length) {
     return (
-      <div className="aspect-[16/9] flex items-center justify-center" style={{ backgroundColor: EMPTY_BG }}>
+      <div
+        className="aspect-[16/9] md:aspect-[2/1] flex items-center justify-center"
+        style={{ backgroundColor: 'rgba(44, 36, 32, 0.04)' }}
+      >
         <span className="font-sans text-sm" style={{ color: 'rgba(44, 36, 32, 0.3)' }}>
           Нет изображений
         </span>
@@ -49,68 +50,84 @@ export default function ImageGallery({ images = [], title = '' }) {
 
   return (
     <div>
-      {/* Horizontal image slider — shows multiple images side-by-side */}
+      {/* Main image slider — edge-to-edge, no gaps */}
       <div className="relative group">
         <div
           ref={sliderRef}
-          className="pamono-slider flex gap-2 overflow-x-auto snap-x snap-mandatory"
-          style={{ scrollBehavior: 'smooth' }}
+          className="pamono-slider flex overflow-x-auto snap-x snap-mandatory"
+          style={{ scrollBehavior: 'smooth', gap: '2px' }}
         >
-          {images.map((img, idx) => (
-            <div
-              key={idx}
-              className="snap-center flex-shrink-0 cursor-zoom-in"
-              style={{
-                width: images.length === 1 ? '100%' : images.length === 2 ? '50%' : 'calc(50% - 4px)',
-                minWidth: images.length === 1 ? '100%' : '300px',
-              }}
-              onClick={() => { setActiveIndex(idx); setLightboxOpen(true) }}
-            >
-              <div className="aspect-[4/3] overflow-hidden bg-white">
-                <img
-                  src={getImageSrc(img)}
-                  alt={getImageAlt(img, `${title} — фото ${idx + 1}`)}
-                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-[1.03]"
-                />
+          {images.map((img, idx) => {
+            // Single image = full width, 2 images = 50% each, 3+ = show ~2.5 visible
+            const widthClass = images.length === 1
+              ? 'w-full'
+              : images.length === 2
+                ? 'w-1/2'
+                : 'w-[45%] md:w-[40%]'
+
+            return (
+              <div
+                key={idx}
+                className={`snap-center flex-shrink-0 cursor-zoom-in ${widthClass}`}
+                onClick={() => { setActiveIndex(idx); setLightboxOpen(true) }}
+              >
+                <div className="aspect-[4/3] overflow-hidden bg-neutral-100">
+                  <img
+                    src={getImageSrc(img)}
+                    alt={getImageAlt(img, `${title} — фото ${idx + 1}`)}
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-[1.03]"
+                    loading={idx > 2 ? 'lazy' : 'eager'}
+                  />
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
-        {/* Navigation arrows on page edges */}
+        {/* Nav arrows — always visible on desktop, tap on mobile */}
         {hasMultiple && (
           <>
             <button
-              onClick={goPrev}
+              onClick={(e) => { e.stopPropagation(); goPrev() }}
               disabled={isFirst}
-              className="absolute left-0 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-white/90 backdrop-blur-sm shadow-md transition-all opacity-0 group-hover:opacity-100 disabled:opacity-0 hover:bg-white"
-              style={{ borderRadius: '0 2px 2px 0' }}
+              className="absolute left-0 top-0 bottom-0 w-12 md:w-14 flex items-center justify-center transition-all bg-gradient-to-r from-black/20 to-transparent md:from-black/10 opacity-80 hover:opacity-100 disabled:opacity-0"
+              aria-label="Назад"
             >
-              <ChevronLeft size={20} style={{ color: '#2C2420' }} />
+              <ChevronLeft size={28} className="text-white drop-shadow-md" />
             </button>
             <button
-              onClick={goNext}
+              onClick={(e) => { e.stopPropagation(); goNext() }}
               disabled={isLast}
-              className="absolute right-0 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-white/90 backdrop-blur-sm shadow-md transition-all opacity-0 group-hover:opacity-100 disabled:opacity-0 hover:bg-white"
-              style={{ borderRadius: '2px 0 0 2px' }}
+              className="absolute right-0 top-0 bottom-0 w-12 md:w-14 flex items-center justify-center transition-all bg-gradient-to-l from-black/20 to-transparent md:from-black/10 opacity-80 hover:opacity-100 disabled:opacity-0"
+              aria-label="Вперёд"
             >
-              <ChevronRight size={20} style={{ color: '#2C2420' }} />
+              <ChevronRight size={28} className="text-white drop-shadow-md" />
             </button>
           </>
         )}
 
+        {/* Image counter overlay — mobile friendly */}
+        {hasMultiple && (
+          <div
+            className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full font-sans text-xs text-white/90"
+            style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+          >
+            {activeIndex + 1} / {images.length}
+          </div>
+        )}
+
         {/* Zoom hint */}
         <div
-          className="absolute bottom-3 right-3 p-2 rounded-full opacity-0 group-hover:opacity-70 transition-opacity pointer-events-none"
+          className="absolute bottom-3 left-3 p-2 rounded-full opacity-0 group-hover:opacity-60 transition-opacity pointer-events-none hidden md:block"
           style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
         >
           <ZoomIn size={14} className="text-white" />
         </div>
       </div>
 
-      {/* Small thumbnails below */}
+      {/* Thumbnails below */}
       {hasMultiple && (
-        <div className="flex gap-1.5 mt-3">
+        <div className="flex gap-1 mt-2 overflow-x-auto pamono-slider pb-1">
           {images.map((img, idx) => {
             const isActive = idx === activeIndex
             return (
@@ -119,8 +136,8 @@ export default function ImageGallery({ images = [], title = '' }) {
                 onClick={() => setActiveIndex(idx)}
                 className="flex-shrink-0 overflow-hidden transition-all duration-200"
                 style={{
-                  width: '64px',
-                  height: '64px',
+                  width: '60px',
+                  height: '60px',
                   border: isActive ? '2px solid #2C2420' : '2px solid transparent',
                   opacity: isActive ? 1 : 0.5,
                 }}
@@ -129,6 +146,7 @@ export default function ImageGallery({ images = [], title = '' }) {
                   src={getImageSrc(img)}
                   alt={getImageAlt(img, `${title} — миниатюра ${idx + 1}`)}
                   className="w-full h-full object-cover"
+                  loading="lazy"
                 />
               </button>
             )
@@ -162,7 +180,7 @@ function Lightbox({ images, activeIndex, title, onClose, onPrev, onNext, onSelec
   const current = images[activeIndex] || images[0]
   const hasMultiple = images.length > 1
 
-  // Keyboard navigation
+  // Keyboard + swipe navigation
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'Escape') onClose()
@@ -170,17 +188,22 @@ function Lightbox({ images, activeIndex, title, onClose, onPrev, onNext, onSelec
       if (e.key === 'ArrowRight') onNext()
     }
     window.addEventListener('keydown', handleKey)
-    return () => window.removeEventListener('keydown', handleKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', handleKey)
+      document.body.style.overflow = ''
+    }
   }, [onClose, onPrev, onNext])
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+      className="fixed inset-0 z-[60] bg-black/95 flex items-center justify-center"
       onClick={onClose}
     >
       <button
         onClick={onClose}
         className="absolute top-4 right-4 p-3 text-white/70 hover:text-white transition-colors z-10"
+        aria-label="Закрыть"
       >
         <X size={24} />
       </button>
@@ -194,8 +217,9 @@ function Lightbox({ images, activeIndex, title, onClose, onPrev, onNext, onSelec
       <img
         src={getImageSrc(current)}
         alt={getImageAlt(current, title)}
-        className="max-w-[90vw] max-h-[85vh] object-contain"
+        className="max-w-[92vw] max-h-[85vh] object-contain select-none"
         onClick={(e) => e.stopPropagation()}
+        draggable={false}
       />
 
       {hasMultiple && (
@@ -203,24 +227,26 @@ function Lightbox({ images, activeIndex, title, onClose, onPrev, onNext, onSelec
           <button
             onClick={(e) => { e.stopPropagation(); onPrev() }}
             disabled={isFirst}
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 text-white/60 hover:text-white transition-colors disabled:opacity-20"
+            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 p-2 md:p-3 text-white/60 hover:text-white transition-colors disabled:opacity-20"
+            aria-label="Назад"
           >
             <ChevronLeft size={32} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onNext() }}
             disabled={isLast}
-            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 text-white/60 hover:text-white transition-colors disabled:opacity-20"
+            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 p-2 md:p-3 text-white/60 hover:text-white transition-colors disabled:opacity-20"
+            aria-label="Вперёд"
           >
             <ChevronRight size={32} />
           </button>
 
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
             {images.map((img, idx) => (
               <button
                 key={idx}
                 onClick={(e) => { e.stopPropagation(); onSelect(idx) }}
-                className={`w-12 h-12 overflow-hidden rounded transition-all ${
+                className={`w-10 h-10 md:w-12 md:h-12 overflow-hidden rounded transition-all ${
                   idx === activeIndex ? 'ring-2 ring-white opacity-100' : 'opacity-40 hover:opacity-70'
                 }`}
               >
