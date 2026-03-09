@@ -7,6 +7,7 @@ export const useAuth = () => useContext(AuthContext)
 const DEMO_ACCOUNTS = {
   'admin@vintage.demo': { id: 'demo-admin-001', role: 'admin', password: 'demo123' },
   'seller@vintage.demo': { id: 'demo-seller-001', role: 'seller', password: 'demo123', shop_id: 'demo-shop-001' },
+  'agent@vintage.demo': { id: 'demo-agent-001', role: 'agent', password: 'demo123' },
 }
 
 const ROLE_TIMEOUT_MS = 3000
@@ -127,8 +128,22 @@ export function AuthProvider({ children }) {
           setRole('seller')
           setShopId(shop.id)
         } else {
-          setRole('admin')
-          setShopId(null)
+          // Check profiles for agent role
+          try {
+            const { data: profile } = await supabase
+              .from('profiles').select('role').eq('id', data.user.id).maybeSingle()
+            if (profile?.role === 'agent') {
+              detectedRole = 'agent'
+              setRole('agent')
+              setShopId(null)
+            } else {
+              setRole('admin')
+              setShopId(null)
+            }
+          } catch {
+            setRole('admin')
+            setShopId(null)
+          }
         }
       } catch {
         setRole('admin')
@@ -172,7 +187,7 @@ export function AuthProvider({ children }) {
     return {
       data: null,
       error: {
-        message: 'Неверные данные.\nАдмин: admin@vintage.demo / demo123\nПродавец: seller@vintage.demo / demo123',
+        message: 'Неверные данные.\nАдмин: admin@vintage.demo / demo123\nПродавец: seller@vintage.demo / demo123\nАгент: agent@vintage.demo / demo123',
       },
     }
   }
@@ -251,6 +266,7 @@ export function AuthProvider({ children }) {
       session, user, loading, role, shopId,
       isAdmin: role === 'admin',
       isSeller: role === 'seller',
+      isAgent: role === 'agent',
       isDemoMode,
       signIn, signOut, registerSeller,
     }}>

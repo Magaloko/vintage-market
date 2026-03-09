@@ -1325,6 +1325,91 @@ export async function getUsersByRole(...roles) {
 }
 
 // =============================================================================
+// Agent Workspace API
+// =============================================================================
+
+export async function getAgentInquiries(agentId) {
+  if (!isSupabaseConfigured) {
+    return {
+      data: localInquiries.filter(i => i.assigned_to === agentId || !i.assigned_to),
+      error: null,
+    }
+  }
+
+  return safeQuery(async () => {
+    const { data, error } = await supabase
+      .from('inquiries').select('*')
+      .or(`assigned_to.eq.${agentId},assigned_to.is.null`)
+      .order('created_at', { ascending: false })
+    return { data: data || [], error }
+  }, { data: [] })
+}
+
+export async function assignTicket(ticketId, agentId) {
+  if (!isSupabaseConfigured) {
+    const idx = localInquiries.findIndex(i => i.id === ticketId)
+    if (idx === -1) return { error: { message: 'Not found' } }
+    localInquiries[idx].assigned_to = agentId || null
+    localInquiries[idx].updated_at = now()
+    return { error: null }
+  }
+
+  return safeQuery(async () => {
+    const { error } = await supabase.from('inquiries')
+      .update({ assigned_to: agentId || null, updated_at: now() })
+      .eq('id', ticketId)
+    return { error }
+  }, {})
+}
+
+export async function getAgentDashboard(agentId) {
+  if (!isSupabaseConfigured) {
+    const mine = localInquiries.filter(i => i.assigned_to === agentId)
+    const unassigned = localInquiries.filter(i => !i.assigned_to && !['solved', 'closed'].includes(i.status))
+    const open = mine.filter(i => !['solved', 'closed'].includes(i.status))
+    const withCsat = mine.filter(i => i.csat_rating != null)
+    const slaBreaches = open.filter(i => {
+      const hours = (Date.now() - new Date(i.created_at).getTime()) / 3600000
+      return i.sla_first_reply_hours ? i.sla_first_reply_hours > 8 : hours > 8
+    })
+    return {
+      data: {
+        myTickets: open.length,
+        unassigned: unassigned.length,
+        slaBreaches: slaBreaches.length,
+        avgCsat: withCsat.length ? +(withCsat.reduce((s, i) => s + i.csat_rating, 0) / withCsat.length).toFixed(1) : null,
+        slaAlerts: slaBreaches.slice(0, 5),
+      },
+      error: null,
+    }
+  }
+
+  return safeQuery(async () => {
+    const { data: all } = await supabase.from('inquiries').select('*')
+    if (!all) return { data: { myTickets: 0, unassigned: 0, slaBreaches: 0, avgCsat: null, slaAlerts: [] }, error: null }
+
+    const mine = all.filter(i => i.assigned_to === agentId)
+    const unassigned = all.filter(i => !i.assigned_to && !['solved', 'closed'].includes(i.status))
+    const open = mine.filter(i => !['solved', 'closed'].includes(i.status))
+    const withCsat = mine.filter(i => i.csat_rating != null)
+    const slaBreaches = open.filter(i => {
+      const hours = (Date.now() - new Date(i.created_at).getTime()) / 3600000
+      return i.sla_first_reply_hours ? i.sla_first_reply_hours > 8 : hours > 8
+    })
+    return {
+      data: {
+        myTickets: open.length,
+        unassigned: unassigned.length,
+        slaBreaches: slaBreaches.length,
+        avgCsat: withCsat.length ? +(withCsat.reduce((s, i) => s + i.csat_rating, 0) / withCsat.length).toFixed(1) : null,
+        slaAlerts: slaBreaches.slice(0, 5),
+      },
+      error: null,
+    }
+  })
+}
+
+// =============================================================================
 // Analytics Events Reader
 // =============================================================================
 

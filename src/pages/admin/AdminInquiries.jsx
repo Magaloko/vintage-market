@@ -11,7 +11,7 @@ import {
   getInquiries, updateTicketStatus, deleteInquiry,
   addInquiryNote, getInquiryNotes, getStatusLog,
   autoCloseTickets, recordFirstReply, submitCSAT,
-  OBZOR_TRANSITIONS,
+  OBZOR_TRANSITIONS, getUsersByRole, assignTicket,
 } from '../../lib/api'
 import { ticketMacros } from '../../data/demoProducts'
 
@@ -649,7 +649,7 @@ function HoverLink({ href, to, children }) {
 }
 
 /* ── Ticket detail (expanded) ─────────────────────────────────── */
-function TicketDetail({ inq, onStatusChange, onDelete, onCSAT }) {
+function TicketDetail({ inq, onStatusChange, onDelete, onCSAT, agents, onAssign }) {
   const isClosed = inq.status === 'closed'
   const sla = computeSLA(inq)
 
@@ -685,6 +685,31 @@ function TicketDetail({ inq, onStatusChange, onDelete, onCSAT }) {
           )}
         </div>
       </div>
+
+      {/* Agent assignment */}
+      {agents && agents.length > 0 && (
+        <div className="flex items-center gap-2 mb-3">
+          <span className="font-body text-[10px] tracking-wider uppercase" style={{ color: alpha.ink30 }}>
+            Агент:
+          </span>
+          <select
+            value={inq.assigned_to || ''}
+            onChange={(e) => onAssign(inq.id, e.target.value || null)}
+            className="font-body text-xs px-2 py-1 outline-none"
+            style={{
+              backgroundColor: alpha.ink03,
+              border: `1px solid ${alpha.gold12}`,
+              borderRadius: '2px',
+              color: colors.ink,
+            }}
+          >
+            <option value="">— Не назначен —</option>
+            {agents.map(a => (
+              <option key={a.id} value={a.id}>{a.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Status pipeline */}
       <StatusPipeline currentStatus={inq.status} />
@@ -731,7 +756,7 @@ function TicketDetail({ inq, onStatusChange, onDelete, onCSAT }) {
 }
 
 /* ── Single ticket row ────────────────────────────────────────── */
-function TicketRow({ inq, isExpanded, onToggle, onStatusChange, onDelete, onCSAT }) {
+function TicketRow({ inq, isExpanded, onToggle, onStatusChange, onDelete, onCSAT, agents, onAssign }) {
   const status = OBZOR_STATUSES[inq.status] || OBZOR_STATUSES.new
   const StatusIcon = status.icon
 
@@ -763,6 +788,14 @@ function TicketRow({ inq, isExpanded, onToggle, onStatusChange, onDelete, onCSAT
             {inq.csat_rating && (
               <CSATStars rating={inq.csat_rating} size={10} />
             )}
+            {inq.assigned_to && agents?.find(a => a.id === inq.assigned_to) && (
+              <span
+                className="font-body text-[9px] px-1.5 py-0.5"
+                style={{ backgroundColor: 'rgba(74, 139, 110, 0.1)', color: '#4A8B6E', borderRadius: '1px' }}
+              >
+                {agents.find(a => a.id === inq.assigned_to)?.name}
+              </span>
+            )}
           </div>
           <p className="font-body text-xs truncate mt-1" style={{ color: alpha.ink30 }}>
             {inq.message}
@@ -785,7 +818,7 @@ function TicketRow({ inq, isExpanded, onToggle, onStatusChange, onDelete, onCSAT
       </button>
 
       {isExpanded && (
-        <TicketDetail inq={inq} onStatusChange={onStatusChange} onDelete={onDelete} onCSAT={onCSAT} />
+        <TicketDetail inq={inq} onStatusChange={onStatusChange} onDelete={onDelete} onCSAT={onCSAT} agents={agents} onAssign={onAssign} />
       )}
     </div>
   )
@@ -797,9 +830,11 @@ export default function AdminInquiries() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [expandedId, setExpandedId] = useState(null)
+  const [agents, setAgents] = useState([])
 
   useEffect(() => {
     load()
+    getUsersByRole('agent').then(({ data }) => setAgents(data || [])).catch(() => {})
     // Auto-close solved tickets older than 4 days
     autoCloseTickets(4).then(({ data }) => {
       if (data?.closed > 0) {
@@ -860,6 +895,15 @@ export default function AdminInquiries() {
     setInquiries((prev) => prev.filter((i) => i.id !== id))
     setExpandedId(null)
     toast.success('Удалено')
+  }
+
+  const handleAssign = async (ticketId, agentId) => {
+    const { error } = await assignTicket(ticketId, agentId)
+    if (error) { toast.error('Ошибка назначения'); return }
+    setInquiries(prev => prev.map(i =>
+      i.id === ticketId ? { ...i, assigned_to: agentId, updated_at: new Date().toISOString() } : i
+    ))
+    toast.success(agentId ? 'Агент назначен' : 'Назначение снято')
   }
 
   /* Auto-open new tickets when expanded */
@@ -944,6 +988,8 @@ export default function AdminInquiries() {
               onStatusChange={handleStatusChange}
               onDelete={handleDelete}
               onCSAT={handleCSAT}
+              agents={agents}
+              onAssign={handleAssign}
             />
           ))}
         </div>

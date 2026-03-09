@@ -32,6 +32,10 @@ const AdminBulkImport = lazy(() => import('./pages/admin/AdminBulkImport'))
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'))
 const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'))
 
+const AgentLayout = lazy(() => import('./components/agent/AgentLayout'))
+const AgentDashboard = lazy(() => import('./pages/agent/AgentDashboard'))
+const AgentWorkspace = lazy(() => import('./pages/agent/AgentWorkspace'))
+
 const SellerRegister = lazy(() => import('./pages/seller/SellerRegister'))
 const SellerDashboard = lazy(() => import('./pages/seller/SellerDashboard'))
 const SellerProducts = lazy(() => import('./pages/seller/SellerProducts'))
@@ -69,6 +73,7 @@ function AdminRoute({ children }) {
   if (!session) return <Navigate to="/admin/login" replace />
   if (isAdmin || role === null) return children
   if (isSeller) return <Navigate to="/seller" replace />
+  if (role === 'agent') return <Navigate to="/agent" replace />
   return children
 }
 
@@ -80,6 +85,16 @@ function SellerRoute({ children }) {
   if (isSeller) return children
   if (isAdmin) return <Navigate to="/admin" replace />
   if (role === null) return <PageLoader />
+  return <Navigate to="/admin/login" replace />
+}
+
+function AgentRoute({ children }) {
+  const { session, loading, role, isAdmin } = useAuth()
+
+  if (loading) return <PageLoader />
+  if (!session) return <Navigate to="/admin/login" replace />
+  if (role === 'agent') return children
+  if (isAdmin) return <Navigate to="/admin" replace />
   return <Navigate to="/admin/login" replace />
 }
 
@@ -142,6 +157,11 @@ export default function App() {
                   <Route path="calculator" element={<AdminCalculator />} />
                   <Route path="categories" element={<AdminCategories />} />
                   <Route path="users" element={<AdminUsers />} />
+                </Route>
+
+                <Route path="/agent" element={<AgentRoute><AgentLayout /></AgentRoute>}>
+                  <Route index element={<AgentDashboard />} />
+                  <Route path="workspace" element={<AgentWorkspace />} />
                 </Route>
 
                 <Route path="/seller" element={<SellerRoute><SellerLayout /></SellerRoute>}>

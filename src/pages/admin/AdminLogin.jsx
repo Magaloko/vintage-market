@@ -67,7 +67,7 @@ export default function AdminLogin() {
       return
     }
 
-    navigate(role === 'seller' ? '/seller' : '/admin')
+    navigate(role === 'seller' ? '/seller' : role === 'agent' ? '/agent' : '/admin')
   }
 
   return (
@@ -114,6 +114,9 @@ export default function AdminLogin() {
                 / <code style={{ color: colors.goldLight }}>demo123</code>
                 <br />
                 Продавец: <code style={{ color: colors.goldLight }}>seller@vintage.demo</code>{' '}
+                / <code style={{ color: colors.goldLight }}>demo123</code>
+                <br />
+                Агент: <code style={{ color: colors.goldLight }}>agent@vintage.demo</code>{' '}
                 / <code style={{ color: colors.goldLight }}>demo123</code>
               </div>
             </div>
