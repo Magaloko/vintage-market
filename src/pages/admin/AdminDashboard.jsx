@@ -13,6 +13,7 @@ import {
 } from 'recharts'
 import { getStats, getTicketAnalytics, autoCloseTickets } from '../../lib/api'
 import { categories } from '../../data/demoProducts'
+import { PRODUCT_STATUSES, PRODUCT_STATUS_GROUPS, getStatusDef } from '../../data/productStatuses'
 
 /* ── Theme tokens (light) ────────────────────────────────────── */
 const PIE_COLORS = ['#B08D57', '#7A5340', '#5B3A29', '#9B7E4A', '#C9A96E', '#6E5535']
@@ -301,6 +302,9 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {/* ── Stock Overview ──────────────────────────────────────── */}
+      <StockOverview statusCounts={stats.statusCounts} />
+
       {/* ── Business KPIs ──────────────────────────────────────── */}
       <BusinessKPIs />
 
@@ -552,6 +556,127 @@ function BusinessKPIs() {
           </Link>
         ))}
       </div>
+    </div>
+  )
+}
+
+/* ── Stock Overview ─────────────────────────────────────────── */
+
+function StockOverview({ statusCounts = {} }) {
+  // Group statuses into 3 buckets
+  const onStock = (statusCounts['active'] || 0) + (statusCounts['at_kz_warehouse'] || 0)
+  const inTransit = (statusCounts['in_transit_warehouse'] || 0) + (statusCounts['at_warehouse'] || 0) +
+    (statusCounts['in_transit_kz'] || 0) + (statusCounts['in_transit_customer'] || 0)
+  const procurement = (statusCounts['ordered'] || 0) + (statusCounts['paid_supplier'] || 0)
+  const reserved = statusCounts['reserved'] || 0
+  const sold = statusCounts['sold'] || 0
+  const issues = (statusCounts['defective'] || 0) + (statusCounts['returned'] || 0)
+
+  const buckets = [
+    { label: 'На складе',    value: onStock,      color: '#5A6B3C', icon: '📍' },
+    { label: 'В пути',       value: inTransit,    color: '#5A7A8B', icon: '🚚' },
+    { label: 'Закупка',      value: procurement,  color: '#B08D57', icon: '📦' },
+    { label: 'Забронировано', value: reserved,     color: '#9B7CB8', icon: '🔒' },
+    { label: 'Продано',      value: sold,         color: '#8B7355', icon: '🏷️' },
+    { label: 'Проблемы',     value: issues,       color: '#B5736A', icon: '⚠️' },
+  ]
+
+  const total = buckets.reduce((s, b) => s + b.value, 0)
+
+  // Per-status detail
+  const activeStatuses = PRODUCT_STATUSES.filter(s => statusCounts[s.key] > 0)
+
+  return (
+    <div style={panelStyle} className="p-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-sans text-sm font-medium flex items-center gap-2" style={{ color: alpha.ink70 }}>
+          <Package size={16} style={{ color: colors.gold }} />
+          Складская статистика
+        </h2>
+        <Link
+          to="/admin/products"
+          className="flex items-center gap-1 font-sans text-[10px] uppercase tracking-wider transition-colors"
+          style={{ color: alpha.ink40 }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = colors.gold }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = alpha.ink40 }}
+        >
+          Все товары <ArrowRight size={8} />
+        </Link>
+      </div>
+
+      {/* Summary buckets */}
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
+        {buckets.map((b) => (
+          <div
+            key={b.label}
+            className="text-center p-3"
+            style={{
+              backgroundColor: `${b.color}10`,
+              border: `1px solid ${b.color}20`,
+              borderRadius: '2px',
+            }}
+          >
+            <div className="text-lg">{b.icon}</div>
+            <p className="font-sans text-xl font-bold mt-1" style={{ color: b.color }}>
+              {b.value}
+            </p>
+            <p className="font-sans text-[9px] uppercase tracking-wider mt-0.5" style={{ color: `${b.color}99` }}>
+              {b.label}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Pipeline bar */}
+      {total > 0 && (
+        <>
+          <div className="flex h-3 rounded-sm overflow-hidden" style={{ backgroundColor: alpha.gold08 }}>
+            {buckets.filter(b => b.value > 0).map((b) => (
+              <div
+                key={b.label}
+                title={`${b.label}: ${b.value} (${Math.round(b.value / total * 100)}%)`}
+                style={{ width: `${(b.value / total) * 100}%`, backgroundColor: b.color, minWidth: '3px' }}
+              />
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+            {buckets.filter(b => b.value > 0).map((b) => (
+              <span key={b.label} className="flex items-center gap-1 font-sans text-[10px]" style={{ color: b.color }}>
+                <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: b.color }} />
+                {b.label}: {b.value} ({Math.round(b.value / total * 100)}%)
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Detailed per-status breakdown */}
+      {activeStatuses.length > 0 && (
+        <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${alpha.gold10}` }}>
+          <p className="font-sans text-[10px] uppercase tracking-wider mb-2" style={{ color: alpha.ink30 }}>
+            Детализация по статусам
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+            {activeStatuses.map((s) => (
+              <div
+                key={s.key}
+                className="flex items-center gap-2 px-2 py-1.5"
+                style={{ backgroundColor: s.bg, borderRadius: '2px' }}
+              >
+                <span className="text-sm">{s.emoji}</span>
+                <div>
+                  <p className="font-sans text-sm font-semibold" style={{ color: s.color }}>
+                    {statusCounts[s.key]}
+                  </p>
+                  <p className="font-sans text-[8px] uppercase tracking-wider" style={{ color: `${s.color}99` }}>
+                    {s.label}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
