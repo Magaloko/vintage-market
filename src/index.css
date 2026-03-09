@@ -192,6 +192,10 @@
 .thumbnail-slider::-webkit-scrollbar { display: none; }
 .thumbnail-slider { scrollbar-width: none; -ms-overflow-style: none; }
 
+/* Pamono-style horizontal image slider — hide scrollbar */
+.pamono-slider::-webkit-scrollbar { display: none; }
+.pamono-slider { scrollbar-width: none; -ms-overflow-style: none; }
+
 /* Markdown description rendering */
 .vintage-description h1,
 .vintage-description h2,
