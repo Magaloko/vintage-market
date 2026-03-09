@@ -14,23 +14,23 @@ export const categoryGroups = [
 // =============================================================================
 
 export const categories = [
-  // --- Vintage ---
-  { id: 'clothing',     name: 'Одежда',            group: 'vintage' },
-  { id: 'accessories',  name: 'Аксессуары',        group: 'vintage' },
-  { id: 'furniture',    name: 'Мебель',            group: 'vintage' },
-  { id: 'collectibles', name: 'Коллекционное',     group: 'vintage' },
-  { id: 'jewelry',          name: 'Ювелирные украшения', group: 'vintage' },
-  { id: 'costume_jewelry',  name: 'Бижутерия',           group: 'vintage' },
-  { id: 'art',          name: 'Искусство',         group: 'vintage' },
-  { id: 'books',        name: 'Книги',             group: 'vintage' },
-  { id: 'vinyl',        name: 'Винил и музыка',    group: 'vintage' },
-  { id: 'electronics',  name: 'Электроника',       group: 'vintage' },
-  { id: 'ceramics',     name: 'Посуда',            group: 'vintage' },
-  { id: 'cutlery',      name: 'Столовые приборы',  group: 'vintage' },
+  // --- Vintage (А–Я) ---
+  { id: 'accessories',     name: 'Аксессуары',          group: 'vintage' },
+  { id: 'costume_jewelry', name: 'Бижутерия',           group: 'vintage' },
+  { id: 'vinyl',           name: 'Винил и музыка',      group: 'vintage' },
+  { id: 'art',             name: 'Искусство',           group: 'vintage' },
+  { id: 'books',           name: 'Книги',               group: 'vintage' },
+  { id: 'collectibles',    name: 'Коллекционное',       group: 'vintage' },
+  { id: 'furniture',       name: 'Мебель',              group: 'vintage' },
+  { id: 'clothing',        name: 'Одежда',              group: 'vintage' },
+  { id: 'ceramics',        name: 'Посуда',              group: 'vintage' },
+  { id: 'cutlery',         name: 'Столовые приборы',    group: 'vintage' },
+  { id: 'electronics',     name: 'Электроника',         group: 'vintage' },
+  { id: 'jewelry',         name: 'Ювелирные украшения', group: 'vintage' },
 
-  // --- Real Estate ---
-  { id: 'apartment',  name: 'Квартира',  group: 'realestate' },
+  // --- Real Estate (А–Я) ---
   { id: 'house',      name: 'Дом',       group: 'realestate' },
+  { id: 'apartment',  name: 'Квартира',  group: 'realestate' },
   { id: 'commercial', name: 'Коммерция', group: 'realestate' },
 
   // --- Shops ---
@@ -305,133 +305,133 @@ export function formatEra(start, end) {
 // =============================================================================
 
 export const subcategories = {
-  // ── Ювелирные украшения ─────────────────────────────────
-  jewelry: [
-    { id: 'watches',       name: 'Часы' },
-    { id: 'pendants',      name: 'Подвески / Charms' },
-    { id: 'bracelets',     name: 'Браслеты' },
-    { id: 'brooches',      name: 'Броши / Манжеты' },
-    { id: 'necklaces',     name: 'Ожерелья / Колье' },
-    { id: 'earrings',      name: 'Серьги' },
-    { id: 'piercings',     name: 'Пирсинг' },
-    { id: 'rings',         name: 'Кольца' },
-    { id: 'sets',          name: 'Наборы / Комплекты' },
-    { id: 'j_accessories', name: 'Аксессуары / Хранение' },
+  // ── Аксессуары ──────────────────────────────────────────
+  accessories: [
+    { id: 'fans',        name: 'Веера' },
+    { id: 'wallets',     name: 'Кошельки / Портмоне' },
+    { id: 'glasses',     name: 'Очки' },
+    { id: 'cigarette',   name: 'Портсигары / Мундштуки' },
+    { id: 'compacts',    name: 'Пудреницы / Зеркала' },
+    { id: 'belts',       name: 'Ремни' },
+    { id: 'bags',        name: 'Сумки / Портфели' },
+    { id: 'canes',       name: 'Трости' },
+    { id: 'acc_other',   name: 'Другое' },
   ],
   // ── Бижутерия ───────────────────────────────────────────
   costume_jewelry: [
-    { id: 'cj_pendants',   name: 'Подвески' },
     { id: 'cj_bracelets',  name: 'Браслеты' },
     { id: 'cj_brooches',   name: 'Броши' },
-    { id: 'cj_necklaces',  name: 'Ожерелья / Бусы' },
-    { id: 'cj_earrings',   name: 'Серьги / Клипсы' },
     { id: 'cj_rings',      name: 'Кольца' },
     { id: 'cj_sets',       name: 'Комплекты' },
-  ],
-  // ── Столовые приборы ────────────────────────────────────
-  cutlery: [
-    { id: 'spoons',     name: 'Ложки' },
-    { id: 'forks',      name: 'Вилки' },
-    { id: 'knives',     name: 'Ножи' },
-    { id: 'ct_sets',    name: 'Наборы' },
-    { id: 'serving',    name: 'Сервировочные' },
-    { id: 'cupholders', name: 'Подстаканники' },
-  ],
-  // ── Посуда ──────────────────────────────────────────────
-  ceramics: [
-    { id: 'tea_set',     name: 'Чайный набор' },
-    { id: 'coffee_set',  name: 'Кофейный набор' },
-    { id: 'services',    name: 'Сервизы' },
-    { id: 'plates',      name: 'Тарелки' },
-    { id: 'cups',        name: 'Чашки / Кружки' },
-    { id: 'teapots',     name: 'Чайники / Заварники' },
-    { id: 'sugar_bowls', name: 'Сахарницы / Молочники' },
-    { id: 'soup_tureen', name: 'Супницы' },
-    { id: 'bowls',       name: 'Миски / Салатники' },
-    { id: 'vases',       name: 'Вазы' },
-    { id: 'figurines',   name: 'Фигурки / Статуэтки' },
-    { id: 'decorative',  name: 'Декоративные тарелки' },
-  ],
-  // ── Одежда ──────────────────────────────────────────────
-  clothing: [
-    { id: 'dresses',     name: 'Платья' },
-    { id: 'coats',       name: 'Пальто / Плащи' },
-    { id: 'jackets',     name: 'Куртки / Пиджаки' },
-    { id: 'skirts',      name: 'Юбки' },
-    { id: 'pants',       name: 'Брюки' },
-    { id: 'shirts',      name: 'Рубашки / Блузки' },
-    { id: 'knitwear',    name: 'Трикотаж / Свитера' },
-    { id: 'scarves',     name: 'Шарфы / Платки' },
-    { id: 'hats',        name: 'Головные уборы' },
-    { id: 'cl_sets',     name: 'Костюмы / Комплекты' },
-  ],
-  // ── Аксессуары ──────────────────────────────────────────
-  accessories: [
-    { id: 'bags',        name: 'Сумки / Портфели' },
-    { id: 'wallets',     name: 'Кошельки / Портмоне' },
-    { id: 'belts',       name: 'Ремни' },
-    { id: 'glasses',     name: 'Очки' },
-    { id: 'fans',        name: 'Веера' },
-    { id: 'canes',       name: 'Трости' },
-    { id: 'cigarette',   name: 'Портсигары / Мундштуки' },
-    { id: 'compacts',    name: 'Пудреницы / Зеркала' },
-    { id: 'acc_other',   name: 'Другое' },
-  ],
-  // ── Мебель ──────────────────────────────────────────────
-  furniture: [
-    { id: 'chairs',     name: 'Стулья / Кресла' },
-    { id: 'tables',     name: 'Столы' },
-    { id: 'cabinets',   name: 'Шкафы / Комоды' },
-    { id: 'desks',      name: 'Письменные столы' },
-    { id: 'mirrors',    name: 'Зеркала' },
-    { id: 'lamps',      name: 'Светильники / Лампы' },
-    { id: 'clocks',     name: 'Часы' },
-    { id: 'f_decor',    name: 'Декор интерьера' },
-  ],
-  // ── Коллекционное ───────────────────────────────────────
-  collectibles: [
-    { id: 'coins',      name: 'Монеты' },
-    { id: 'stamps',     name: 'Марки' },
-    { id: 'postcards',  name: 'Открытки' },
-    { id: 'badges',     name: 'Значки / Ордена' },
-    { id: 'toys',       name: 'Игрушки' },
-    { id: 'militaria',  name: 'Военное' },
-    { id: 'col_other',  name: 'Другое' },
-  ],
-  // ── Искусство ───────────────────────────────────────────
-  art: [
-    { id: 'paintings',  name: 'Картины / Живопись' },
-    { id: 'graphics',   name: 'Графика / Гравюры' },
-    { id: 'sculptures', name: 'Скульптуры' },
-    { id: 'icons',      name: 'Иконы' },
-    { id: 'posters',    name: 'Плакаты / Афиши' },
-    { id: 'photos',     name: 'Фотографии' },
-  ],
-  // ── Книги ───────────────────────────────────────────────
-  books: [
-    { id: 'fiction',     name: 'Художественная' },
-    { id: 'nonfiction',  name: 'Научная / Техническая' },
-    { id: 'children',    name: 'Детские' },
-    { id: 'albums',      name: 'Альбомы / Каталоги' },
-    { id: 'rare',        name: 'Редкие / Антикварные' },
-    { id: 'periodicals', name: 'Журналы / Газеты' },
+    { id: 'cj_necklaces',  name: 'Ожерелья / Бусы' },
+    { id: 'cj_pendants',   name: 'Подвески' },
+    { id: 'cj_earrings',   name: 'Серьги / Клипсы' },
   ],
   // ── Винил и музыка ──────────────────────────────────────
   vinyl: [
-    { id: 'lp',          name: 'LP / Альбомы' },
-    { id: 'singles',     name: 'Синглы / 7"' },
+    { id: 'instruments', name: 'Инструменты' },
     { id: 'cassettes',   name: 'Кассеты' },
     { id: 'players',     name: 'Проигрыватели' },
-    { id: 'instruments', name: 'Инструменты' },
+    { id: 'singles',     name: 'Синглы / 7"' },
+    { id: 'lp',          name: 'LP / Альбомы' },
+  ],
+  // ── Искусство ───────────────────────────────────────────
+  art: [
+    { id: 'graphics',   name: 'Графика / Гравюры' },
+    { id: 'icons',       name: 'Иконы' },
+    { id: 'paintings',   name: 'Картины / Живопись' },
+    { id: 'posters',     name: 'Плакаты / Афиши' },
+    { id: 'sculptures',  name: 'Скульптуры' },
+    { id: 'photos',      name: 'Фотографии' },
+  ],
+  // ── Книги ───────────────────────────────────────────────
+  books: [
+    { id: 'albums',      name: 'Альбомы / Каталоги' },
+    { id: 'children',    name: 'Детские' },
+    { id: 'periodicals', name: 'Журналы / Газеты' },
+    { id: 'nonfiction',  name: 'Научная / Техническая' },
+    { id: 'rare',        name: 'Редкие / Антикварные' },
+    { id: 'fiction',     name: 'Художественная' },
+  ],
+  // ── Коллекционное ───────────────────────────────────────
+  collectibles: [
+    { id: 'militaria',  name: 'Военное' },
+    { id: 'badges',     name: 'Значки / Ордена' },
+    { id: 'toys',       name: 'Игрушки' },
+    { id: 'stamps',     name: 'Марки' },
+    { id: 'coins',      name: 'Монеты' },
+    { id: 'postcards',  name: 'Открытки' },
+    { id: 'col_other',  name: 'Другое' },
+  ],
+  // ── Мебель ──────────────────────────────────────────────
+  furniture: [
+    { id: 'f_decor',    name: 'Декор интерьера' },
+    { id: 'mirrors',    name: 'Зеркала' },
+    { id: 'desks',      name: 'Письменные столы' },
+    { id: 'lamps',      name: 'Светильники / Лампы' },
+    { id: 'tables',     name: 'Столы' },
+    { id: 'chairs',     name: 'Стулья / Кресла' },
+    { id: 'clocks',     name: 'Часы' },
+    { id: 'cabinets',   name: 'Шкафы / Комоды' },
+  ],
+  // ── Одежда ──────────────────────────────────────────────
+  clothing: [
+    { id: 'pants',       name: 'Брюки' },
+    { id: 'hats',        name: 'Головные уборы' },
+    { id: 'cl_sets',     name: 'Костюмы / Комплекты' },
+    { id: 'jackets',     name: 'Куртки / Пиджаки' },
+    { id: 'coats',       name: 'Пальто / Плащи' },
+    { id: 'dresses',     name: 'Платья' },
+    { id: 'shirts',      name: 'Рубашки / Блузки' },
+    { id: 'knitwear',    name: 'Трикотаж / Свитера' },
+    { id: 'scarves',     name: 'Шарфы / Платки' },
+    { id: 'skirts',      name: 'Юбки' },
+  ],
+  // ── Посуда ──────────────────────────────────────────────
+  ceramics: [
+    { id: 'vases',       name: 'Вазы' },
+    { id: 'decorative',  name: 'Декоративные тарелки' },
+    { id: 'coffee_set',  name: 'Кофейный набор' },
+    { id: 'bowls',       name: 'Миски / Салатники' },
+    { id: 'sugar_bowls', name: 'Сахарницы / Молочники' },
+    { id: 'services',    name: 'Сервизы' },
+    { id: 'soup_tureen', name: 'Супницы' },
+    { id: 'plates',      name: 'Тарелки' },
+    { id: 'figurines',   name: 'Фигурки / Статуэтки' },
+    { id: 'teapots',     name: 'Чайники / Заварники' },
+    { id: 'tea_set',     name: 'Чайный набор' },
+    { id: 'cups',        name: 'Чашки / Кружки' },
+  ],
+  // ── Столовые приборы ────────────────────────────────────
+  cutlery: [
+    { id: 'forks',      name: 'Вилки' },
+    { id: 'spoons',     name: 'Ложки' },
+    { id: 'ct_sets',    name: 'Наборы' },
+    { id: 'knives',     name: 'Ножи' },
+    { id: 'cupholders', name: 'Подстаканники' },
+    { id: 'serving',    name: 'Сервировочные' },
   ],
   // ── Электроника ─────────────────────────────────────────
   electronics: [
+    { id: 'calculators', name: 'Калькуляторы' },
     { id: 'radios',      name: 'Радиоприёмники' },
     { id: 'tvs',         name: 'Телевизоры' },
-    { id: 'cameras',     name: 'Фотоаппараты' },
     { id: 'phones',      name: 'Телефоны' },
-    { id: 'calculators', name: 'Калькуляторы' },
+    { id: 'cameras',     name: 'Фотоаппараты' },
     { id: 'el_other',    name: 'Другое' },
+  ],
+  // ── Ювелирные украшения ─────────────────────────────────
+  jewelry: [
+    { id: 'j_accessories', name: 'Аксессуары / Хранение' },
+    { id: 'bracelets',     name: 'Браслеты' },
+    { id: 'brooches',      name: 'Броши / Манжеты' },
+    { id: 'rings',         name: 'Кольца' },
+    { id: 'sets',          name: 'Наборы / Комплекты' },
+    { id: 'necklaces',     name: 'Ожерелья / Колье' },
+    { id: 'piercings',     name: 'Пирсинг' },
+    { id: 'pendants',      name: 'Подвески / Charms' },
+    { id: 'earrings',      name: 'Серьги' },
+    { id: 'watches',       name: 'Часы' },
   ],
 }
 
