@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import { MessageCircle, X, ArrowUp, Sparkles, RefreshCw } from 'lucide-react'
+import { MessageCircle, X, ArrowUp, Sparkles, RefreshCw, WifiOff } from 'lucide-react'
 import { useCompare } from '../../lib/CompareContext'
 import { useCurrency } from '../../lib/CurrencyContext'
 import { sendChatMessage } from '../../lib/chatApi'
@@ -110,6 +110,15 @@ function ChatMessage({ msg }) {
           {msg.products.map(p => (
             <ProductMiniCard key={p.id} product={p} />
           ))}
+        </div>
+      )}
+
+      {msg.fallback && (
+        <div className="flex items-center gap-1 mt-0.5">
+          <WifiOff size={10} style={{ color: COLORS.creamFaint }} />
+          <span className="font-body text-[9px]" style={{ color: COLORS.creamFaint }}>
+            Офлайн-режим
+          </span>
         </div>
       )}
     </div>
@@ -238,7 +247,7 @@ export default function ChatWidget() {
       .filter(m => m.role !== 'system' && m.id !== 'welcome')
       .map(m => ({ role: m.role, text: m.text }))
 
-    const { reply, products, error } = await sendChatMessage(chatHistory)
+    const { reply, products, error, fallback } = await sendChatMessage(chatHistory)
 
     if (error || !reply) {
       setHasError(true)
@@ -259,6 +268,7 @@ export default function ChatWidget() {
       text: reply,
       products: products || [],
       timestamp: Date.now(),
+      fallback: fallback || false,
     }])
   }, [input, isLoading, messages])
 

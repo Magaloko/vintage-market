@@ -21,6 +21,41 @@ const GIFT_KEYWORDS = ['подарок', 'подарить', 'сюрприз', '
 const DECOR_KEYWORDS = ['интерьер', 'декор', 'дом', 'квартир', 'уют']
 
 /* ------------------------------------------------------------------ */
+/*  Resilience: failure tracking + circuit breaker                     */
+/* ------------------------------------------------------------------ */
+
+let consecutiveFailures = 0
+const MAX_FAILURES_BEFORE_FALLBACK = 2
+const CIRCUIT_RESET_MS = 5 * 60 * 1000 // 5 min
+let circuitOpenedAt = 0
+
+/** Returns true if the AI service is likely down (circuit open). */
+function isCircuitOpen() {
+  if (consecutiveFailures < MAX_FAILURES_BEFORE_FALLBACK) return false
+  if (Date.now() - circuitOpenedAt > CIRCUIT_RESET_MS) {
+    // Half-open: allow one attempt after cooldown
+    consecutiveFailures = MAX_FAILURES_BEFORE_FALLBACK - 1
+    return false
+  }
+  return true
+}
+
+function recordSuccess() { consecutiveFailures = 0 }
+function recordFailure() {
+  consecutiveFailures++
+  if (consecutiveFailures >= MAX_FAILURES_BEFORE_FALLBACK) {
+    circuitOpenedAt = Date.now()
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Rate limiter: per-session, prevent spam                            */
+/* ------------------------------------------------------------------ */
+
+let lastRequestTime = 0
+const MIN_REQUEST_INTERVAL_MS = 1500 // 1.5s between requests
+
+/* ------------------------------------------------------------------ */
 /*  Demo fallback                                                      */
 /* ------------------------------------------------------------------ */
 
@@ -56,7 +91,6 @@ function demoChatResponse(messages) {
     .join(' ')
     .toLowerCase()
 
-  const lastText = messages[messages.length - 1]?.text?.toLowerCase() || ''
   const userMsgCount = messages.filter(m => m.role === 'user').length
 
   // Try to find matching products
@@ -89,7 +123,7 @@ function demoChatResponse(messages) {
     'Здравствуйте! Я консультант Galerie du Temps. Помогу подобрать идеальную винтажную вещь. Что вас интересует — подарок, что-то для интерьера или для собственной коллекции?',
     'Отличный выбор! Какой у вас примерный бюджет? Это поможет подобрать подходящие варианты.',
     'Понимаю. Какая эпоха или стиль вам ближе? У нас есть вещи от ар-деко 1920-х до ретро 1970-х.',
-    'Спасибо за подробности! К сожалению, в демо-каталоге пока не нашлось точного совпадения. Загляните в наш каталог — там могут быть новые поступления!',
+    'Спасибо за подробности! Посмотрите наш каталог — там найдутся интересные варианты. Или напишите нам через форму обратной связи!',
   ]
 
   const idx = Math.min(userMsgCount - 1, scripted.length - 1)
@@ -97,29 +131,75 @@ function demoChatResponse(messages) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Timeout wrapper                                                    */
+/* ------------------------------------------------------------------ */
+
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Request timed out')), ms),
+    ),
+  ])
+}
+
+/* ------------------------------------------------------------------ */
+/*  AI edge function call with retry                                   */
+/* ------------------------------------------------------------------ */
+
+async function callAI(messages, retries = 1) {
+  const { data, error } = await withTimeout(
+    supabase.functions.invoke('gemini-chat', { body: { messages } }),
+    15_000, // 15s timeout
+  )
+
+  if (error) throw error
+  if (data?.error) {
+    // Gemini returned an error in the response body
+    if (retries > 0 && data.error.includes?.('429')) {
+      // Rate limited — wait and retry once
+      await new Promise(r => setTimeout(r, 2000))
+      return callAI(messages, retries - 1)
+    }
+    throw new Error(data.error)
+  }
+
+  return data
+}
+
+/* ------------------------------------------------------------------ */
 /*  Public API                                                         */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Send a chat message. Returns { reply, products, error, fallback }.
+ * - `fallback: true` means the answer came from the local demo engine.
+ */
 export async function sendChatMessage(messages) {
-  try {
-    if (isSupabaseConfigured && supabase) {
-      const { data, error } = await supabase.functions.invoke('gemini-chat', {
-        body: { messages },
-      })
-      if (error) throw error
-      return { reply: data.reply, products: data.products || [], error: null }
-    }
+  // Rate limiting
+  const elapsed = Date.now() - lastRequestTime
+  if (elapsed < MIN_REQUEST_INTERVAL_MS) {
+    await new Promise(r => setTimeout(r, MIN_REQUEST_INTERVAL_MS - elapsed))
+  }
+  lastRequestTime = Date.now()
 
-    // Demo fallback
-    await new Promise(r => setTimeout(r, 800 + Math.random() * 700))
-    const result = demoChatResponse(messages)
-    return { ...result, error: null }
-  } catch (err) {
-    console.error('Chat error:', err)
-    return {
-      reply: null,
-      products: [],
-      error: 'Не удалось связаться с сервером. Попробуйте позже.',
+  // Try AI service if Supabase is configured and circuit is closed
+  if (isSupabaseConfigured && supabase && !isCircuitOpen()) {
+    try {
+      const data = await callAI(
+        messages.map(m => ({ role: m.role, text: m.text })),
+      )
+      recordSuccess()
+      return { reply: data.reply, products: data.products || [], error: null, fallback: false }
+    } catch (err) {
+      console.warn('AI chat error, falling back to demo:', err.message || err)
+      recordFailure()
+      // Fall through to demo fallback
     }
   }
+
+  // Demo fallback — always available, works offline
+  await new Promise(r => setTimeout(r, 600 + Math.random() * 400))
+  const result = demoChatResponse(messages)
+  return { ...result, error: null, fallback: true }
 }
