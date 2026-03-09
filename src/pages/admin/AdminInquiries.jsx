@@ -883,7 +883,7 @@ export default function AdminInquiries() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="font-display text-2xl italic" style={{ color: colors.ink }}>
-            Obzor
+            Заявки
             {activeCount > 0 && (
               <span
                 className="ml-3 px-2.5 py-0.5 font-body text-xs"

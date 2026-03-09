@@ -28,6 +28,7 @@ import ImageGallery from '../components/public/ImageGallery'
 import FavoriteButton from '../components/public/FavoriteButton'
 import CompareButton from '../components/public/CompareButton'
 import PriceInsight from '../components/public/PriceInsight'
+import { trackEvent } from '../lib/analytics'
 import PriceHistoryChart from '../components/public/PriceHistoryChart'
 import SimilarProducts from '../components/public/SimilarProducts'
 import ProductCard from '../components/public/ProductCard'
@@ -146,6 +147,7 @@ export default function ProductPage() {
         }
 
         setProduct(data)
+        trackEvent('product_view', { product_id: data.id, category: data.category })
 
         const [avg, linked] = await Promise.allSettled([
           getCategoryAvgPrice(data.category),
@@ -239,6 +241,7 @@ export default function ProductPage() {
 
   const handleShare = async () => {
     const url = window.location.href
+    trackEvent('share_click', { product_id: product?.id, channel: navigator.share ? 'native' : 'clipboard', category: product?.category })
     if (navigator.share) {
       try { await navigator.share({ title: product.title, url }) } catch {}
     } else {

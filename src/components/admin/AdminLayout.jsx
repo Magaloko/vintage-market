@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Outlet, NavLink, useNavigate, Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   Package,
@@ -8,6 +8,8 @@ import {
   Menu,
   X,
   ChevronLeft,
+  ChevronDown,
+  ChevronRight,
   AlertTriangle,
   MessageSquare,
   Calculator,
@@ -21,10 +23,17 @@ import { useAuth } from '../../lib/AuthContext'
 const SIDEBAR_LINKS = [
   { to: '/admin', icon: LayoutDashboard, label: 'Панель управления', end: true },
   { to: '/admin/analytics', icon: BarChart3, label: 'Аналитика' },
-  { to: '/admin/products', icon: Package, label: 'Товары' },
-  { to: '/admin/products/new', icon: Plus, label: 'Добавить товар' },
-  { to: '/admin/products/bulk', icon: Upload, label: 'Массовый импорт' },
-  { to: '/admin/inquiries', icon: MessageSquare, label: 'Obzor' },
+  {
+    id: 'products',
+    icon: Package,
+    label: 'Товары',
+    children: [
+      { to: '/admin/products', icon: Package, label: 'Все товары' },
+      { to: '/admin/products/new', icon: Plus, label: 'Новый товар' },
+      { to: '/admin/products/bulk', icon: Upload, label: 'Массовый импорт' },
+    ],
+  },
+  { to: '/admin/inquiries', icon: MessageSquare, label: 'Заявки' },
   { to: '/admin/categories', icon: Layers, label: 'Категории' },
   { to: '/admin/users', icon: Users, label: 'Пользователи' },
   { to: '/admin/calculator', icon: Calculator, label: 'Калькулятор' },
@@ -106,20 +115,107 @@ function SidebarHeader({ onClose }) {
 }
 
 function SidebarNav({ links, onLinkClick }) {
+  const location = useLocation()
+  const [expanded, setExpanded] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('vintage_admin_sidebar_expanded') || '{}') }
+    catch { return {} }
+  })
+
+  // Auto-expand group if current URL matches a child
+  useEffect(() => {
+    let changed = false
+    const next = { ...expanded }
+    links.forEach(item => {
+      if (item.children) {
+        const isChildActive = item.children.some(c =>
+          location.pathname === c.to || location.pathname.startsWith(c.to + '/')
+        )
+        if (isChildActive && !next[item.id]) {
+          next[item.id] = true
+          changed = true
+        }
+      }
+    })
+    if (changed) {
+      setExpanded(next)
+      localStorage.setItem('vintage_admin_sidebar_expanded', JSON.stringify(next))
+    }
+  }, [location.pathname])
+
+  const toggle = (id) => {
+    setExpanded(prev => {
+      const next = { ...prev, [id]: !prev[id] }
+      localStorage.setItem('vintage_admin_sidebar_expanded', JSON.stringify(next))
+      return next
+    })
+  }
+
   return (
     <nav className="flex-1 px-4 space-y-1">
-      {links.map(({ to, icon: Icon, label, end }) => (
-        <NavLink
-          key={to}
-          to={to}
-          end={end}
-          onClick={onLinkClick}
-          className={({ isActive }) => `admin-sidebar-link ${isActive ? 'active' : ''}`}
-        >
-          <Icon size={18} />
-          {label}
-        </NavLink>
-      ))}
+      {links.map(item => {
+        if (item.children) {
+          const Icon = item.icon
+          const isOpen = !!expanded[item.id]
+          const isChildActive = item.children.some(c =>
+            location.pathname === c.to || location.pathname.startsWith(c.to + '/')
+          )
+          return (
+            <div key={item.id}>
+              <button
+                onClick={() => toggle(item.id)}
+                className={`admin-sidebar-link w-full ${isChildActive ? 'active' : ''}`}
+                style={{ justifyContent: 'space-between' }}
+              >
+                <span className="flex items-center gap-3">
+                  <Icon size={18} />
+                  {item.label}
+                </span>
+                {isOpen
+                  ? <ChevronDown size={14} style={{ opacity: 0.4 }} />
+                  : <ChevronRight size={14} style={{ opacity: 0.4 }} />
+                }
+              </button>
+              <div
+                className="overflow-hidden transition-all duration-200"
+                style={{
+                  maxHeight: isOpen ? `${item.children.length * 44}px` : '0px',
+                  opacity: isOpen ? 1 : 0,
+                }}
+              >
+                {item.children.map(child => {
+                  const ChildIcon = child.icon
+                  return (
+                    <NavLink
+                      key={child.to}
+                      to={child.to}
+                      end
+                      onClick={onLinkClick}
+                      className={({ isActive }) => `admin-sidebar-link ${isActive ? 'active' : ''}`}
+                      style={{ paddingLeft: '2.75rem', fontSize: '0.8125rem' }}
+                    >
+                      <ChildIcon size={15} />
+                      {child.label}
+                    </NavLink>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        }
+        const { to, icon: Icon, label, end } = item
+        return (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            onClick={onLinkClick}
+            className={({ isActive }) => `admin-sidebar-link ${isActive ? 'active' : ''}`}
+          >
+            <Icon size={18} />
+            {label}
+          </NavLink>
+        )
+      })}
     </nav>
   )
 }

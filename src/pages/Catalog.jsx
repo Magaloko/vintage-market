@@ -3,6 +3,7 @@ import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { X, SlidersHorizontal, ChevronDown } from 'lucide-react'
 import ProductCard from '../components/public/ProductCard'
 import { getProducts, getCategoryCounts } from '../lib/api'
+import { trackEvent } from '../lib/analytics'
 import {
   categories,
   conditions,
@@ -168,6 +169,13 @@ export default function Catalog() {
 
     setProducts(sortProducts(filtered, sortBy))
     setVisibleCount(ITEMS_PER_PAGE)
+
+    if (activeSubcategory || activeCondition || activeEra || activePriceRange !== 'all') {
+      trackEvent('catalog_filter', {
+        category: activeCategory || null,
+        metadata: { subcategory: activeSubcategory, condition: activeCondition, era: activeEra, priceRange: activePriceRange },
+      })
+    }
   }, [allProducts, activeSubcategory, activeCondition, activeEra, activePriceRange, sortBy])
 
   /* ---------- Derived values ---------- */

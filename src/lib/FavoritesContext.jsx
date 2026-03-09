@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { supabase, isSupabaseConfigured } from './supabase'
 import { useAuth } from './AuthContext'
+import { trackEvent } from './analytics'
 
 const FavoritesContext = createContext({})
 export const useFavorites = () => useContext(FavoritesContext)
@@ -67,6 +68,7 @@ export function FavoritesProvider({ children }) {
 
     setFavorites(updated)
     writeLocal(updated)
+    trackEvent(removing ? 'favorite_remove' : 'favorite_add', { product_id: productId })
 
     if (isSupabaseConfigured && session?.user) {
       try {
