@@ -50,38 +50,29 @@ export default function ImageGallery({ images = [], title = '' }) {
 
   return (
     <div>
-      {/* Main image slider — edge-to-edge, no gaps */}
+      {/* Main image slider — fixed height, images fit within */}
       <div className="relative group">
         <div
           ref={sliderRef}
           className="pamono-slider flex overflow-x-auto snap-x snap-mandatory"
-          style={{ scrollBehavior: 'smooth', gap: '2px' }}
+          style={{ scrollBehavior: 'smooth', gap: '2px', height: 'clamp(260px, 45vw, 480px)' }}
         >
-          {images.map((img, idx) => {
-            // Single image = full width, 2 images = 50% each, 3+ = show ~2.5 visible
-            const widthClass = images.length === 1
-              ? 'w-full'
-              : images.length === 2
-                ? 'w-1/2'
-                : 'w-[45%] md:w-[40%]'
-
-            return (
-              <div
-                key={idx}
-                className={`snap-center flex-shrink-0 cursor-zoom-in ${widthClass}`}
-                onClick={() => { setActiveIndex(idx); setLightboxOpen(true) }}
-              >
-                <div className="aspect-[4/3] overflow-hidden bg-neutral-100">
-                  <img
-                    src={getImageSrc(img)}
-                    alt={getImageAlt(img, `${title} — фото ${idx + 1}`)}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-[1.03]"
-                    loading={idx > 2 ? 'lazy' : 'eager'}
-                  />
-                </div>
-              </div>
-            )
-          })}
+          {images.map((img, idx) => (
+            <div
+              key={idx}
+              className="snap-center flex-shrink-0 cursor-zoom-in h-full"
+              style={{ width: images.length === 1 ? '100%' : images.length === 2 ? '50%' : 'auto' }}
+              onClick={() => { setActiveIndex(idx); setLightboxOpen(true) }}
+            >
+              <img
+                src={getImageSrc(img)}
+                alt={getImageAlt(img, `${title} — фото ${idx + 1}`)}
+                className="h-full w-auto max-w-none object-cover transition-transform duration-500 hover:scale-[1.02] bg-neutral-100"
+                style={images.length <= 2 ? { width: '100%' } : undefined}
+                loading={idx > 2 ? 'lazy' : 'eager'}
+              />
+            </div>
+          ))}
         </div>
 
         {/* Nav arrows — always visible on desktop, tap on mobile */}
