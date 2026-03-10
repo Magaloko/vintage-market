@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { MessageSquare, CheckCircle, Mail, Phone, Send, ChevronDown, ChevronRight, StickyNote } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { useAuth } from '../../lib/AuthContext'
+import { useAuth } from '../../lib/contexts/AuthContext'
 import { getShopInquiries, updateTicketStatus, addInquiryNote, getInquiryNotes } from '../../lib/api'
 
 // -- Constants ----------------------------------------------------------------

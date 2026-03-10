@@ -17,7 +17,7 @@ import { PUBLIC_VISIBLE_STATUSES } from '../data/productStatuses'
 import { categoryGroups, categories, formatEra } from '../data/demoProducts'
 import ProductCard from '../components/public/ProductCard'
 import VintageQuiz from '../components/public/VintageQuiz'
-import { useCurrency } from '../lib/CurrencyContext'
+import { useCurrency } from '../lib/contexts/CurrencyContext'
 
 const POPULAR_THRESHOLD = 100
 

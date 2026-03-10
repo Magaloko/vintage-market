@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import { ArrowLeft, X } from 'lucide-react'
-import { useCompare } from '../lib/CompareContext'
-import { useCurrency } from '../lib/CurrencyContext'
+import { useCompare } from '../lib/contexts/CompareContext'
+import { useCurrency } from '../lib/contexts/CurrencyContext'
 import { categories, conditions, categoryFields, formatEra } from '../data/demoProducts'
 
 /* ------------------------------------------------------------------ */

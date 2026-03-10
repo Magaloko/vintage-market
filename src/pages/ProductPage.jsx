@@ -36,7 +36,7 @@ import ProductReviews from '../components/public/ProductReviews'
 import InlineDescriptionEditor from '../components/public/InlineDescriptionEditor'
 import { FINAL_STATUSES } from '../data/productStatuses'
 import { siteConfig } from '../lib/siteConfig'
-import { useCurrency } from '../lib/CurrencyContext'
+import { useCurrency } from '../lib/contexts/CurrencyContext'
 
 /* ------------------------------------------------------------------ */
 /*  Field icon mapping                                                 */

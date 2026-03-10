@@ -14,7 +14,7 @@ import {
 } from '../../data/demoProducts'
 import { PRODUCT_STATUS_GROUPS, getStatusesByGroup } from '../../data/productStatuses'
 import { getActiveCategoryList } from '../../lib/categorySettings'
-import { CURRENCIES, FALLBACK_RATES } from '../../lib/CurrencyContext'
+import { CURRENCIES, FALLBACK_RATES } from '../../lib/contexts/CurrencyContext'
 import ImageUploader from '../../components/admin/ImageUploader'
 
 /** Extract plain Instagram username from URL or @handle */

@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Search, Heart, Menu, X, Sun, Moon, ChevronDown } from 'lucide-react'
-import { useFavorites } from '../../lib/FavoritesContext'
-import { useTheme } from '../../lib/ThemeContext'
-import { useCurrency } from '../../lib/CurrencyContext'
+import { useFavorites } from '../../lib/contexts/FavoritesContext'
+import { useTheme } from '../../lib/contexts/ThemeContext'
+import { useCurrency } from '../../lib/contexts/CurrencyContext'
 import { getCategoryCounts } from '../../lib/api'
 import { categories as allCategories } from '../../data/demoProducts'
 

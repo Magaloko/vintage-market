@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Package, Eye, ShoppingBag, MessageCircle } from 'lucide-react'
 import CostCalculator from '../../components/shared/CostCalculator'
-import { useCurrency } from '../../lib/CurrencyContext'
-import { useAuth } from '../../lib/AuthContext'
+import { useCurrency } from '../../lib/contexts/CurrencyContext'
+import { useAuth } from '../../lib/contexts/AuthContext'
 import { getShopStats } from '../../lib/api'
 
 export default function SellerCalculator() {

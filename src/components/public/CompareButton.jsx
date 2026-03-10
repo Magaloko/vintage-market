@@ -1,5 +1,5 @@
 import { GitCompareArrows } from 'lucide-react'
-import { useCompare } from '../../lib/CompareContext'
+import { useCompare } from '../../lib/contexts/CompareContext'
 
 const SIZES = {
   sm: { button: 'w-8 h-8', icon: 14 },

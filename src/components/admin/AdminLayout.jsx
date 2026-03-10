@@ -25,7 +25,7 @@ import {
   CalendarDays,
   Star,
 } from 'lucide-react'
-import { useAuth } from '../../lib/AuthContext'
+import { useAuth } from '../../lib/contexts/AuthContext'
 
 const SIDEBAR_LINKS = [
   { to: '/admin', icon: LayoutDashboard, label: 'Панель управления', end: true },

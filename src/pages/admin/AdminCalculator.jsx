@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BarChart3 } from 'lucide-react'
 import CostCalculator from '../../components/shared/CostCalculator'
-import { useCurrency } from '../../lib/CurrencyContext'
+import { useCurrency } from '../../lib/contexts/CurrencyContext'
 import { getStats } from '../../lib/api'
 
 export default function AdminCalculator() {

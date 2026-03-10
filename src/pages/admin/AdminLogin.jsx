@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { LogIn, AlertCircle, Store } from 'lucide-react'
-import { useAuth } from '../../lib/AuthContext'
+import { useAuth } from '../../lib/contexts/AuthContext'
 import { isSupabaseConfigured } from '../../lib/supabase'
 
 /* ── Shared style tokens ─────────────────────────────────────── */

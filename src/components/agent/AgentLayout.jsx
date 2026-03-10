@@ -8,7 +8,7 @@ import {
   X,
   ChevronLeft,
 } from 'lucide-react'
-import { useAuth } from '../../lib/AuthContext'
+import { useAuth } from '../../lib/contexts/AuthContext'
 
 const SIDEBAR_LINKS = [
   { to: '/agent', icon: LayoutDashboard, label: 'Обзор', end: true },

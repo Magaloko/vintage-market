@@ -56,11 +56,11 @@ import PublicLayout from './components/public/PublicLayout'
 import AdminLayout from './components/admin/AdminLayout'
 const SellerLayout = lazy(() => import('./components/seller/SellerLayout'))
 
-import { AuthProvider, useAuth } from './lib/AuthContext'
-import { FavoritesProvider } from './lib/FavoritesContext'
-import { CompareProvider } from './lib/CompareContext'
-import { ThemeProvider } from './lib/ThemeContext'
-import { CurrencyProvider } from './lib/CurrencyContext'
+import { AuthProvider, useAuth } from './lib/contexts/AuthContext'
+import { FavoritesProvider } from './lib/contexts/FavoritesContext'
+import { CompareProvider } from './lib/contexts/CompareContext'
+import { ThemeProvider } from './lib/contexts/ThemeContext'
+import { CurrencyProvider } from './lib/contexts/CurrencyContext'
 import CompareBar from './components/public/CompareBar'
 
 function PageLoader() {

@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { supabase, isSupabaseConfigured } from './supabase'
+import { supabase, isSupabaseConfigured } from '../supabase'
 import { useAuth } from './AuthContext'
-import { trackEvent } from './analytics'
+import { trackEvent } from '../analytics'
 
 const FavoritesContext = createContext({})
 export const useFavorites = () => useContext(FavoritesContext)

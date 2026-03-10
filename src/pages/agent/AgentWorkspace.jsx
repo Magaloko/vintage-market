@@ -7,7 +7,7 @@ import {
   MessageSquare, AlertTriangle,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { useAuth } from '../../lib/AuthContext'
+import { useAuth } from '../../lib/contexts/AuthContext'
 import {
   getAgentInquiries, updateTicketStatus, addInquiryNote,
   getInquiryNotes, getStatusLog, recordFirstReply,

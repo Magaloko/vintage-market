@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { X, GitCompareArrows } from 'lucide-react'
-import { useCompare } from '../../lib/CompareContext'
+import { useCompare } from '../../lib/contexts/CompareContext'
 
 const COLORS = {
   bg: 'rgba(14, 26, 43, 0.95)',

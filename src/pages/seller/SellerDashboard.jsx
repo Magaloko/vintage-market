@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Package, Eye, MessageSquare, TrendingUp, Plus, Store } from 'lucide-react'
-import { useAuth } from '../../lib/AuthContext'
+import { useAuth } from '../../lib/contexts/AuthContext'
 import { getShopStats, getMyShop } from '../../lib/api'
 
 // -- Constants ----------------------------------------------------------------

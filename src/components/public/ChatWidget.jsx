@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { MessageCircle, X, ArrowUp, Sparkles, RefreshCw, WifiOff } from 'lucide-react'
-import { useCompare } from '../../lib/CompareContext'
-import { useCurrency } from '../../lib/CurrencyContext'
+import { useCompare } from '../../lib/contexts/CompareContext'
+import { useCurrency } from '../../lib/contexts/CurrencyContext'
 import { sendChatMessage } from '../../lib/chatApi'
 
 /* ------------------------------------------------------------------ */

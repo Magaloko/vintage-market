@@ -1,5 +1,5 @@
 import { TrendingDown, TrendingUp, Minus } from 'lucide-react'
-import { useCurrency } from '../../lib/CurrencyContext'
+import { useCurrency } from '../../lib/contexts/CurrencyContext'
 
 const THRESHOLDS = { low: -15, high: 15 }
 

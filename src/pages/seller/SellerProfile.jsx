@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Save, Store, MapPin, Phone, Mail, Globe, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { useAuth } from '../../lib/AuthContext'
+import { useAuth } from '../../lib/contexts/AuthContext'
 import { getMyShop, updateShop } from '../../lib/api'
 
 // -- Constants ----------------------------------------------------------------

@@ -11,7 +11,7 @@ import {
   Store,
   Calculator,
 } from 'lucide-react'
-import { useAuth } from '../../lib/AuthContext'
+import { useAuth } from '../../lib/contexts/AuthContext'
 
 const NAV_LINKS = [
   { to: '/seller', icon: LayoutDashboard, label: 'Панель', end: true },

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Plus, Edit, Trash2, Eye, Search, Package, Star } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { getProducts, deleteProduct, togglePromoted } from '../../lib/api'
-import { useAuth } from '../../lib/AuthContext'
+import { useAuth } from '../../lib/contexts/AuthContext'
 import { categories } from '../../data/demoProducts'
 import { getStatusLabel } from '../../data/productStatuses'
 

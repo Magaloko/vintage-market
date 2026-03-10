@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Heart, ShoppingBag } from 'lucide-react'
-import { useFavorites } from '../lib/FavoritesContext'
+import { useFavorites } from '../lib/contexts/FavoritesContext'
 import { getProduct } from '../lib/api'
 import ProductCard from '../components/public/ProductCard'
 

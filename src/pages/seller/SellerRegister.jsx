@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Store, Mail, Lock, MapPin, Phone, ArrowRight } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { useAuth } from '../../lib/AuthContext'
+import { useAuth } from '../../lib/contexts/AuthContext'
 
 // -- Constants ----------------------------------------------------------------
 

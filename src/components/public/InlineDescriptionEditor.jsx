@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { Pencil, Check, X, Bold, Italic, Heading2, List } from 'lucide-react'
-import { useAuth } from '../../lib/AuthContext'
+import { useAuth } from '../../lib/contexts/AuthContext'
 import { updateProduct } from '../../lib/api'
 import toast from 'react-hot-toast'
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Heart } from 'lucide-react'
-import { useFavorites } from '../../lib/FavoritesContext'
+import { useFavorites } from '../../lib/contexts/FavoritesContext'
 
 const SIZES = {
   sm: { icon: 16, button: 'w-8 h-8' },

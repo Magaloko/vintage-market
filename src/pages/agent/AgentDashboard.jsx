@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Headphones, Ticket, AlertTriangle, Star, Inbox } from 'lucide-react'
-import { useAuth } from '../../lib/AuthContext'
+import { useAuth } from '../../lib/contexts/AuthContext'
 import { getAgentDashboard } from '../../lib/api'
 
 const COLORS = {
